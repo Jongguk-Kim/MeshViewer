@@ -6,3 +6,5 @@ __*.*
 *.spec
 __pycache__/
 .gitignore
+*.axi
+*.trd

@@ -83,7 +83,7 @@ TireComponents = [
     'BDC'  , # bead cover 
     'SPC'  ,  ## spiral coil
     'SWS'  ,  # temporary component for Endurance simulation 
-    'JPC1'
+    'JPC1'   
 ]
 
 

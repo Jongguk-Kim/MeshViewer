@@ -1,1 +1,8 @@
 dist/
+build/
+*.dir
+*.tmp
+__*.*
+*.spec
+__pycache__/
+.gitignore

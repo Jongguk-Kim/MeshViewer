@@ -71,8 +71,6 @@ TireComponents = [
     'JEC1' , 'JEC', # Jointless Edge Cap 1
     'OJEC1', # Overlapped Jointless Edge Cap
     'OJFC1', # Overlapped Jointless Full Cap
-    'OJEC2', # Overlapped Jointless Edge Cap
-    'OJFC2', # Overlapped Jointless Full Cap
     'PK1'  , # Half Bead Packing
     'PK2'  , # Full Bead Packing
     'RFM'  , # Bead S(RFM)
@@ -82,8 +80,7 @@ TireComponents = [
     'CH3'  , 'CH3_R', 'CH3_L',  # 2nd Nylon Chafer
     'BDC'  , # bead cover 
     'SPC'  ,  ## spiral coil
-    'SWS'  ,  # temporary component for Endurance simulation 
-    'JPC1'
+    'SWS'    # temporary component for Endurance simulation 
 ]
 
 
@@ -701,14 +698,12 @@ def LayoutMesh_From_axi(axi="", limit=10000, output="" ):
     sectornodes = nodes 
     return sectornodes 
 
-def PatternMesh_from_trd(trd="", limit=10000, output="", treadNo=10**7 ):
-
-    print (" writing temporary file", output)
-    with open(trd) as I: 
+def PatternMesh_from_trd(axi="", limit=10000, output="", treadNo=10**7 ):
+    with open(axi) as I: 
         lines = I.readlines()
     fp = open(output, 'w')
     fp.write("**************************************\n")
-    fp.write("** TIRE MESH from TRD to debug P3DM\n")
+    fp.write("** TIRE MESH from AXI to debug P3DM\n")
     fp.write("**************************************\n")
 
     SectorNodes = 0;     AllNodes = 0;     Node_Sectors = 0; 
@@ -778,7 +773,7 @@ def PatternMesh_from_trd(trd="", limit=10000, output="", treadNo=10**7 ):
 
             if cmd=="ND" : 
                 data = line.split(",")
-                if int(data[0]) < limit*2+treadNo: 
+                if int(data[0]) < limit+treadNo: 
                     fp.write("%s, %s, %s, %s\n"%(data[0], data[3].strip(), data[2], data[1].strip()))
                     SectorNodes += 1 
                 AllNodes += 1 
@@ -870,25 +865,17 @@ def PatternMesh_from_trd(trd="", limit=10000, output="", treadNo=10**7 ):
     trdOffset = findout_offset(nodeIds, step=limit, shift=-treadNo)
     print ("# Tread Offset=", trdOffset)
 
-    
-
     Node_Sectors = AllNodes / SectorNodes 
     EL_Sectors = AllElements / SectorEls 
-
 
     print ("\n ** Sector No. check ")
     print (" All Nodes = %d\n Nodes per Sector = %d\n Sectors = %.1f"%(AllNodes, SectorNodes, Node_Sectors))
     print (" All ELs   = %d\n ELs per Sector   = %d\n Sectors = %.1f"%(AllElements, SectorEls, EL_Sectors))
 
-    if Node_Sectors >= 180: ptn = False 
-    else: ptn = True 
-
     
 
     nodes = np.array(nodes)
     elements = np.array(elements)
-
-    write_Pattern3d_2dMesh(offset=limit, output=output, npn=nodes, els=elements, surfs=None)
 
     idx = np.where(nodes[:,0]<limit+treadNo)[0]
     s1nodes = nodes[idx]
@@ -900,7 +887,7 @@ def PatternMesh_from_trd(trd="", limit=10000, output="", treadNo=10**7 ):
     pitchnodes = nodes[ix]
 
     pitchnodes = nodes 
-    return pitchnodes, Node_Sectors 
+    return pitchnodes 
 
 def meshgrid_in_Quadrilateral(xs, ys, num=10, endpoint=True, vs=None): 
     # xs=[x1, x2, x3, x4]; ys=[y1, y2, y3, y4]
@@ -1089,43 +1076,6 @@ def findout_offset(numbers, step=10000, shift=0):
     # print (i)
     return offset 
 
-def write_Pattern3d_2dMesh(offset=10000, output='trd.tmp', npn=None, els=None, surfs=None): 
-    treadNo = 10**7 
-    limit = offset 
-
-    nodeIds = npn[:,0]
-    limit = findout_offset(nodeIds, step=limit, shift=-treadNo)
-
-    print ("# TREAD OFFSET ", limit)
-
-    fp = open(output, 'w')
-    fp.write("**************************************\n")
-    fp.write("** TIRE MESH from TRD to debug P3DM\n")
-    fp.write("**************************************\n")
-    fp.write("*NODE, SYSTEM=R\n")
-    for n in npn: 
-        if n[0] < limit*2+treadNo: 
-            r =  math.sqrt( n[3]**2 + n[1]**2) 
-            fp.write("%10d, %12.7f, %12.7f, %12.7f\n"%(n[0],r, n[2], 0))
-
-    fp.write("*ELEMENT, TYPE=CGAX4H\n")
-    c3 =False 
-    cnt = 0 
-    for el in els: 
-        cnt += 1 
-        if el[0] < limit+treadNo and el[7] > 0:
-            if cnt %2 : 
-                fp.write("%10d, %10d, %10d, %10d, %10d\n"%(el[0], el[1], el[2], el[6], el[5]))
-            else: 
-                fp.write("%10d, %10d, %10d, %10d, %10d\n"%(el[0]+limit, el[2], el[3], el[7], el[6]))
-        else: 
-            c3 = True    
-    if c3: 
-        for el in els: 
-            if el[0] < limit+treadNo and el[7] == 0:
-                fp.write("%10d, %10d, %10d, %10d, %10d\n"%(el[0], el[1], el[2], el[5], el[4]))
-                # fp.write("%10d, %10d, %10d, %10d, %10d\n"%(el[0]+limit, el[2], el[3], el[6], el[5]))
-        
 
 # ElementCenterValueToInnerValues
 def Distribution_From_CenterValue(npn, elements, elsets, vmin=0.0, vmax=1.0, tie=None, surface=None): 
@@ -2818,7 +2768,7 @@ class NODE:
         for i in range(N):
             if self.Node[i][0] == n:
                 return self.Node[i]
-        # print ("Cannot Find Node (%d)"%(n))
+        print ("Cannot Find Node (%d)"%(n))
         NullList = [0, 0.0, 0.0, 0.0]
         return NullList
     def Sort(self, item=0, reverse=False):
@@ -3311,7 +3261,7 @@ def Mesh2DInformation(InpFileName, comments=True):
                         if "ELSET" in word.upper(): 
                             ename = word.split("=")[1].strip()
                     
-                    if EL == 'MGAX1' or EL == 'MAX1':
+                    if EL == 'MGAX1':
                         spt = 'M1'
                     elif 'CGAX3'  in EL or 'CAX3'  in EL: 
                         spt = 'C3'
@@ -3319,8 +3269,6 @@ def Mesh2DInformation(InpFileName, comments=True):
                         spt = 'C4'
                     else:
                         spt = 'NN'
-
-                    # print ("$$", line.strip(), word, EL, spt)
                     
                 elif "*SURFACE" in line.upper(): 
                     if "INTERACTION" in line.upper() or "BEHAVIOR" in line.upper() or "PROPERTY" in line.upper(): 
@@ -3425,26 +3373,20 @@ def Mesh2DInformation(InpFileName, comments=True):
                         C = [[N1[x], N1[y]], [N2[x], N2[y]]]
                         Element.Add([int(word[0]), int(word[1]), int(word[2]), 0, 0, ename, 2, math.sqrt(math.pow(N1[2] - N2[2], 2) + math.pow(N1[3] - N2[3], 2)+ math.pow(N1[1] - N2[1], 2)), (N1[2] + N2[2]) / 2.0, (N1[3] + N2[3]) / 2.0, C, 0])
                     except:
-                        # if comments: print ("* Error to read MGAX1:", line.strip())
-                        pass 
+                        if comments: print ("* Error to read MGAX1:", line.strip())
                 if spt == 'C3':
                     try:
                         A, C = Area([int(word[1]), int(word[2]), int(word[3])], Node)
                         Element.Add([int(word[0]), int(word[1]), int(word[2]), int(word[3]), 0, ename, 3, A[0], A[1], A[2], C, 0])
                     except:
-                        # if comments: print ("* Error to read CGAX3:", line.strip())
-                        pass 
+                        if comments: print ("* Error to read CGAX3:", line.strip())
                 if spt == 'C4':
                     # print (line.strip())
-                    # try:
-                        # print (line.strip())
+                    try:
                         A, C = Area([int(word[1]), int(word[2]), int(word[3]), int(word[4])], Node)
-                        # print(A, C)
                         Element.Add([int(word[0]), int(word[1]), int(word[2]), int(word[3]), int(word[4]), ename, 4, A[0], A[1], A[2], C, 0])
-                        # print (Element.Element[-1])
-                    # except:
-                    #     # if comments: print ("* Error to read CGAX4:", line.strip())
-                    #     pass 
+                    except:
+                        if comments: print ("* Error to read CGAX4:", line.strip())
 
                 if spt == 'NS':
                     pass
@@ -3476,11 +3418,9 @@ def Mesh2DInformation(InpFileName, comments=True):
                 else:
                     pass
     # print ("STEP 1")
-    
-    
-    # if len(Element.Element) == 0: 
-    #     if comments: print ("# NO DATA in FILE!")
-    #     return Node, Element, Elset, surface, tie, xy, rims
+    if len(Element.Element) == 0: 
+        if comments: print ("# NO DATA in FILE!")
+        return Node, Element, Elset, surface, tie, xy, rims
     if len(rimtemp) > 0: rims.append(rimtemp)
     rimtemp = [] 
     if len(isurface) > 0: surface.append(isurface)
@@ -3525,19 +3465,6 @@ def Mesh2DInformation(InpFileName, comments=True):
     xp=0; yp=0; zp=0
     xn=0; yn=0; zn=0
 
-    iz = 3; ix=1
-
-    # 
-    # ixs = np.where(npn[:,3]<=0.001)[0]
-    # N1 = len(ixs)
-    # ixs = np.where(npn[:,1]<=0.001)[0]
-    # N2 = len(ixs)
-
-    # if N1 < N2 : 
-    #     ix = 3; iz = 1 
-    # else: 
-    #     ix = 1; iz = 3
-
     for i, nd in enumerate(Node.Node):
         if nd[1] != 0: x0 = 1
         if nd[2] != 0: y0 = 1
@@ -3548,8 +3475,13 @@ def Mesh2DInformation(InpFileName, comments=True):
         if nd[1] < 0: xn = -1
         if nd[2] < 0: yn = -1
         if nd[3] < 0: zn = -1
-        Node.Node[i][iz] = math.sqrt(nd[1]**2 + nd[3]**2)
-        Node.Node[i][ix] = 0.0
+        nd[3] = math.sqrt(nd[1]**2 + nd[3]**2)
+        nd[1] = 0.0
+    
+    
+    x=20; y=3
+    xy = x+y
+    
     
     for i, el in enumerate(Element.Element):
         if el[6] == 3: 
@@ -3604,50 +3536,22 @@ def Mesh2DInformation(InpFileName, comments=True):
         elements.append([el[0], el[1], el[2], el[3], el[4]])
         if el[5] == "CTB" or el[5] == "SUT" : 
             td.append(el)
-    try: 
-        elements = np.array(elements)
-        elno = elements[:,0]
-        elno=np.unique(elno)
-        nds = elements[:,1:5]
-        nds = nds.flatten()
-        nds = np.unique(nds)
-        nds = np.delete(nds, 0)
-        el2 = np.where(elements[:,3] ==0)[0]
-        el4 = np.where(elements[:,4] > 0)[0]
+
+    elements = np.array(elements)
+    elno = elements[:,0]
+    elno=np.unique(elno)
+    nds = elements[:,1:5]
+    nds = nds.flatten()
+    nds = np.unique(nds)
+    nds = np.delete(nds, 0)
+    el2 = np.where(elements[:,3] ==0)[0]
+    el4 = np.where(elements[:,4] > 0)[0]
+    if comments: 
+        print ("\n**    NO. of EL=%d, Node=%d"%(len(elements), len(nds))) 
+        print ("**    EL 2N=%d, 3N=%d, 4N=%d "%(len(el2), len(elements) - len(el2) - len(el4), len(el4)))
+        print ("**    ELEMENTs CAP/SUB=%d (else=%d)"%(len(td), len(elements)-len(td)))
+
     
-
-        if comments: 
-            print ("\n**    NO. of EL=%d, Node=%d"%(len(elements), len(nds))) 
-            print ("**    EL 2N=%d, 3N=%d, 4N=%d "%(len(el2), len(elements) - len(el2) - len(el4), len(el4)))
-            print ("**    ELEMENTs CAP/SUB=%d (else=%d)"%(len(td), len(elements)-len(td)))
-    except: 
-        pass 
-
-    npn = np.array(Node.Node)
-    i = 0 
-    while i < len(Element.Element): 
-        ix = np.where(npn[:,0] == Element.Element[i][1])[0]
-        if not len(ix): 
-            del(Element.Element[i])
-            continue 
-        ix = np.where(npn[:,0] == Element.Element[i][2])[0]
-        if not len(ix): 
-            del(Element.Element[i])
-            continue 
-        if Element.Element[i][3] : 
-            ix = np.where(npn[:,0] == Element.Element[i][3])[0]
-            if not len(ix): 
-                del(Element.Element[i])
-                continue 
-        if Element.Element[i][4] : 
-            ix = np.where(npn[:,0] == Element.Element[i][4])[0]
-            if not len(ix): 
-                del(Element.Element[i])
-                continue
-
-        i += 1
-
-
     return Node, Element, Elset, surface, tie, xy, rims
 def MeshInclude(incfile, Node, Elset, xy=23): 
 
@@ -4103,9 +4007,19 @@ def Area(NodeList, Node, XY=23, **args):   ## Calculate Area of a polygon
             A[2] = A[2] / A[0] / 6
         except:
             if errorimage > 0: 
-                pass 
+                print ("!! Error to calculate Area ", A)
+                print (NodeList)
+                npn = np.array(Node.Node)
+                for n in NodeList: 
+                    ix = np.where(npn[:,0] == n)[0][0]
+                    print (npn[ix])
 
-            return [0.0, 0.0, 0.0], None 
+                # pNode = NODE()
+                # for i in range(n):
+                #     Ni = Node.NodeByID(NodeList[i])
+                #     pNode.Add(Ni)
+                # pNode.Image("Error_Area_"+str(pNode.Node[0][0])+".png", size=1.5)
+            return [0.0, 0.0, 0.0]
 
         if A[0] < 0:
             A[0] = -A[0]
@@ -4115,7 +4029,7 @@ def Area(NodeList, Node, XY=23, **args):   ## Calculate Area of a polygon
         print ("Length of Node is 0")
         print (NodeList)
         print (Node.Node[0])
-        return [0.0, 0.0, 0.0], None 
+        return [0.0, 0.0, 0.0]
 
 def Allelsets(filename): 
     with open (filename) as  INP: 
@@ -4158,81 +4072,16 @@ def Allelsets(filename):
 
     return elsets 
 
-def Generate_nodes_for_OE(element, node, fname=None, outeredge=None):
-
-    npn = np.array(node.Node)
-
-    tp = open(fname, 'w') 
-
-    onode=[]
-    for ed in outeredge.Edge: 
-        onode.append(ed[0])
-        onode.append(ed[1])
-    onode = np.array(onode)
-    onode = np.unique(onode)
-
-    tp.write("*NODE, NSET=OUTER\n")
-    cx = 1; cz=3   ## 
-    for on in onode: 
-        ix =np.where(npn[:,0]==on)[0][0]
-        n = npn[ix]
-        tp.write("%10d, %12.6f, %12.6f, %12.6f\n"%(n[0], n[cx], n[2], n[cz]))
-
-    memb=['C01'  , 'CC1', # Carcass Cord 1 
-    'C02'  , 'CC2', # Carcass Cord 2
-    'C03'  , 'CC3', # Carcass Cord 3 
-    'C04'  , 'CC4', # Carcass Cord 4
-    'BT1'  , # Belt 1 
-    'BT2'  , # Belt 2
-    'BT3'  , # Belt 3
-    'BT4'  , # Belt 4
-    'JFC1' , 'JFC', # Jointless Full Cap 1
-    'JFC2' , # Jointless Full Cap 2
-    'JEC1' , 'JEC', # Jointless Edge Cap 1
-    'OJEC1', # Overlapped Jointless Edge Cap
-    'OJFC1', # Overlapped Jointless Full Cap
-    'OJEC2', # Overlapped Jointless Edge Cap
-    'OJFC2', # Overlapped Jointless Full Cap
-    'PK1'  , # Half Bead Packing
-    'PK2'  , # Full Bead Packing
-    'RFM'  , # Bead S(RFM)
-    'FLI'  , # Bead Flipper
-    'CH1'  , 'CH1_R', 'CH1_L',  # Steel Chafer 
-    'CH2'  , 'CH2_R', 'CH2_L',  # 1st Nylon Chafer
-    'CH3'  , 'CH3_R', 'CH3_L',  # 2nd Nylon Chafer
-    # 'BDC'  , # bead cover 
-    'SPC'  ,  ## spiral coil
-    ]
-
-    for mem in memb: 
-        el = element.Elset(mem)
-        if len(el.Element): 
-            tp.write("*NODE, NSET=%s\n"%(mem))
-            el_nodes = el.Nodes(node=node)
-            for n in el_nodes.Node: 
-                tp.write("%10d, %12.6f, %12.6f, %12.6f\n"%(n[0], n[cx], n[2], n[cz]))
-
-    tp.close()
-
-
-def LayoutToProfile(element, node, output='edge', color='darkgray', lw=0.5, counting=1, meshfile=None, nodeout=False): 
+def LayoutToProfile(element, node, output='edge', color='darkgray', lw=0.5, counting=1): 
     if isinstance(node, list): npn = np.array(node)
     else:                      npn = np.array(node.Node)
 
-    
-
     outer0 = element.OuterEdge(node)
-
-    if meshfile and nodeout: 
-        Generate_nodes_for_OE(element, node, outeredge=outer0, fname=meshfile[:-4]+"-node_outer.inp")
-
         
     for el in element.Element: 
-        if el[6] ==2: 
-            outer0.Add([el[1], el[2], el[5], 0, el[0], 0])
+        if el[6] ==2: outer0.Add([el[1], el[2], el[5], 0, el[0], 0])
     BDR = element.Elset('BEAD_R')
     BDL = element.Elset('BEAD_L')
-
 
     r=[]
     mr = 0 
@@ -4350,11 +4199,9 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1164, 803)
-
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap("mesh.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         MainWindow.setWindowIcon(icon)
-        
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
@@ -4532,8 +4379,7 @@ class Ui_MainWindow(object):
         
         
         self.verticalLayout_4 = QtWidgets.QVBoxLayout()
-        
-
+        self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.checkBox_NdNo = QtWidgets.QCheckBox(self.centralwidget)
         self.checkBox_NdNo.setMaximumSize(QtCore.QSize(130, 20))
         self.checkBox_NdNo.setChecked(False)
@@ -4567,12 +4413,6 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_5 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_5.setObjectName("horizontalLayout_5")
-
-        self.checkBox_NodeOut = QtWidgets.QCheckBox(self.centralwidget)
-        self.checkBox_NodeOut.setMaximumSize(QtCore.QSize(130, 20))
-        self.checkBox_NodeOut.setChecked(False)
-        self.checkBox_NodeOut.setObjectName("checkBox_node_out")
-        self.horizontalLayout_5.addWidget(self.checkBox_NodeOut)
 
         self.checkBox_ElsetNode = QtWidgets.QCheckBox(self.centralwidget)
         self.checkBox_ElsetNode.setMaximumSize(QtCore.QSize(130, 20))
@@ -4805,6 +4645,8 @@ class Ui_MainWindow(object):
         self._stdout.start()
         self._stdout.printOccur.connect(lambda x : self._append_text(x))
 
+        nodes = PatternMesh_from_trd("3003474VT00054-0.trd", output="temp.trd", limit=10000)
+
 
     def selectionQt_list(self): 
         self.figure.Clear_ElsetBoundary()
@@ -4890,7 +4732,7 @@ class Ui_MainWindow(object):
             self.Cdepth_solid_val.setText("0.5")
             self.call2Dmesh(manualfile=self.meshfile)
 
-    def call2Dmesh(self, manualfile='', pattern=False): 
+    def call2Dmesh(self, manualfile=''): 
         self.meshfile = manualfile 
         if self.meshfile and isfile(self.meshfile):
             self.layoutcounting = 1
@@ -4908,11 +4750,6 @@ class Ui_MainWindow(object):
             # sys.exit()
             self.list_widget.clear()
 
-
-            if len(self.element.Element) == 0 and len(self.node.Node): 
-                self.figure.gplot(self.node, self.element)
-                return 
-
             if len(self.element.Element) ==0: 
                 with open(self.meshfile) as MF: 
                     lines = MF.readlines()
@@ -4927,7 +4764,6 @@ class Ui_MainWindow(object):
                 print ("\n# Error! to read mesh file.")
                 return
 
-            # print ("DRAW NORMAL")
         
             self.ElsetNames=[]
             # self.allelsets = Allelsets(self.meshfile)
@@ -5022,13 +4858,8 @@ class Ui_MainWindow(object):
     def callTrd(self): 
         self.trdfile, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Select File", self.cwd, "File Open(*.trd)")
         if self.trdfile: 
-            nodes, sectors = PatternMesh_from_trd(self.trdfile, output=self.tmptrd, limit=self.limit_offset)
-            if sectors < 180: 
-                ptn = True 
-            else: 
-                ptn = False 
-
-            self.call2Dmesh(manualfile = self.tmptrd, pattern=ptn)
+            nodes = PatternMesh_from_trd(self.trdfile, output=self.tmptrd, limit=self.limit_offset)
+            self.call2Dmesh(manualfile = self.tmptrd)
     def callSDB(self): 
         self.sdbresult, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Select File", self.cwd, "File Open(*.sdb0*)")
         if self.sdbresult: 
@@ -5593,10 +5424,7 @@ class Ui_MainWindow(object):
             print ("   '%s'\n"%(nameadded))
             self.com_node, self.com_element, self.com_elset, self.com_surface, self.com_tie, self.com_xy, self.rims = Mesh2DInformation(self.comparingmesh)
             print ("")
-            if len(self.com_element.Element) ==0 and len(self.com_node.Node):
-                self.figure.AddNodes(self.com_node, size=2)
-                return 
-            elif len(self.com_element.Element) ==0: 
+            if len(self.com_element.Element) ==0: 
                 with open(self.comparingmesh) as CM: 
                     lines = CM.readlines()
                 print ("******************************************")
@@ -5692,8 +5520,7 @@ class Ui_MainWindow(object):
         if self.layoutcomparing > 0: 
             self.Bead_Min_R = []
             self.Profiles = []
-            profile0, mr0= LayoutToProfile(self.element, self.node, output='line', color=lst_colors[0], lw=basic_line_width, counting=0,\
-                 meshfile=self.meshfile, nodeout=self.checkBox_NodeOut.isChecked())
+            profile0, mr0= LayoutToProfile(self.element, self.node, output='line', color=lst_colors[0], lw=basic_line_width, counting=0)
             self.Bead_Min_R.append(mr0)
             self.Profiles.append(profile0)
             self.figure.Draw_profiles(self.Profiles, self.Bead_Min_R)
@@ -5829,7 +5656,6 @@ class Ui_MainWindow(object):
         self.ImageType.setText(_translate("MainWindow", "Elsets"))
         self.checkBox_NdNo.setText(_translate("MainWindow", "Node No"))
         self.checkBox_ElNo.setText(_translate("MainWindow", "Element No"))
-        self.checkBox_NodeOut.setText(_translate("MainWindow", "Save Outer Nodes"))
 
         self.checkBox_ElsetNode.setText(_translate("MainWindow", "Node No"))
         self.checkBox_ElsetElement.setText(_translate("MainWindow", "Element No"))
@@ -6068,7 +5894,7 @@ class myCanvas(FigureCanvas):
 
     def onReleased(self, event): 
         
-        dotsize = 2 
+        
         if event.button == 2: 
             self.mclick += 1
 
@@ -6137,7 +5963,7 @@ class myCanvas(FigureCanvas):
                     self.cxs.append(tx)
                     self.cys.append(ty)
 
-                    d, = plt.plot(tx, ty, 'o', color='gray', markersize=dotsize)
+                    d, = plt.plot(tx, ty, 'o', color='gray')
                     self.dots.append(d)
                     
 
@@ -6174,8 +6000,8 @@ class myCanvas(FigureCanvas):
 
                         self.cxs.append(tx)
                         self.cys.append(ty)
-                        # d, = plt.plot(cx, cy, 'o', color='red')
-                        # self.dots.append(d)
+                        d, = plt.plot(cx, cy, 'o', color='red')
+                        self.dots.append(d)
 
                          
                         ch = plt.text((self.cxs[0]+self.cxs[1])/2.0, (self.cys[0]+self.cys[1])/2.0, "R="+str(round(R*1000, 2)), size=self.fontsize, color='black')
@@ -6186,7 +6012,7 @@ class myCanvas(FigureCanvas):
                             print (" Center = %.3E, %.3E"%(-B/A*500, -C/A*500))
                             print (" Radius = %.3E"%(math.sqrt(SQRT) /abs(A)*500))
                         else: 
-                            crcl = plt.Circle((cx, cy), R, color='orange', fill=False, linewidth=dotsize/3)
+                            crcl = plt.Circle((cx, cy), R, color='gray', fill=False)
                             self.ax.add_artist(crcl)
                             self.circle.append(crcl)
                     self.mclick = 0 
@@ -6206,15 +6032,14 @@ class myCanvas(FigureCanvas):
                     self.cxs.append(tx)
                     self.cys.append(ty)
 
-                    d, = plt.plot(tx, ty, 'o', color='gray', markersize=dotsize)
+                    d, = plt.plot(tx, ty, 'o', color='gray')
                     self.dots.append(d)
 
-            self.plot_current_display_range()
-            # current_xlim=self.ax.get_xlim()
-            # current_ylim=self.ax.get_ylim()
-            # plt.xlim(current_xlim[0], current_xlim[1])
-            # plt.ylim(current_ylim[0], current_ylim[1])
-            # self.figure.canvas.draw_idle()
+            current_xlim=self.ax.get_xlim()
+            current_ylim=self.ax.get_ylim()
+            plt.xlim(current_xlim[0], current_xlim[1])
+            plt.ylim(current_ylim[0], current_ylim[1])
+            self.figure.canvas.draw_idle()
 
         elif event.button == 1: 
             self.clicked =0  
@@ -6251,7 +6076,7 @@ class myCanvas(FigureCanvas):
             self.cline=[]
             self.llen=[]
 
-            self.plot_current_display_range()
+            self.figure.canvas.draw_idle()
 
         elif event.button ==3:
             self.clicked += 1
@@ -6297,14 +6122,12 @@ class myCanvas(FigureCanvas):
                             ch = plt.text(tx+shift, ty+shift, 'Temperature=%.2f'%(self.temperature_node[lx][4]), size=self.fontsize)
                             self.chars.append(ch)
 
-                            self.plot_current_display_range()
-
-                            # current_xlim=self.ax.get_xlim()
-                            # current_ylim=self.ax.get_ylim()
-                            # plt.xlim(current_xlim[0], current_xlim[1])
-                            # plt.ylim(current_ylim[0], current_ylim[1])
+                            current_xlim=self.ax.get_xlim()
+                            current_ylim=self.ax.get_ylim()
+                            plt.xlim(current_xlim[0], current_xlim[1])
+                            plt.ylim(current_ylim[0], current_ylim[1])
                             
-                            # self.figure.canvas.draw_idle()
+                            self.figure.canvas.draw_idle()
                 
                     return 
                 else: 
@@ -6319,10 +6142,12 @@ class myCanvas(FigureCanvas):
                         if len(indy) > 0: 
                             ind = np.intersect1d(indx, indy) 
                     if len(ind) > 0 : 
+                        print ("%.6f, %.6f"%(event.xdata, event.ydatay))
                         mn = []
                         for ix in ind: 
                             l = math.sqrt( (event.xdata - self.points[ix][2])**2 + (event.ydata - self.points[ix][3])**2 )
                             mn.append([ix, l])
+                            
                         mn = np.array(mn)
                         lmin = np.min(mn[:,1]) 
                         lx = -1
@@ -6333,6 +6158,8 @@ class myCanvas(FigureCanvas):
                         if lx >=0: 
                             tx = self.points[lx][2]
                             ty = self.points[lx][3]
+
+                            
                             # print ("B3", self.points[lx])
                     else: 
                         self.clicked -= 1
@@ -6354,9 +6181,8 @@ class myCanvas(FigureCanvas):
             self.lxs.append(tx)
             self.lys.append(ty)
             
-            d, = plt.plot(tx, ty, 'o', color='red', markersize=dotsize)
+            d, = plt.plot(tx, ty, 'o', color='red')
             self.dots.append(d)
-            # print ("%.6f, %.6f"%(tx, ty))
             N = len(self.lxs)-1
             if N> 0: 
                 self.distance = round( math.sqrt((self.lxs[N]-self.lxs[N-1])**2 + (self.lys[N]-self.lys[N-1])**2 ) *1000, 2)
@@ -6365,7 +6191,7 @@ class myCanvas(FigureCanvas):
                 ch = plt.text((self.lxs[N]+self.lxs[N-1])/2.0, (self.lys[N]+self.lys[N-1])/2.0, str(self.distance), size=self.fontsize)
                 self.chars.append(ch)
 
-                ln, = plt.plot([self.lxs[N-1], self.lxs[N]],[self.lys[N-1], self.lys[N]], color='red', linewidth=dotsize/3)
+                ln, = plt.plot([self.lxs[N-1], self.lxs[N]],[self.lys[N-1], self.lys[N]], color='orange')
                 self.lines.append(ln)
 
                 if self.clicked > 2: 
@@ -6392,17 +6218,15 @@ class myCanvas(FigureCanvas):
                     self.cline=[]
                     
                     self.distance = round( math.sqrt((self.lxs[N]-self.lxs[0])**2 + (self.lys[N]-self.lys[0])**2 ) *1000, 2)
-                    # ch = plt.text((self.lxs[N]+self.lxs[0])/2.0, (self.lys[N]+self.lys[0])/2.0, str(self.distance), color='gray', size=self.fontsize)
-                    # self.llen.append(ch)
-                    ln, = plt.plot([self.lxs[0], self.lxs[N]],[self.lys[0], self.lys[N]], color='gray', linestyle="--", linewidth=dotsize/3 )
+                    ch = plt.text((self.lxs[N]+self.lxs[0])/2.0, (self.lys[N]+self.lys[0])/2.0, str(self.distance), color='gray', size=self.fontsize)
+                    self.llen.append(ch)
+                    ln, = plt.plot([self.lxs[0], self.lxs[N]],[self.lys[0], self.lys[N]], color='gray', linestyle="--" )
                     self.cline.append(ln)
-            # current_xlim=self.ax.get_xlim()
-            # current_ylim=self.ax.get_ylim()
-            # plt.xlim(current_xlim[0], current_xlim[1])
-            # plt.ylim(current_ylim[0], current_ylim[1])
-            # self.figure.canvas.draw_idle()
-            self.plot_current_display_range()
-
+            current_xlim=self.ax.get_xlim()
+            current_ylim=self.ax.get_ylim()
+            plt.xlim(current_xlim[0], current_xlim[1])
+            plt.ylim(current_ylim[0], current_ylim[1])
+            self.figure.canvas.draw_idle()
 
     def ComparingMode(self, edge0, node0, xy0, edge1, node1, xy1): 
         self.figure.clear()
@@ -6505,13 +6329,11 @@ class myCanvas(FigureCanvas):
                     nd = self.ax.scatter(Xs, Ys, s=size, c='gray' )    
 
             self.dots.append(nd)
-
-        self.plot_current_display_range()
-        # current_xlim=self.ax.get_xlim()
-        # current_ylim=self.ax.get_ylim()
-        # plt.xlim(current_xlim[0], current_xlim[1])
-        # plt.ylim(current_ylim[0], current_ylim[1])
-        # self.figure.canvas.draw_idle()
+        current_xlim=self.ax.get_xlim()
+        current_ylim=self.ax.get_ylim()
+        plt.xlim(current_xlim[0], current_xlim[1])
+        plt.ylim(current_ylim[0], current_ylim[1])
+        self.figure.canvas.draw_idle()
 
     def OnlyAddingNode(self, nodes, size, color=0, vmin=0, vmax=0 ): 
         # self.dots = []
@@ -6530,12 +6352,11 @@ class myCanvas(FigureCanvas):
 
             self.dots.append(nd)
 
-        self.plot_current_display_range()
-        # current_xlim=self.ax.get_xlim()
-        # current_ylim=self.ax.get_ylim()
-        # plt.xlim(current_xlim[0], current_xlim[1])
-        # plt.ylim(current_ylim[0], current_ylim[1])
-        # self.figure.canvas.draw_idle()
+        current_xlim=self.ax.get_xlim()
+        current_ylim=self.ax.get_ylim()
+        plt.xlim(current_xlim[0], current_xlim[1])
+        plt.ylim(current_ylim[0], current_ylim[1])
+        self.figure.canvas.draw_idle()
             
     def Clear_ElsetBoundary(self): 
         try: 
@@ -6544,12 +6365,11 @@ class myCanvas(FigureCanvas):
 
             for txt in self.settexts: 
                 txt.set_visible(False)
-            self.plot_current_display_range()
-            # current_xlim=self.ax.get_xlim()
-            # current_ylim=self.ax.get_ylim()
-            # plt.xlim(current_xlim[0], current_xlim[1])
-            # plt.ylim(current_ylim[0], current_ylim[1])
-            # self.figure.canvas.draw_idle()
+            current_xlim=self.ax.get_xlim()
+            current_ylim=self.ax.get_ylim()
+            plt.xlim(current_xlim[0], current_xlim[1])
+            plt.ylim(current_ylim[0], current_ylim[1])
+            self.figure.canvas.draw_idle()
         except: 
             pass 
     
@@ -6677,12 +6497,11 @@ class myCanvas(FigureCanvas):
 
         except Exception : pass 
 
-        self.plot_current_display_range()
-        # current_xlim=self.ax.get_xlim()
-        # current_ylim=self.ax.get_ylim()
-        # plt.xlim(current_xlim[0], current_xlim[1])
-        # plt.ylim(current_ylim[0], current_ylim[1])
-        # self.figure.canvas.draw_idle()
+        current_xlim=self.ax.get_xlim()
+        current_ylim=self.ax.get_ylim()
+        plt.xlim(current_xlim[0], current_xlim[1])
+        plt.ylim(current_ylim[0], current_ylim[1])
+        self.figure.canvas.draw_idle()
 
 
     def Add_ElsetBoundary(self, name, elements, nodes, nid, eid,  allelsets, npel): 
@@ -6769,12 +6588,11 @@ class myCanvas(FigureCanvas):
 
             self.LineEL.append(line) 
 
-        self.plot_current_display_range()
-        # current_xlim=self.ax.get_xlim()
-        # current_ylim=self.ax.get_ylim()
-        # plt.xlim(current_xlim[0], current_xlim[1])
-        # plt.ylim(current_ylim[0], current_ylim[1])
-        # self.figure.canvas.draw_idle()
+        current_xlim=self.ax.get_xlim()
+        current_ylim=self.ax.get_ylim()
+        plt.xlim(current_xlim[0], current_xlim[1])
+        plt.ylim(current_ylim[0], current_ylim[1])
+        self.figure.canvas.draw_idle()
 
 
     def getplotinformation(self, node, element, elset, surface, tie, xy=23, add2d=[]):
@@ -6794,43 +6612,38 @@ class myCanvas(FigureCanvas):
             self.y.append(nd[Y])
 
         for el in element.Element:
-            try: 
-                if el[6] == 3: 
-                    x1 = el[10][0][0]; y1 = el[10][0][1]
-                    x2 = el[10][1][0]; y2 = el[10][1][1]
-                    x3 = el[10][2][0]; y3 = el[10][2][1]
-                    icolor = Color(el[5])
-                    # polygon = plt.Polygon([[x1, y1], [x2, y2], [x3, y3]], color=icolor, alpha=cdepth, lw=MeshLineWidth)
-                    polygon = [[[x1, y1], [x2, y2], [x3, y3]], icolor]
-                    self.polygons.append(polygon)
-                    self.eid.append(el[0])
-                    self.ex.append((x1 + x2 + x3 )/3)
-                    self.ey.append((y1 + y2 + y3 )/3)
-                    
-                elif el[6] == 4: 
-                    x1 = el[10][0][0]; y1 = el[10][0][1]
-                    x2 = el[10][1][0]; y2 = el[10][1][1]
-                    x3 = el[10][2][0]; y3 = el[10][2][1]
-                    x4 = el[10][3][0]; y4 = el[10][3][1]
-                    icolor = Color(el[5])
-                    # polygon = plt.Polygon([[x1, y1], [x2, y2], [x3, y3], [x4, y4]], color=icolor, alpha=cdepth, lw=MeshLineWidth)
-                    polygon = [[[x1, y1], [x2, y2], [x3, y3], [x4, y4]], icolor]
-                    self.polygons.append(polygon)
-                    self.eid.append(el[0])
-                    self.ex.append((x1 + x2 + x3 + x4)/4)
-                    self.ey.append((y1 + y2 + y3 + y4)/4)
-                else:
-                    x1 = el[10][0][0]; y1 = el[10][0][1]
-                    x2 = el[10][1][0]; y2 = el[10][1][1]
-                    polygon = [[[x1, y1], [x2, y2]], Mcolor]
-                    self.polygons.append(polygon)
-                    self.eid.append(el[0])
-                    self.ex.append((x1 + x2 )/2)
-                    self.ey.append((y1 + y2 )/2)
-            except Exception as EX: 
-                print (EX)
-                continue 
+            if el[6] == 3: 
+                x1 = el[10][0][0]; y1 = el[10][0][1]
+                x2 = el[10][1][0]; y2 = el[10][1][1]
+                x3 = el[10][2][0]; y3 = el[10][2][1]
+                icolor = Color(el[5])
+                # polygon = plt.Polygon([[x1, y1], [x2, y2], [x3, y3]], color=icolor, alpha=cdepth, lw=MeshLineWidth)
+                polygon = [[[x1, y1], [x2, y2], [x3, y3]], icolor]
+                self.polygons.append(polygon)
+                self.eid.append(el[0])
+                self.ex.append((x1 + x2 + x3 )/3)
+                self.ey.append((y1 + y2 + y3 )/3)
                 
+            elif el[6] == 4: 
+                x1 = el[10][0][0]; y1 = el[10][0][1]
+                x2 = el[10][1][0]; y2 = el[10][1][1]
+                x3 = el[10][2][0]; y3 = el[10][2][1]
+                x4 = el[10][3][0]; y4 = el[10][3][1]
+                icolor = Color(el[5])
+                # polygon = plt.Polygon([[x1, y1], [x2, y2], [x3, y3], [x4, y4]], color=icolor, alpha=cdepth, lw=MeshLineWidth)
+                polygon = [[[x1, y1], [x2, y2], [x3, y3], [x4, y4]], icolor]
+                self.polygons.append(polygon)
+                self.eid.append(el[0])
+                self.ex.append((x1 + x2 + x3 + x4)/4)
+                self.ey.append((y1 + y2 + y3 + y4)/4)
+            else:
+                x1 = el[10][0][0]; y1 = el[10][0][1]
+                x2 = el[10][1][0]; y2 = el[10][1][1]
+                polygon = [[[x1, y1], [x2, y2]], Mcolor]
+                self.polygons.append(polygon)
+                self.eid.append(el[0])
+                self.ex.append((x1 + x2 )/2)
+                self.ey.append((y1 + y2 )/2)
 
         if len(add2d) > 0: 
             icolor = 'black'
@@ -6889,8 +6702,6 @@ class myCanvas(FigureCanvas):
                 # print (en, N1, N2)
                 s1 = node.NodeByID(N1)
                 s2 = node.NodeByID(N2)
-                if s1[3] ==0 or s2 ==0: 
-                    continue 
                 x1 = s1[X];                y1 = s1[Y]
                 x2 = s2[X];                y2 = s2[Y]
 
@@ -6931,8 +6742,6 @@ class myCanvas(FigureCanvas):
                                 break
                         s1 = node.NodeByID(N1)
                         s2 = node.NodeByID(N2)
-                        if s1[3] ==0 or s2 ==0:  continue 
-
                         x1 = s1[X];                y1 = s1[Y]
                         x2 = s2[X];                y2 = s2[Y]
                         self.stie.append([[x1, y1], [x2, y2]])
@@ -6964,7 +6773,6 @@ class myCanvas(FigureCanvas):
                                 break
                         s1 = node.NodeByID(N1)
                         s2 = node.NodeByID(N2)
-                        if s1[3] ==0 or s2 ==0:  continue 
                         x1 = s1[X];                y1 = s1[Y]
                         x2 = s2[X];                y2 = s2[Y]
                         self.mtie.append([[x1, y1], [x2, y2]])
@@ -6991,10 +6799,8 @@ class myCanvas(FigureCanvas):
         try:
             self.searchdots.remove()
         except:
-            pass
-
-        self.plot_current_display_range() 
-        # self.figure.canvas.draw_idle()
+            pass 
+        self.figure.canvas.draw_idle()
 
         self.id_poly = []
         self.searchdots= []
@@ -7059,8 +6865,7 @@ class myCanvas(FigureCanvas):
                 ch=self.ax.text(searchx[i], searchy[i], d, color='green', size=textsize)
                 self.searchchars.append(ch)
 
-        self.plot_current_display_range()
-        # self.figure.canvas.draw_idle()
+        self.figure.canvas.draw_idle()
     def NIDShow(self, show=0): 
         if show ==1: 
             nodecolor = 'gray'
@@ -7071,12 +6876,11 @@ class myCanvas(FigureCanvas):
         else: 
             for nch in self.nodechars: 
                 nch.set_visible(False)
-        # current_xlim=self.ax.get_xlim()
-        # current_ylim=self.ax.get_ylim()
-        # plt.xlim(current_xlim[0], current_xlim[1])
-        # plt.ylim(current_ylim[0], current_ylim[1])
-        # self.figure.canvas.draw_idle()
-        self.plot_current_display_range()
+        current_xlim=self.ax.get_xlim()
+        current_ylim=self.ax.get_ylim()
+        plt.xlim(current_xlim[0], current_xlim[1])
+        plt.ylim(current_ylim[0], current_ylim[1])
+        self.figure.canvas.draw_idle()
     def EIDShow(self, show=0): 
         if show ==1: 
             soltextcolor = 'steelblue'
@@ -7087,12 +6891,11 @@ class myCanvas(FigureCanvas):
         else: 
             for nch in self.elchars: 
                 nch.set_visible(False)
-        # current_xlim=self.ax.get_xlim()
-        # current_ylim=self.ax.get_ylim()
-        # plt.xlim(current_xlim[0], current_xlim[1])
-        # plt.ylim(current_ylim[0], current_ylim[1])
-        # self.figure.canvas.draw_idle()
-        self.plot_current_display_range()
+        current_xlim=self.ax.get_xlim()
+        current_ylim=self.ax.get_ylim()
+        plt.xlim(current_xlim[0], current_xlim[1])
+        plt.ylim(current_ylim[0], current_ylim[1])
+        self.figure.canvas.draw_idle()
     def Displaysets(self, dsurface, delset, element, cdepth=0.5, mdepth=0.8,  xy=23, sshow=1, eshow=1):
         X = int(xy/10)
         Y = int(xy%10) 
@@ -7190,7 +6993,7 @@ class myCanvas(FigureCanvas):
         plt.xlim(xmin-0.01, xmax+0.01)
         plt.ylim(ymin-0.01, ymax+0.01)
         self.figure.canvas.draw()
-    def gplot(self,  node, element, elset=None, surface=None, tie=None, xy=23, size=0.1, ni=0, ei=0, si=0, ti=0, srr=0, srl=0, spr=0, srd=0, cdepth=0.5,  mdepth=0.8, snode=[], sel=[], rims=[]):
+    def gplot(self,  node, element, elset, surface, tie, xy=23, size=0.1, ni=0, ei=0, si=0, ti=0, srr=0, srl=0, spr=0, srd=0, cdepth=0.5,  mdepth=0.8, snode=[], sel=[], rims=[]):
         X = int(xy/10)
         Y = int(xy%10)
 
@@ -7213,30 +7016,12 @@ class myCanvas(FigureCanvas):
         self.nodechars=[]
 
         self.temperature_mode = False 
-
-        # print (" ** ", len(node.Node),  len(element.Element))
         if len(node.Node) == 0 or len(element.Element) == 0: 
             self.figure.clear()
             self.ax = self.figure.add_subplot(111)
             self.ax.axis("equal")
             self.figure.canvas.mpl_connect('button_release_event', self.onReleased)
             self.figure.canvas.draw()
-        elif len(node.Node) and len(element.Element) == 0: 
-            self.figure.clear()
-            self.ax = self.figure.add_subplot(111)
-            self.ax.axis("equal")
-            npn = np.array(node.Node)
-
-            self.ax.scatter(npn[:,2], npn[:,3]) 
-
-            self.points = np.array(node.Node)
-
-            self.figure.canvas.mpl_connect('button_release_event', self.onReleased)
-            self.figure.canvas.mpl_connect('scroll_event',self.zoom)
-            self.figure.canvas.mpl_connect('button_press_event', self.onclick)
-            self.figure.canvas.draw()
-
-
         else:
             if self.pei ==0 and ei ==1: 
                 for i, d in enumerate(self.eid):
@@ -7248,8 +7033,7 @@ class myCanvas(FigureCanvas):
                         self.ax.text(self.x[i], self.y[i], d, color=nodecolor, size=textsize)
                 self.figure.canvas.mpl_connect('button_release_event', self.onReleased)
                 # self.figure.canvas.draw()
-                # self.figure.canvas.draw_idle()
-                self.plot_current_display_range()
+                self.figure.canvas.draw_idle()
             elif self.pni ==0 and ni ==1: 
                 for i, d in enumerate(self.nid): 
                     self.ax.text(self.x[i], self.y[i], d, color=nodecolor, size=textsize)
@@ -7258,8 +7042,7 @@ class myCanvas(FigureCanvas):
                     for i, d in enumerate(self.eid):
                         self.ax.text(self.ex[i], self.ey[i], d, color=soltextcolor, size=textsize )
                 self.figure.canvas.mpl_connect('button_release_event', self.onReleased)
-                # self.figure.canvas.draw_idle()
-                self.plot_current_display_range()
+                self.figure.canvas.draw_idle()
             else:
                 self.figure.clear()
                 self.ax = self.figure.add_subplot(111)
@@ -7609,20 +7392,13 @@ class myCanvas(FigureCanvas):
             self.searchdots.remove()
         except:
             pass 
-        # self.figure.canvas.draw_idle()
-        self.plot_current_display_range()
+        self.figure.canvas.draw_idle()
 
         self.id_poly = []
         self.searchdots= []
         self.searchchars=[]
 
-    def plot_current_display_range(self): 
-        current_xlim=self.ax.get_xlim()
-        current_ylim=self.ax.get_ylim()
-        plt.xlim(current_xlim[0], current_xlim[1])
-        plt.ylim(current_ylim[0], current_ylim[1])
-        self.figure.canvas.draw_idle()
-         
+
 def Angle_3nodes(n1=[], n2=[], n3=[], xy=0): ## n2 : mid node 
     v1 = [n1[1]-n2[1], n1[2]-n2[2], n1[3]-n2[3] ]
     v2 = [n3[1]-n2[1], n3[2]-n2[2], n3[3]-n2[3] ]
@@ -7636,7 +7412,7 @@ def Angle_3nodes(n1=[], n2=[], n3=[], xy=0): ## n2 : mid node
         angle = math.acos(cos)
 
     return angle
-    
+
 
 
 if __name__ == "__main__":

@@ -6,6 +6,16 @@
 #
 # WARNING! All changes made in this file will be lost!
 
+"""
+Version History 
+
+V2.001
+  - date : 2021.12.08
+  - add log history 
+  - Add Elset Set : JPC1, CAX3H, CAX4H, MAX1
+
+"""
+
 ## make exe file 
 ## pip install pyinstaller
 ## pyinstaller -F *.py 
@@ -18,8 +28,9 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QListWidget, QListWidgetItem
 
 import math, struct
-from os import getcwd
+from os import getcwd, remove
 from os.path import isfile
+
 # import numpy as np
 import numpy as np 
 
@@ -90,6 +101,15 @@ TireComponents = [
 TreadElset = ['CTB', 'SUT', 'CTR', 'UTR', 'TRW']
 ChaferName = ['CH1', 'CH2', 'CH3', 'SCF', 'NCF']
 lst_colors = ['black', 'red', 'blue', 'green', 'orange', 'gray','pink', 'brown', 'olive', 'cyan', 'purple']
+
+def timer(func): 
+    def wrapper(*args, **kwargs): 
+        start = time.time()
+        rv = func(*args, **kwargs)
+        total = time.time() - start
+        print (" Time: %.2f"%(total))
+        return rv 
+    return wrapper 
 
 def readSDB(sdb): 
 
@@ -1214,8 +1234,6 @@ def Distribution_From_CenterValue(npn, elements, elsets, vmin=0.0, vmax=1.0, tie
                     px = np.append(px, tx, axis=0)
                     py = np.append(py, ty, axis=0)
                     pv = np.append(pv, tv, axis=0)
-
-            
 
 def CenterValueToInnerValues(N, E, NR=0.98, G= 0.15E-3, **args):
     for key, value in args.items():
@@ -4804,6 +4822,59 @@ class Ui_MainWindow(object):
         self._stdout = StdoutRedirect()
         self._stdout.start()
         self._stdout.printOccur.connect(lambda x : self._append_text(x))
+
+        self.usingLog()
+        
+
+    def usingLog(self): 
+        host = '10.82.66.65'
+        user = 'h20200155'
+        pw = user
+        port = 22 
+        import paramiko as FTP 
+        import socket
+        self.ftp = FTP.SSHClient()
+        self.ftp.set_missing_host_key_policy(FTP.AutoAddPolicy())
+
+        try: 
+            self.ftp.connect(host, username=user, password=pw, port=port, timeout=1)
+            self.sftp = self.ftp.open_sftp()
+
+            logfile ="/home/users/h20200155/MyProgram/MeshViewer_log.txt"
+            locallog = 'MeshViewer_log.txt'
+            self.sftp.get(logfile, locallog)
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            local_add = s.getsockname()[0]
+            s.close()
+
+            with open(locallog) as LF: 
+                lines = LF.readlines()
+            
+            if not len(lines): lines =["\n"]
+
+            cnt = 1 
+            for i, line in enumerate(lines): 
+                wds = line.split(",")
+                if wds[0].strip() == local_add: 
+                    cnt = int(wds[1].strip())+1 
+                    lines[i] = "%s,%4d, %s\n"%(wds[0].strip(), cnt, str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())) )
+                    break 
+            else: 
+                firstline= "%s,%4d, %s\n"%(local_add, cnt, str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())) )
+                lines[0]= firstline + lines[0] 
+
+            fp = open(locallog, 'w')
+            fp.writelines(lines)
+            fp.close()
+
+            self.sftp.put(locallog, logfile)
+        except Exception as EX: 
+            print(EX)
+
+        if isfile(locallog) : 
+            remove(locallog)
+        self.ftp.close()
 
 
     def selectionQt_list(self): 

@@ -4359,15 +4359,56 @@ def Color(elsetname):                ## Define Color set
         c = 'silver'
     return c
 
+
 class Ui_MainWindow(object):
 
     def __init__(self):
         super().__init__()
         self.setupUi(MainWindow)
+        MainWindow.setAcceptDrops(True)
+
+    def dragEnterEvent(self, e):
+        """
+        This function will detect the drag enter event from the mouse on the main window
+        """
+        print('drag-enter')
+        if e.mimeData().hasUrls:
+            e.accept()
+        else:
+            e.ignore()
+
+    def dragMoveEvent(self,e):
+        """
+        This function will detect the drag move event on the main window
+        """
+        print('drag-move')
+        if e.mimeData().hasUrls:
+            e.accept()
+        else:
+            e.ignore()
+    
+    def dropEvent(self, e): 
+        """
+		This function will enable the drop file directly on to the 
+		main window. The file location will be stored in the self.filename
+		"""
+        print('drag-drop')
+        if e.mineData().hasurls(): 
+            e.setDropAction(QtCore.Qt.CopyAction)
+            e.accetp()
+            for url in e.mimeData().urls(): 
+                fname = str(url.toLocalFile())
+        else: 
+            e.ignore()
+
+        print(fname)
+            
+        self.call2Dmesh(manualfile=fname)
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1164, 803)
+        
 
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap("mesh.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -4819,13 +4860,14 @@ class Ui_MainWindow(object):
 
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
-        self._stdout = StdoutRedirect()
-        self._stdout.start()
-        self._stdout.printOccur.connect(lambda x : self._append_text(x))
+        # self._stdout = StdoutRedirect()
+        # self._stdout.start()
+        # self._stdout.printOccur.connect(lambda x : self._append_text(x))
 
         self.usingLog()
         
-
+    
+    
     def usingLog(self): 
         host = '10.82.66.65'
         user = 'h20200155'

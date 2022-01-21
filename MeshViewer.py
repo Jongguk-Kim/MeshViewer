@@ -22,6 +22,7 @@ V2.001
 ## pyinstaller .exe --onefile --windowwed *.py 
 # from matplotlib import use
 # use('TkAgg')
+from contextlib import redirect_stderr
 import matplotlib.pyplot as plt
 # plt.style.use( 'ggplot') 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -4859,14 +4860,14 @@ class Ui_MainWindow(object):
 
 
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
-
-        # self._stdout = StdoutRedirect()
-        # self._stdout.start()
-        # self._stdout.printOccur.connect(lambda x : self._append_text(x))
+        
 
         self.usingLog()
         
-    
+    def redirect(self): 
+        self._stdout = StdoutRedirect()
+        self._stdout.start()
+        self._stdout.printOccur.connect(lambda x : self._append_text(x))
     
     def usingLog(self): 
         host = '10.82.66.65'
@@ -7758,6 +7759,7 @@ if __name__ == "__main__":
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
     ui.setupUi(MainWindow)
+    ui.redirect()
     MainWindow.show()
     sys.exit(app.exec_())
 

@@ -4891,21 +4891,23 @@ class Ui_MainWindow(object):
             local_add = s.getsockname()[0]
             s.close()
 
-            with open(locallog) as LF: 
-                lines = LF.readlines()
-            
-            if not len(lines): lines =["\n"]
+            cnt = 1
+            lines=  "%15s,%5d, %s\n"%(local_add, cnt, str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())) )
 
-            cnt = 1 
-            for i, line in enumerate(lines): 
-                wds = line.split(",")
-                if wds[0].strip() == local_add: 
-                    cnt = int(wds[1].strip())+1 
-                    lines[i] = "%s,%4d, %s\n"%(wds[0].strip(), cnt, str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())) )
-                    break 
-            else: 
-                firstline= "%s,%4d, %s\n"%(local_add, cnt, str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())) )
-                lines[0]= firstline + lines[0] 
+            with open(locallog) as LF: 
+                words = LF.readlines()
+
+            if len(words): 
+                if  words[0].split(",")[0].strip() == local_add: 
+                    w = words[0].split(",") 
+                    cnt = int(w[1].strip())+1
+                    words[0] = "%15s,%5d, %s\n"%(local_add, cnt, str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())) )
+                    lines =""
+
+                for i, wd in enumerate(words): 
+                    if i > 5000: break 
+                    lines += wd 
+
 
             fp = open(locallog, 'w')
             fp.writelines(lines)

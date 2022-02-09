@@ -121,7 +121,7 @@ def load_pyVista_mesh(file_name, centering=False):
     edges = grid.extract_feature_edges(feature_angle=45, boundary_edges=False)
     surfaces = grid.extract_surface()
     print(" Mesh Volume", grid.volume)
-    return grid, edges, pt_cloud, surfaces
+    return grid, edges, pt_cloud, surfaces, nodes
 
 def lighting(): 
     # setup lighting

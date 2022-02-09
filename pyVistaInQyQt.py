@@ -13,6 +13,7 @@ from click import progressbar
 import pyVista as Mesh  
 from pyvistaqt import QtInteractor, MainWindow
 import os 
+import numpy as np 
 
 colors=['linen', 
     'silver', 'gray', 'linen', \
@@ -53,50 +54,105 @@ class Ui_MainWindow(object):
         self.comboBox.addItem("")
         self.comboBox.addItem("")
         self.horizontalLayout.addWidget(self.comboBox)
+        self.verticalLayout_Opecity = QtWidgets.QVBoxLayout()
+        self.verticalLayout_Opecity.setObjectName("verticalLayout_Opecity")
         self.label_opecity = QtWidgets.QLabel(self.centralwidget)
-        self.label_opecity.setMaximumSize(QtCore.QSize(80, 30))
+        self.label_opecity.setMaximumSize(QtCore.QSize(80, 15))
         self.label_opecity.setAlignment(QtCore.Qt.AlignCenter)
         self.label_opecity.setObjectName("label_opecity")
-        self.horizontalLayout.addWidget(self.label_opecity)
+        self.verticalLayout_Opecity.addWidget(self.label_opecity)
         self.horizontalSlider_opacity = QtWidgets.QSlider(self.centralwidget)
-        self.horizontalSlider_opacity.setMaximumSize(QtCore.QSize(150, 30))
+        self.horizontalSlider_opacity.setMaximumSize(QtCore.QSize(80, 15))
         self.horizontalSlider_opacity.setMaximum(100)
         self.horizontalSlider_opacity.setSingleStep(5)
         self.horizontalSlider_opacity.setProperty("value", 100)
         self.horizontalSlider_opacity.setOrientation(QtCore.Qt.Horizontal)
         self.horizontalSlider_opacity.setObjectName("horizontalSlider_opacity")
-        self.horizontalLayout.addWidget(self.horizontalSlider_opacity)
+        self.verticalLayout_Opecity.addWidget(self.horizontalSlider_opacity)
+        self.horizontalLayout.addLayout(self.verticalLayout_Opecity)
+        self.verticalLayout_edges = QtWidgets.QVBoxLayout()
+        self.verticalLayout_edges.setObjectName("verticalLayout_edges")
         self.checkBox_showEdges = QtWidgets.QCheckBox(self.centralwidget)
         self.checkBox_showEdges.setMaximumSize(QtCore.QSize(60, 30))
         self.checkBox_showEdges.setObjectName("checkBox_showEdges")
-        self.horizontalLayout.addWidget(self.checkBox_showEdges)
+        self.verticalLayout_edges.addWidget(self.checkBox_showEdges)
         self.checkBox_meshLine = QtWidgets.QCheckBox(self.centralwidget)
         self.checkBox_meshLine.setMaximumSize(QtCore.QSize(90, 30))
         self.checkBox_meshLine.setChecked(True)
         self.checkBox_meshLine.setObjectName("checkBox_meshLine")
-        self.horizontalLayout.addWidget(self.checkBox_meshLine)
+        self.verticalLayout_edges.addWidget(self.checkBox_meshLine)
+        self.horizontalLayout.addLayout(self.verticalLayout_edges)
+        self.verticalLayout_solid_Jaco = QtWidgets.QVBoxLayout()
+        self.verticalLayout_solid_Jaco.setObjectName("verticalLayout_solid_Jaco")
+        self.checkBox_Solid = QtWidgets.QCheckBox(self.centralwidget)
+        self.checkBox_Solid.setMaximumSize(QtCore.QSize(80, 15))
+        self.checkBox_Solid.setObjectName("checkBox_Solid")
+        self.verticalLayout_solid_Jaco.addWidget(self.checkBox_Solid)
         self.checkBox_jacobian = QtWidgets.QCheckBox(self.centralwidget)
-        self.checkBox_jacobian.setMaximumSize(QtCore.QSize(80, 30))
+        self.checkBox_jacobian.setMaximumSize(QtCore.QSize(80, 15))
         self.checkBox_jacobian.setObjectName("checkBox_jacobian")
-        self.horizontalLayout.addWidget(self.checkBox_jacobian)
+        self.verticalLayout_solid_Jaco.addWidget(self.checkBox_jacobian)
+        self.horizontalLayout.addLayout(self.verticalLayout_solid_Jaco)
+        self.verticalLayout_xClipping = QtWidgets.QVBoxLayout()
+        self.verticalLayout_xClipping.setObjectName("verticalLayout_xClipping")
         self.checkBox_clipping_X = QtWidgets.QCheckBox(self.centralwidget)
-        self.checkBox_clipping_X.setMaximumSize(QtCore.QSize(60, 30))
+        self.checkBox_clipping_X.setMaximumSize(QtCore.QSize(60, 15))
         self.checkBox_clipping_X.setObjectName("checkBox_clipping_X")
-        self.horizontalLayout.addWidget(self.checkBox_clipping_X)
-        self.lineEdit_x_clip_offset = QtWidgets.QLineEdit(self.centralwidget)
-        self.lineEdit_x_clip_offset.setMaximumSize(QtCore.QSize(50, 30))
-        self.lineEdit_x_clip_offset.setAlignment(QtCore.Qt.AlignCenter)
-        self.lineEdit_x_clip_offset.setObjectName("lineEdit_x_clip_offset")
-        self.horizontalLayout.addWidget(self.lineEdit_x_clip_offset)
+        self.verticalLayout_xClipping.addWidget(self.checkBox_clipping_X)
+        self.checkBox_clipping_X_reverse = QtWidgets.QCheckBox(self.centralwidget)
+        self.checkBox_clipping_X_reverse.setMaximumSize(QtCore.QSize(70, 15))
+        self.checkBox_clipping_X_reverse.setObjectName("checkBox_clipping_X_reverse")
+        self.verticalLayout_xClipping.addWidget(self.checkBox_clipping_X_reverse)
+        self.horizontalLayout.addLayout(self.verticalLayout_xClipping)
+        self.horizontalSlider_x_clipping = QtWidgets.QSlider(self.centralwidget)
+        self.horizontalSlider_x_clipping.setMaximumSize(QtCore.QSize(80, 30))
+        self.horizontalSlider_x_clipping.setMaximum(100)
+        self.horizontalSlider_x_clipping.setSingleStep(5)
+        self.horizontalSlider_x_clipping.setProperty("value", 50)
+        self.horizontalSlider_x_clipping.setSliderPosition(50)
+        self.horizontalSlider_x_clipping.setOrientation(QtCore.Qt.Horizontal)
+        self.horizontalSlider_x_clipping.setObjectName("horizontalSlider_x_clipping")
+        self.horizontalLayout.addWidget(self.horizontalSlider_x_clipping)
+        self.verticalLayout_yClipping = QtWidgets.QVBoxLayout()
+        self.verticalLayout_yClipping.setObjectName("verticalLayout_yClipping")
+        self.checkBox_clipping_Y = QtWidgets.QCheckBox(self.centralwidget)
+        self.checkBox_clipping_Y.setMaximumSize(QtCore.QSize(60, 15))
+        self.checkBox_clipping_Y.setObjectName("checkBox_clipping_Y")
+        self.verticalLayout_yClipping.addWidget(self.checkBox_clipping_Y)
+        self.checkBox_clipping_Y_reverse = QtWidgets.QCheckBox(self.centralwidget)
+        self.checkBox_clipping_Y_reverse.setMaximumSize(QtCore.QSize(70, 15))
+        self.checkBox_clipping_Y_reverse.setObjectName("checkBox_clipping_Y_reverse")
+        self.verticalLayout_yClipping.addWidget(self.checkBox_clipping_Y_reverse)
+        self.horizontalLayout.addLayout(self.verticalLayout_yClipping)
+        self.horizontalSlider_y_clipping = QtWidgets.QSlider(self.centralwidget)
+        self.horizontalSlider_y_clipping.setMaximumSize(QtCore.QSize(80, 30))
+        self.horizontalSlider_y_clipping.setMaximum(100)
+        self.horizontalSlider_y_clipping.setSingleStep(5)
+        self.horizontalSlider_y_clipping.setProperty("value", 50)
+        self.horizontalSlider_y_clipping.setSliderPosition(50)
+        self.horizontalSlider_y_clipping.setOrientation(QtCore.Qt.Horizontal)
+        self.horizontalSlider_y_clipping.setObjectName("horizontalSlider_y_clipping")
+        self.horizontalLayout.addWidget(self.horizontalSlider_y_clipping)
+        self.verticalLayout_zClipping = QtWidgets.QVBoxLayout()
+        self.verticalLayout_zClipping.setObjectName("verticalLayout_zClipping")
         self.checkBox_clipping_Z = QtWidgets.QCheckBox(self.centralwidget)
-        self.checkBox_clipping_Z.setMaximumSize(QtCore.QSize(60, 30))
+        self.checkBox_clipping_Z.setMaximumSize(QtCore.QSize(60, 15))
         self.checkBox_clipping_Z.setObjectName("checkBox_clipping_Z")
-        self.horizontalLayout.addWidget(self.checkBox_clipping_Z)
-        self.lineEdit_z_clip_offset = QtWidgets.QLineEdit(self.centralwidget)
-        self.lineEdit_z_clip_offset.setMaximumSize(QtCore.QSize(50, 30))
-        self.lineEdit_z_clip_offset.setAlignment(QtCore.Qt.AlignCenter)
-        self.lineEdit_z_clip_offset.setObjectName("lineEdit_z_clip_offset")
-        self.horizontalLayout.addWidget(self.lineEdit_z_clip_offset)
+        self.verticalLayout_zClipping.addWidget(self.checkBox_clipping_Z)
+        self.checkBox_clipping_Z_reverse = QtWidgets.QCheckBox(self.centralwidget)
+        self.checkBox_clipping_Z_reverse.setMaximumSize(QtCore.QSize(70, 15))
+        self.checkBox_clipping_Z_reverse.setObjectName("checkBox_clipping_Z_reverse")
+        self.verticalLayout_zClipping.addWidget(self.checkBox_clipping_Z_reverse)
+        self.horizontalLayout.addLayout(self.verticalLayout_zClipping)
+        self.horizontalSlider_z_clipping = QtWidgets.QSlider(self.centralwidget)
+        self.horizontalSlider_z_clipping.setMaximumSize(QtCore.QSize(80, 30))
+        self.horizontalSlider_z_clipping.setMaximum(100)
+        self.horizontalSlider_z_clipping.setSingleStep(5)
+        self.horizontalSlider_z_clipping.setProperty("value", 50)
+        self.horizontalSlider_z_clipping.setSliderPosition(50)
+        self.horizontalSlider_z_clipping.setOrientation(QtCore.Qt.Horizontal)
+        self.horizontalSlider_z_clipping.setObjectName("horizontalSlider_z_clipping")
+        self.horizontalLayout.addWidget(self.horizontalSlider_z_clipping)
         self.gridLayout.addLayout(self.horizontalLayout, 0, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
@@ -115,10 +171,10 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.pushButton_openfile.setText(_translate("MainWindow", "open 3d mesh"))
         self.pushButton_add_Mesh.setText(_translate("MainWindow", "add Mesh"))
-        self.comboBox.setItemText(0, _translate("MainWindow", "gray"))
+        self.comboBox.setItemText(0, _translate("MainWindow", "wheat"))
         self.comboBox.setItemText(1, _translate("MainWindow", "lightblue"))
         self.comboBox.setItemText(2, _translate("MainWindow", "lightgreen"))
-        self.comboBox.setItemText(3, _translate("MainWindow", "wheat"))
+        self.comboBox.setItemText(3, _translate("MainWindow", "gray"))
         self.comboBox.setItemText(4, _translate("MainWindow", "aqua"))
         self.comboBox.setItemText(5, _translate("MainWindow", "pink"))
         self.comboBox.setItemText(6, _translate("MainWindow", "coral"))
@@ -127,13 +183,14 @@ class Ui_MainWindow(object):
         self.label_opecity.setText(_translate("MainWindow", "Opecity : 100"))
         self.checkBox_showEdges.setText(_translate("MainWindow", "Edges"))
         self.checkBox_meshLine.setText(_translate("MainWindow", "Mesh Line"))
+        self.checkBox_Solid.setText(_translate("MainWindow", "Solid"))
         self.checkBox_jacobian.setText(_translate("MainWindow", "Jacobian"))
         self.checkBox_clipping_X.setText(_translate("MainWindow", "Clip X"))
-        self.lineEdit_x_clip_offset.setText(_translate("MainWindow", "0.0"))
+        self.checkBox_clipping_X_reverse.setText(_translate("MainWindow", "Invert"))
+        self.checkBox_clipping_Y.setText(_translate("MainWindow", "Clip Y"))
+        self.checkBox_clipping_Y_reverse.setText(_translate("MainWindow", "Inverst"))
         self.checkBox_clipping_Z.setText(_translate("MainWindow", "Clip Z"))
-        self.lineEdit_z_clip_offset.setText(_translate("MainWindow", "0.0"))
-
-
+        self.checkBox_clipping_Z_reverse.setText(_translate("MainWindow", "Invert"))
 
     def operating(self): 
         self.actions()
@@ -141,7 +198,7 @@ class Ui_MainWindow(object):
         self.createFrame()
 
     def initialize(self): 
-        self.meshes=[]; self.points=[]; self.colors=[]; self.edges=[]; self.surfaces=[]
+        self.meshes=[]; self.points=[]; self.colors=[]; self.edges=[]; self.surfaces=[]; self.nodes=[]
         self.opecity = 1.0
         self.show_edges = False
         self.camera_position=None 
@@ -151,10 +208,17 @@ class Ui_MainWindow(object):
         self.xClipped = False
         self.yClipped = False
         self.zClipped = False
+        self.solidClip = False 
+        self.x_revClipping = False 
+        self.y_revClipping = False 
+        self.z_revClipping = False 
 
         self.xClippingShift = 0.0
         self.yClippingShift = 0.0
         self.zClippingShift = 0.0
+        self.xclippingScale = 1.0
+        self.yclippingScale = 1.0
+        self.zclippingScale = 1.0
 
         self.dfile = "qt_pyVista.dir"
         cwd =os.getcwd()
@@ -171,27 +235,51 @@ class Ui_MainWindow(object):
         self.pushButton_openfile.clicked.connect(self.openFile)
         self.pushButton_add_Mesh.clicked.connect(self.addMesh)
         self.horizontalSlider_opacity.valueChanged.connect(self.get_OpecityValue)
+        
         self.checkBox_showEdges.clicked.connect(self.showEdges)
         self.checkBox_jacobian.clicked.connect(self.showQualityCheck)
         self.checkBox_meshLine.clicked.connect(self.show_MeshLine)
+        self.checkBox_Solid.clicked.connect(self.choose_solid_surface)
 
         self.checkBox_clipping_X.clicked.connect(self.clipping_X)
+        self.checkBox_clipping_Y.clicked.connect(self.clipping_Y)
         self.checkBox_clipping_Z.clicked.connect(self.clipping_Z)
-        self.lineEdit_x_clip_offset.returnPressed.connect(self.clipping_X)
-        self.lineEdit_z_clip_offset.returnPressed.connect(self.clipping_Z)
+        self.horizontalSlider_x_clipping.valueChanged.connect(self.clipping_X)
+        self.horizontalSlider_y_clipping.valueChanged.connect(self.clipping_Y)
+        self.horizontalSlider_z_clipping.valueChanged.connect(self.clipping_Z)
+        self.checkBox_clipping_X_reverse.clicked.connect(self.clipping_X)
+        self.checkBox_clipping_Y_reverse.clicked.connect(self.clipping_Y)
+        self.checkBox_clipping_Z_reverse.clicked.connect(self.clipping_Z)
 
-
+    def choose_solid_surface(self): 
+        if self.checkBox_Solid.isChecked(): self.solidClip = True 
+        else: self.solidClip = False 
+        self.get_camera_position()
+        self.showMesh()
     def clipping_X(self): 
-        self.xClippingShift = float(self.lineEdit_x_clip_offset.text())
+        self.xClippingShift = (self.horizontalSlider_x_clipping.value() - 50) * self.xclippingScale #float(self.lineEdit_x_clip_offset.text())
         if self.checkBox_clipping_X.isChecked(): self.xClipped = True 
         else: self.xClipped = False 
+        if self.checkBox_clipping_X_reverse.isChecked(): self.x_revClipping = True 
+        else: self.x_revClipping = False 
+        self.get_camera_position()
+        self.showMesh()
+    
+    def clipping_Y(self): 
+        self.yClippingShift = (self.horizontalSlider_y_clipping.value() - 50) * self.yclippingScale #float(self.lineEdit_y_clip_offset.text())
+        if self.checkBox_clipping_Y.isChecked(): self.yClipped = True 
+        else: self.yClipped = False 
+        if self.checkBox_clipping_Y_reverse.isChecked(): self.y_revClipping = True 
+        else: self.y_revClipping = False 
         self.get_camera_position()
         self.showMesh()
 
     def clipping_Z(self): 
-        self.zClippingShift = float(self.lineEdit_z_clip_offset.text())
+        self.zClippingShift = (self.horizontalSlider_z_clipping.value() - 50)*self.zclippingScale #float(self.lineEdit_z_clip_offset.text())
         if self.checkBox_clipping_Z.isChecked(): self.zClipped = True 
         else: self.zClipped = False 
+        if self.checkBox_clipping_Z_reverse.isChecked(): self.z_revClipping = True 
+        else: self.z_revClipping = False 
         self.get_camera_position()
         self.showMesh()
 
@@ -241,14 +329,36 @@ class Ui_MainWindow(object):
     
     def get_pyVistaMesh(self): 
         if ".ptn" in self.meshfile: 
-            trd, edges, pt1, surface = Mesh.load_pyVista_mesh(self.meshfile, centering=True) 
+            trd, edges, pt1, surface, npn = Mesh.load_pyVista_mesh(self.meshfile, centering=True) 
         else: 
-            trd, edges, pt1, surface = Mesh.load_pyVista_mesh(self.meshfile) 
+            trd, edges, pt1, surface, npn = Mesh.load_pyVista_mesh(self.meshfile) 
 
         self.meshes.append(trd)
         self.points.append(pt1)
         self.edges.append(edges)
         self.surfaces.append(surface)
+        self.nodes.append(npn)
+
+        xmn = 10**7; xmx=-10**7; ymn = 10**7; ymx=-10**7; zmn = 10**7; zmx=-10**7
+        for nodes in self.nodes: 
+            mn = np.min(nodes[:,1]); mx = np.max(nodes[:,1])
+            if xmn > mn: xmn = mn 
+            if xmx < mx: xmx = mx 
+
+            mn = np.min(nodes[:,2]); mx = np.max(nodes[:,2])
+            if ymn > mn: ymn = mn 
+            if ymx < mx: ymx = mx 
+
+            mn = np.min(nodes[:,3]); mx = np.max(nodes[:,3])
+            if zmn > mn: zmn = mn 
+            if zmx < mx: zmx = mx  
+
+        self.xclippingScale=(xmx-xmn)/99
+        self.yclippingScale=(ymx-ymn)/99
+        self.zclippingScale=(zmx-zmn)/99
+
+        print("Scaling x=%.3E, y=%.3E, z=%.3E"%(self.xclippingScale, self.yclippingScale, self.zclippingScale))
+        print (" min y=%.6f, max y=%.6f"%(ymn*self.yclippingScale, ymx*self.yclippingScale))
 
     def openFile(self): 
         
@@ -256,7 +366,10 @@ class Ui_MainWindow(object):
 
         if self.meshfile: 
             self.cwd = writeworkingdirectory(self.meshfile, dfile=self.dfile)
-            self.meshes=[]; self.points=[]; self.colors=[]; self.edges=[]; self.surfaces=[]
+            self.meshes=[]; self.points=[]; self.colors=[]; self.edges=[]; self.surfaces=[]; self.nodes=[]
+            self.horizontalSlider_x_clipping.setSliderPosition(50)
+            self.horizontalSlider_y_clipping.setSliderPosition(50)
+            self.horizontalSlider_z_clipping.setSliderPosition(50)
             self.camera_position = None 
 
             self.get_pyVistaMesh()
@@ -295,16 +408,45 @@ class Ui_MainWindow(object):
 
         else: 
             for mesh, clr, edge, surface in zip(self.meshes, self.colors, self.edges, self.surfaces):
-                clippedMesh = mesh 
+                if self.solidClip: clippedMesh = mesh 
+                else: clippedMesh = surface 
 
                 if self.xClipped : 
-                    clippedMesh = clippedMesh.clip(normal=(1, 0, 0), value=self.xClippingShift)
-                # if self.yClipped :
-                #     clippedMesh = clippedMesh.clip(normal=(0, 0, 1), value=self.yClippingShift)
+                    if self.x_revClipping: 
+                        clippedMesh = clippedMesh.clip(normal=(-1, 0, 0), value=self.xClippingShift)
+                    else: 
+                        clippedMesh = clippedMesh.clip(normal=(1, 0, 0), value=self.xClippingShift)
+                if self.yClipped :
+                    if self.y_revClipping: 
+                        clippedMesh = clippedMesh.clip(normal=(0, -1, 0), value=self.yClippingShift)
+                    else: 
+                        clippedMesh = clippedMesh.clip(normal='y', value=self.yClippingShift)
                 if self.zClipped :
-                    clippedMesh = clippedMesh.clip(normal='z', value=self.zClippingShift)
+                    if self.z_revClipping:
+                        clippedMesh = clippedMesh.clip(normal=(0, 0, -1), value=self.zClippingShift)
+                    else: 
+                        clippedMesh = clippedMesh.clip(normal='z', value=self.zClippingShift)
 
                 try: 
+                    if self.show_edges: 
+                        clippedEdge = edge 
+                        if self.xClipped : 
+                            if self.x_revClipping: 
+                                clippedEdge = clippedEdge.clip(normal=(-1, 0, 0), value=self.xClippingShift)
+                            else: 
+                                clippedEdge = clippedEdge.clip(normal=(1, 0, 0), value=self.xClippingShift)
+                        if self.yClipped :
+                            if self.y_revClipping: 
+                                clippedEdge = clippedEdge.clip(normal=(0, -1, 0), value=self.yClippingShift)
+                            else: 
+                                clippedEdge = clippedEdge.clip(normal='y', value=self.yClippingShift)
+                        if self.zClipped :
+                            if self.z_revClipping:
+                                clippedEdge = clippedEdge.clip(normal=(0, 0, -1), value=self.zClippingShift)
+                            else: 
+                                clippedEdge = clippedEdge.clip(normal='z', value=self.zClippingShift)
+                        self.plotter.add_mesh(clippedEdge, color='red', line_width=3)
+                
                     if self.show_qualityCheck:  
                         meshQuality = clippedMesh.compute_cell_quality('jacobian')
                         self.plotter.add_mesh(meshQuality, show_edges=self.show_meshLine, pbr=False, diffuse=1, opacity=self.opecity)
@@ -312,6 +454,7 @@ class Ui_MainWindow(object):
                         self.plotter.add_mesh(clippedMesh, show_edges=self.show_meshLine, color=clr, metallic=0.3, pbr=False, diffuse=1, opacity=self.opecity) 
                 except: 
                     continue 
+                
             # print(" Color %s"%(clr))
 
         lights = Mesh.lighting()

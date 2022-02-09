@@ -95,15 +95,12 @@ def readSmallMesh_pyVista(fname):
     return nodes, np.array(solids).ravel()
     
 
-def load_pyVista_mesh(file_name, points=False, centering=False): 
+def load_pyVista_mesh(file_name, centering=False): 
 
     nodes, cells = readMesh_pyVista(file_name, centering=centering)
     nCell = int(len(cells)/9)
 
     xyz = nodes[:,1:4]
-
-    
-        
 
     # each cell is a VTK_HEXAHEDRON
     celltypes = np.empty(nCell, dtype=np.uint16) 
@@ -119,10 +116,12 @@ def load_pyVista_mesh(file_name, points=False, centering=False):
     grid = pv.UnstructuredGrid({vtk.VTK_HEXAHEDRON: cells.reshape([-1, 9])[:, 1:]}, xyz)
     grid = pv.UnstructuredGrid({vtk.VTK_HEXAHEDRON: np.delete(cells, np.arange(0, cells.size, 9))}, xyz)
 
-    if points: 
-        pt_cloud = pv.PolyData(xyz)
-        return grid, pt_cloud 
-    return grid 
+    pt_cloud = pv.PolyData(xyz)
+    # edges = grid.extract_all_edges()
+    edges = grid.extract_feature_edges(feature_angle=45, boundary_edges=False)
+    surfaces = grid.extract_surface()
+    print(" Mesh Volume", grid.volume)
+    return grid, edges, pt_cloud, surfaces
 
 def lighting(): 
     # setup lighting
@@ -130,6 +129,12 @@ def lighting():
     # light2 = pv.Light((2, 0, 0), (0, 0, 0), (0.7, 0.0862, 0.0549))
     light3 = pv.Light((0, 0, 10), (0, 0, 0), 'white')
     return [light1, light3]
+
+def createCamera(): 
+    return pv.Camera()
+
+# def getCameraAngle(camera): 
+
 
 def main(): 
     fname = 'AH32.trd'

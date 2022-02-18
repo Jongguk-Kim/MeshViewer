@@ -41,6 +41,8 @@ class Ui_MainWindow(object):
         self.pushButton_add_Mesh.setMaximumSize(QtCore.QSize(100, 30))
         self.pushButton_add_Mesh.setObjectName("pushButton_add_Mesh")
         self.horizontalLayout.addWidget(self.pushButton_add_Mesh)
+        self.verticalLayout_color = QtWidgets.QVBoxLayout()
+        self.verticalLayout_color.setObjectName("verticalLayout_color")
         self.comboBox = QtWidgets.QComboBox(self.centralwidget)
         self.comboBox.setMaximumSize(QtCore.QSize(150, 30))
         self.comboBox.setObjectName("comboBox")
@@ -53,7 +55,8 @@ class Ui_MainWindow(object):
         self.comboBox.addItem("")
         self.comboBox.addItem("")
         self.comboBox.addItem("")
-        self.horizontalLayout.addWidget(self.comboBox)
+        self.verticalLayout_color.addWidget(self.comboBox)
+        self.horizontalLayout.addLayout(self.verticalLayout_color)
         self.verticalLayout_Opecity = QtWidgets.QVBoxLayout()
         self.verticalLayout_Opecity.setObjectName("verticalLayout_Opecity")
         self.label_opecity = QtWidgets.QLabel(self.centralwidget)
@@ -153,26 +156,46 @@ class Ui_MainWindow(object):
         self.horizontalSlider_z_clipping.setOrientation(QtCore.Qt.Horizontal)
         self.horizontalSlider_z_clipping.setObjectName("horizontalSlider_z_clipping")
         self.horizontalLayout.addWidget(self.horizontalSlider_z_clipping)
+        self.verticalLayout_zClipping_2 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_zClipping_2.setObjectName("verticalLayout_zClipping_2")
+        self.label_view_upPosition = QtWidgets.QLabel(self.centralwidget)
+        self.label_view_upPosition.setMinimumSize(QtCore.QSize(50, 0))
+        self.label_view_upPosition.setMaximumSize(QtCore.QSize(50, 15))
+        self.label_view_upPosition.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_view_upPosition.setObjectName("label_view_upPosition")
+        self.verticalLayout_zClipping_2.addWidget(self.label_view_upPosition)
+        self.lineEdit_view_upPosition = QtWidgets.QLineEdit(self.centralwidget)
+        self.lineEdit_view_upPosition.setMaximumSize(QtCore.QSize(50, 20))
+        self.lineEdit_view_upPosition.setAlignment(QtCore.Qt.AlignCenter)
+        self.lineEdit_view_upPosition.setObjectName("lineEdit_view_upPosition")
+        self.verticalLayout_zClipping_2.addWidget(self.lineEdit_view_upPosition)
+        self.horizontalLayout.addLayout(self.verticalLayout_zClipping_2)
         self.gridLayout.addLayout(self.horizontalLayout, 0, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1210, 21))
         self.menubar.setObjectName("menubar")
+        self.menuHOME = QtWidgets.QMenu(self.menubar)
+        self.menuHOME.setObjectName("menuHOME")
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
+        self.actionToggle_Background_color = QtWidgets.QAction(MainWindow)
+        self.actionToggle_Background_color.setObjectName("actionToggle_Background_color")
+        self.menuHOME.addAction(self.actionToggle_Background_color)
+        self.menubar.addAction(self.menuHOME.menuAction())
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "3D Mesh Viewer [ptn, axi, trd]"))
         self.pushButton_openfile.setText(_translate("MainWindow", "open 3d mesh"))
         self.pushButton_add_Mesh.setText(_translate("MainWindow", "add Mesh"))
-        self.comboBox.setItemText(0, _translate("MainWindow", "wheat"))
-        self.comboBox.setItemText(1, _translate("MainWindow", "lightblue"))
+        self.comboBox.setItemText(0, _translate("MainWindow", "lightblue"))
+        self.comboBox.setItemText(1, _translate("MainWindow", "wheat"))
         self.comboBox.setItemText(2, _translate("MainWindow", "lightgreen"))
         self.comboBox.setItemText(3, _translate("MainWindow", "gray"))
         self.comboBox.setItemText(4, _translate("MainWindow", "aqua"))
@@ -191,7 +214,12 @@ class Ui_MainWindow(object):
         self.checkBox_clipping_Y_reverse.setText(_translate("MainWindow", "Inverst"))
         self.checkBox_clipping_Z.setText(_translate("MainWindow", "Clip Z"))
         self.checkBox_clipping_Z_reverse.setText(_translate("MainWindow", "Invert"))
-
+        self.label_view_upPosition.setText(_translate("MainWindow", "UpView"))
+        self.lineEdit_view_upPosition.setText(_translate("MainWindow", "1,0,0"))
+        self.menuHOME.setTitle(_translate("MainWindow", "HOME"))
+        self.actionToggle_Background_color.setText(_translate("MainWindow", "Toggle White Background"))
+        self.actionToggle_Background_color.setShortcut(_translate("MainWindow", "Ctrl+Shift+W"))
+    
     def operating(self): 
         self.actions()
         self.initialize()
@@ -219,6 +247,10 @@ class Ui_MainWindow(object):
         self.xclippingScale = 1.0
         self.yclippingScale = 1.0
         self.zclippingScale = 1.0
+
+        self.view_upPosition = '1, 0, 0'
+
+        self.defaultColor_Background = True 
 
         self.dfile = "qt_pyVista.dir"
         cwd =os.getcwd()
@@ -250,6 +282,37 @@ class Ui_MainWindow(object):
         self.checkBox_clipping_X_reverse.clicked.connect(self.clipping_X)
         self.checkBox_clipping_Y_reverse.clicked.connect(self.clipping_Y)
         self.checkBox_clipping_Z_reverse.clicked.connect(self.clipping_Z)
+
+        self.actionToggle_Background_color.triggered.connect(self.toggling_color_background) 
+        self.lineEdit_view_upPosition.returnPressed.connect(self.changeViewPosition)
+
+    def changeViewPosition(self): 
+        self.view_upPosition = self.lineEdit_view_upPosition.text().strip()
+
+        vx=1; vy=0; vz=0 
+        listText = self.view_upPosition.split(",")
+        for i, v in enumerate(listText): 
+            try: v = float(v)
+            except: v = 0.0 
+            if i ==0: vx = v 
+            if i ==1: vy = v 
+            if i ==2: vz = v 
+        if vx ==0 and vy ==0 and vz ==0: 
+            vx = vy = vz = 1 
+            self.lineEdit_view_upPosition.setText("1, 1, 1")
+
+        self.plotter.camera_position  = (vx, vy, vz)
+        if vz > 0 and vx ==0 and vy==0: 
+            self.plotter.camera.up = (1, 0, 0)
+        self.showMesh()
+    
+    def toggling_color_background(self): 
+        if self.defaultColor_Background: 
+            self.defaultColor_Background=False 
+        else: 
+            self.defaultColor_Background = True 
+        self.get_camera_position()
+        self.showMesh()
 
     def choose_solid_surface(self): 
         if self.checkBox_Solid.isChecked(): self.solidClip = True 
@@ -404,7 +467,7 @@ class Ui_MainWindow(object):
                     meshQuality = mesh.compute_cell_quality('jacobian')
                     self.plotter.add_mesh(meshQuality, show_edges=self.show_meshLine, pbr=False, diffuse=1, opacity=self.opecity)
                 else: 
-                    self.plotter.add_mesh(surface, show_edges=self.show_meshLine, color=clr, metallic=0.3, pbr=False, diffuse=1, opacity=self.opecity) 
+                    self.plotter.add_mesh(surface, show_edges=self.show_meshLine, color=clr, metallic=0.3, pbr=False, diffuse=1, opacity=self.opecity, smooth_shading=False) 
 
         else: 
             for mesh, clr, edge, surface in zip(self.meshes, self.colors, self.edges, self.surfaces):
@@ -451,7 +514,7 @@ class Ui_MainWindow(object):
                         meshQuality = clippedMesh.compute_cell_quality('jacobian')
                         self.plotter.add_mesh(meshQuality, show_edges=self.show_meshLine, pbr=False, diffuse=1, opacity=self.opecity)
                     else: 
-                        self.plotter.add_mesh(clippedMesh, show_edges=self.show_meshLine, color=clr, metallic=0.3, pbr=False, diffuse=1, opacity=self.opecity) 
+                        self.plotter.add_mesh(clippedMesh, show_edges=self.show_meshLine, color=clr, metallic=0.3, pbr=False, diffuse=1, opacity=self.opecity, smooth_shading=False) 
                 except: 
                     continue 
                 
@@ -461,7 +524,10 @@ class Ui_MainWindow(object):
         for light in lights: 
             self.plotter.add_light(light)    
 
-        self.plotter.set_background('gray', top='white')
+        if self.defaultColor_Background: 
+            self.plotter.set_background('gray', top='white')
+        else: 
+            self.plotter.set_background('white')
         self.plotter.enable_parallel_projection()
         self.plotter.add_axes()
         

@@ -125,10 +125,14 @@ def load_pyVista_mesh(file_name, centering=False):
 
 def lighting(): 
     # setup lighting
-    light1 = pv.Light((-2, 2, 0), (0, 0, 0), 'white')
+    lights=[]
+    # light = pv.Light((-2, 2, 0), (0, 0, 0), 'white'); lights.append(light)
+    # light = pv.Light((1, 1, 1), (0, 0, 0), 'white'); lights.append(light)
+    light = pv.Light((1, 0, 0), (0, 0, 0), 'white'); lights.append(light)
     # light2 = pv.Light((2, 0, 0), (0, 0, 0), (0.7, 0.0862, 0.0549))
-    light3 = pv.Light((0, 0, 10), (0, 0, 0), 'white')
-    return [light1, light3]
+    # light3 = pv.Light((0, 0, 10), (0, 0, 0), 'white'); lights.append(light)
+
+    return lights 
 
 def createCamera(): 
     return pv.Camera()

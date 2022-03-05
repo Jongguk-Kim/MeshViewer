@@ -3,18 +3,30 @@ try:
 except: 
     os.system("pip install pyvista")
     
+from time import perf_counter
 import vtk 
 import numpy as np 
+
+import smart_results as Smart 
 
 class MESH(): 
     def __init__(self, meshfile, centering=False) : 
         self.meshfile = meshfile 
         
-        self.grid, self.edges, self.pt_cloud, self.surfaces, self.nodes, self.idx_element, self.cells  = \
-            load_pyVista_mesh(meshfile, centering=centering)
-
-        
-
+        if '.sfric' in meshfile: 
+            self.grid, self.edges, self.pt_cloud, self.surfaces, self.nodes, self.idx_element, self.cells,\
+                 self.npress, self.surfpress  = \
+                load_pyVista_mesh(meshfile, centering=centering)
+            self.press = None 
+            # print("Start interpolating")
+            # self.press = self.surfpress.interpolate(self.npress)
+            # print(" interpolating end.")
+        elif '.sdb' in meshfile: 
+            self.grid, self.edges, self.pt_cloud, self.surfaces, self.nodes, self.idx_element, self.cells  = \
+                load_pyVista_mesh(meshfile, centering=centering)
+        else: 
+            self.grid, self.edges, self.pt_cloud, self.surfaces, self.nodes, self.idx_element, self.cells  = \
+                load_pyVista_mesh(meshfile, centering=centering)
 
 def readInp(fname): 
 
@@ -90,25 +102,45 @@ def readInp(fname):
                             int(wds[1].strip()), int(wds[2].strip()), int(wds[3].strip()), int(wds[4].strip())
                           ]) 
                 index_elements.append([int(wds[0].strip()), len(s8)]) 
+                
+            # if cmd == 'n3':
+            #     s8.append([4, 
+            #                 int(wds[1].strip()), int(wds[2].strip()), int(wds[3].strip()), int(wds[3].strip())
+            #               ]) 
+            #     index_elements.append([int(wds[0].strip()), len(s8)]) 
 
     return nodes, s8, index_elements, mtype
 
-def readMesh_pyVista(fname,  files=None, centering=False): 
+def readMesh_pyVista(fname,  files=None, centering=False, sdb=False): 
+    if sdb: 
+        nodes, membrane, solid = Smart.getSDBModel(fname)
+        meshtype = 9 
+        s8=[]
+        idx_element=[]
+        cnt = 0 
+        for sd in solid: 
+            if sd[7]==0 : 
+                s8.append([8, sd[1], sd[2], sd[3], sd[3], sd[4], sd[5], sd[6], sd[6]])
+            else: 
+                s8.append([8, sd[1], sd[2], sd[3], sd[4], sd[5], sd[6], sd[7], sd[8]])
+            idx_element.append([sd[0], cnt])
+            cnt += 1 
+
+    else: 
+        print(" FILE READING", fname)
+        nodes, s8, idx_element, meshtype = readInp(fname)
+        nodes = np.array(nodes)
+        s8 = np.array(s8)
+
+        if not isinstance(files, type(None)): 
+            for file in files: 
+                print("* FILE READING", file)
+                nds, sd, idx_element, meshtype = readInp(file) 
+                nodes = np.concatenate((nodes, np.array(nds)), axis=0)
+                s8 = np.concatenate((s8, np.array(sd)), axis=0)
+
+
     
-    nodes, s8, idx_element, meshtype = readInp(fname)
-    nodes = np.array(nodes)
-    s8 = np.array(s8)
-
-    if not isinstance(files, type(None)): 
-        for file in files: 
-            nds, sd, idx_element, meshtype = readInp(file) 
-            nodes = np.concatenate((nodes, np.array(nds)), axis=0)
-            s8 = np.concatenate((s8, np.array(sd)), axis=0)
-
-
-    print (" Number of nodes : %d"%(len(nodes)))
-    print (" Number of 8-node elements : %d"%(len(s8)))
-
     idmax = int(np.max(nodes[:,0]))
     if centering: 
         md = np.average(nodes[:,1]) 
@@ -122,60 +154,66 @@ def readMesh_pyVista(fname,  files=None, centering=False):
         npn[int(n[0])][1]=n[1]
         npn[int(n[0])][2]=n[2]
         npn[int(n[0])][3]=n[3]
+    
+    print (" Number of nodes : %d"%(len(nodes)))
+    print (" Number of 8-node elements : %d"%(len(s8)))
+    print (" Element Type : %d"%(meshtype-1))
+    print (" Max Node ID=%d"%(idmax))
+
     return npn, np.array(s8).ravel(), idx_element, s8, meshtype
-
-
-# def readSmallMesh_pyVista(fname): 
-#     nodes, s8, idx_element, meshtype = readInp(fname)
-#     nodes = np.array(nodes)
-#     s8 = np.array(s8)
-
-#     solids=[]
-#     for s in s8: 
-#         ix1=np.where(nodes[:,0] == s[1])[0][0]
-#         ix2=np.where(nodes[:,0] == s[2])[0][0]
-#         ix3=np.where(nodes[:,0] == s[3])[0][0]
-#         ix4=np.where(nodes[:,0] == s[4])[0][0]
-#         ix5=np.where(nodes[:,0] == s[5])[0][0]
-#         ix6=np.where(nodes[:,0] == s[6])[0][0]
-#         ix7=np.where(nodes[:,0] == s[7])[0][0]
-#         ix8=np.where(nodes[:,0] == s[8])[0][0]
-#         solids.append([8, ix1, ix2, ix3, ix4, ix5, ix6, ix7, ix8]) 
-
-#     return nodes, np.array(solids).ravel(), meshtype
     
 
 def makePyvisterCells(cells, nodes, meshtype): 
-    nCell = int(len(cells)/meshtype)
 
-    xyz = nodes[:,1:4]
+    if meshtype != 5: 
+        nCell = int(len(cells)/meshtype)
 
-    # each cell is a VTK_HEXAHEDRON
-    celltypes = np.empty(nCell, dtype=np.uint16) 
-    celltypes[:] = vtk.VTK_HEXAHEDRON 
+        xyz = nodes[:,1:4]
 
-    # if you are not using VTK 9.0 or newer, you must use the offset array
-    # grid = pv.UnstructuredGrid(offset8, cells, celltypes, xyz) 
+        # each cell is a VTK_HEXAHEDRON
+        celltypes = np.empty(nCell, dtype=np.uint16) 
+        celltypes[:] = vtk.VTK_HEXAHEDRON 
 
-    #  if you are using VTK 9.0 or newer, you do not need to input the offset array:
-    # grid = pv.UnstructuredGrid(cells, celltypes, xyz)
+        # if you are not using VTK 9.0 or newer, you must use the offset array
+        # grid = pv.UnstructuredGrid(offset8, cells, celltypes, xyz) 
 
-    # # Alternate versions:
-    # grid = pv.UnstructuredGrid({vtk.VTK_HEXAHEDRON: cells.reshape([-1, meshtype])[:, 1:]}, xyz)
-    grid = pv.UnstructuredGrid({vtk.VTK_HEXAHEDRON: np.delete(cells, np.arange(0, cells.size, meshtype))}, xyz)
+        #  if you are using VTK 9.0 or newer, you do not need to input the offset array:
+        # grid = pv.UnstructuredGrid(cells, celltypes, xyz)
 
+        # # Alternate versions:
+        # grid = pv.UnstructuredGrid({vtk.VTK_HEXAHEDRON: cells.reshape([-1, meshtype])[:, 1:]}, xyz)
+        grid = pv.UnstructuredGrid({vtk.VTK_HEXAHEDRON: np.delete(cells, np.arange(0, cells.size, meshtype))}, xyz)
+    else: 
+        xyz = nodes[:, 1:4]
+        grid = pv.PolyData(xyz, cells)
     return grid, xyz  
 
 def load_pyVista_mesh(file_name, centering=False): 
 
-    nodes, cells, idx_element, elements, meshtype = readMesh_pyVista(file_name, centering=centering)
+    if ".sfric" in file_name: 
+        nodes, cells, idx_element, elements, meshtype, pnodes, pcells = readSfric_pyVista(file_name)
+    elif '.sdb' in file_name: 
+        nodes, cells, idx_element, elements, meshtype = readMesh_pyVista(file_name, sdb=True)
+    else: 
+        nodes, cells, idx_element, elements, meshtype = readMesh_pyVista(file_name, centering=centering)
+    
     grid, xyz = makePyvisterCells(cells, nodes, meshtype)
 
     pt_cloud = pv.PolyData(xyz)
-    if meshtype ==9: 
+    if meshtype ==9 : 
         edges = grid.extract_feature_edges(feature_angle=45, boundary_edges=False)
         surfaces = grid.extract_surface()
         print(" Mesh Volume", grid.volume)
+    elif meshtype ==5: 
+        edges = grid.extract_all_edges()
+        surfaces = grid.extract_surface()
+        if ".sfric" in file_name: 
+            pgrid, pxyz = makePyvisterCells(pcells, nodes, meshtype)
+            pn_cloud = pv.PolyData(pnodes[:, 1:4])
+            pn_cloud["press"] = pnodes[:, 4]
+
+            return grid, edges, pt_cloud, surfaces, nodes, idx_element, elements, pn_cloud, pgrid
+
     else: 
         edges = grid.extract_all_edges()
         surfaces = None 
@@ -228,6 +266,57 @@ def generateMesh_searched(ids, indexes, elements, nodes):
     else: 
         return None 
 # def getCameraAngle(camera): 
+
+def readSdb_pyVista(file_name): 
+    nodes, membrane, solid = Smart.getSDBModel(file_name)
+
+
+
+def readSfric_pyVista(file_name): 
+
+    smart = Smart.SFRIC()
+    Smart.ResultSfric(file_name[:-3], file_name, smart, deformed=1)
+
+
+    cells=[]
+    index_elements =[]
+    cnt = 0 
+    for surf in smart.Surface.Surface: 
+        cells.append([4, surf[1], surf[2], surf[3], surf[4]])
+        index_elements.append([surf[0], cnt])
+        cnt +=1 
+
+    idmax = int(np.max(smart.Node.Node[:,0]))
+    npn = np.zeros(shape=(idmax+1, 4))
+    for n in smart.Node.Node: 
+        npn[int(n[0])][0]=n[0]
+        npn[int(n[0])][1]=n[1]
+        npn[int(n[0])][2]=n[2]
+        npn[int(n[0])][3]=n[3]
+
+
+    meshtype = 5
+
+
+    p_cells=[]
+    p_index_elements =[]
+    cnt = 0 
+    for surf in smart.pSurface.Surface: 
+        p_cells.append([4, surf[1], surf[2], surf[3], surf[4]])
+        p_index_elements.append([surf[0], cnt])
+        cnt +=1 
+
+    idmax = int(np.max(smart.pNode.Node[:,0]))
+    p_npn = np.zeros(shape=(idmax+1, 4))
+    for n in smart.pNode.Node: 
+        p_npn[int(n[0])][0]=n[0]
+        p_npn[int(n[0])][1]=n[1]
+        p_npn[int(n[0])][2]=n[2]
+        p_npn[int(n[0])][3]=n[3]
+
+
+    return npn, np.array(cells).ravel(), index_elements, cells, meshtype, smart.pNode.Node, p_cells
+
 
 
 def main(): 

@@ -21,38 +21,54 @@
     <item row="0" column="0">
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <widget class="QPushButton" name="pushButton_openfile">
-        <property name="maximumSize">
-         <size>
-          <width>100</width>
-          <height>30</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>open 3d mesh</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="pushButton_add_Mesh">
-        <property name="maximumSize">
-         <size>
-          <width>100</width>
-          <height>30</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>add Mesh</string>
-        </property>
-       </widget>
+       <layout class="QVBoxLayout" name="verticalLayout_solid_Jaco_2">
+        <item>
+         <widget class="QPushButton" name="pushButton_openfile">
+          <property name="maximumSize">
+           <size>
+            <width>150</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Open mesh</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_add_Mesh">
+          <property name="minimumSize">
+           <size>
+            <width>150</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>150</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Add mesh</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_color">
         <item>
          <widget class="QComboBox" name="comboBox">
+          <property name="minimumSize">
+           <size>
+            <width>80</width>
+            <height>30</height>
+           </size>
+          </property>
           <property name="maximumSize">
            <size>
-            <width>150</width>
+            <width>80</width>
             <height>30</height>
            </size>
           </property>
@@ -103,31 +119,83 @@
           </item>
          </widget>
         </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_replaceCells">
+          <property name="maximumSize">
+           <size>
+            <width>100</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Replace</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </item>
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_Opecity">
         <item>
-         <widget class="QLabel" name="label_opecity">
+         <widget class="QCheckBox" name="checkBox_meshLine">
           <property name="maximumSize">
            <size>
-            <width>80</width>
-            <height>15</height>
+            <width>90</width>
+            <height>30</height>
            </size>
           </property>
           <property name="text">
-           <string>Opecity : 100</string>
+           <string>Mesh Line</string>
           </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
+          <property name="checked">
+           <bool>true</bool>
           </property>
          </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="label_opecity">
+            <property name="maximumSize">
+             <size>
+              <width>50</width>
+              <height>15</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Opecity </string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="lineEdit_opecity">
+            <property name="maximumSize">
+             <size>
+              <width>30</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>100</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
         <item>
          <widget class="QSlider" name="horizontalSlider_opacity">
           <property name="maximumSize">
            <size>
-            <width>80</width>
+            <width>90</width>
             <height>15</height>
            </size>
           </property>
@@ -148,7 +216,10 @@
        </layout>
       </item>
       <item>
-       <layout class="QVBoxLayout" name="verticalLayout_edges">
+       <layout class="QVBoxLayout" name="verticalLayout_edges"/>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_solid_Jaco">
         <item>
          <widget class="QCheckBox" name="checkBox_showEdges">
           <property name="maximumSize">
@@ -162,26 +233,6 @@
           </property>
          </widget>
         </item>
-        <item>
-         <widget class="QCheckBox" name="checkBox_meshLine">
-          <property name="maximumSize">
-           <size>
-            <width>90</width>
-            <height>30</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>Mesh Line</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QVBoxLayout" name="verticalLayout_solid_Jaco">
         <item>
          <widget class="QCheckBox" name="checkBox_Solid">
           <property name="maximumSize">
@@ -238,32 +289,32 @@
           </property>
          </widget>
         </item>
+        <item>
+         <widget class="QSlider" name="horizontalSlider_x_clipping">
+          <property name="maximumSize">
+           <size>
+            <width>80</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="maximum">
+           <number>100</number>
+          </property>
+          <property name="singleStep">
+           <number>5</number>
+          </property>
+          <property name="value">
+           <number>50</number>
+          </property>
+          <property name="sliderPosition">
+           <number>50</number>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
        </layout>
-      </item>
-      <item>
-       <widget class="QSlider" name="horizontalSlider_x_clipping">
-        <property name="maximumSize">
-         <size>
-          <width>80</width>
-          <height>30</height>
-         </size>
-        </property>
-        <property name="maximum">
-         <number>100</number>
-        </property>
-        <property name="singleStep">
-         <number>5</number>
-        </property>
-        <property name="value">
-         <number>50</number>
-        </property>
-        <property name="sliderPosition">
-         <number>50</number>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
       </item>
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_yClipping">
@@ -293,32 +344,32 @@
           </property>
          </widget>
         </item>
+        <item>
+         <widget class="QSlider" name="horizontalSlider_y_clipping">
+          <property name="maximumSize">
+           <size>
+            <width>80</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="maximum">
+           <number>100</number>
+          </property>
+          <property name="singleStep">
+           <number>5</number>
+          </property>
+          <property name="value">
+           <number>50</number>
+          </property>
+          <property name="sliderPosition">
+           <number>50</number>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
        </layout>
-      </item>
-      <item>
-       <widget class="QSlider" name="horizontalSlider_y_clipping">
-        <property name="maximumSize">
-         <size>
-          <width>80</width>
-          <height>30</height>
-         </size>
-        </property>
-        <property name="maximum">
-         <number>100</number>
-        </property>
-        <property name="singleStep">
-         <number>5</number>
-        </property>
-        <property name="value">
-         <number>50</number>
-        </property>
-        <property name="sliderPosition">
-         <number>50</number>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
       </item>
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_zClipping">
@@ -348,32 +399,32 @@
           </property>
          </widget>
         </item>
+        <item>
+         <widget class="QSlider" name="horizontalSlider_z_clipping">
+          <property name="maximumSize">
+           <size>
+            <width>80</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="maximum">
+           <number>100</number>
+          </property>
+          <property name="singleStep">
+           <number>5</number>
+          </property>
+          <property name="value">
+           <number>50</number>
+          </property>
+          <property name="sliderPosition">
+           <number>50</number>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
        </layout>
-      </item>
-      <item>
-       <widget class="QSlider" name="horizontalSlider_z_clipping">
-        <property name="maximumSize">
-         <size>
-          <width>80</width>
-          <height>30</height>
-         </size>
-        </property>
-        <property name="maximum">
-         <number>100</number>
-        </property>
-        <property name="singleStep">
-         <number>5</number>
-        </property>
-        <property name="value">
-         <number>50</number>
-        </property>
-        <property name="sliderPosition">
-         <number>50</number>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
       </item>
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_zClipping_2">
@@ -412,6 +463,30 @@
           </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_zClipping_3">
+        <item>
+         <widget class="QLineEdit" name="lineEdit_showNodes">
+          <property name="maximumSize">
+           <size>
+            <width>75</width>
+            <height>25</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="lineEdit_showElements">
+          <property name="maximumSize">
+           <size>
+            <width>75</width>
+            <height>25</height>
+           </size>
           </property>
          </widget>
         </item>

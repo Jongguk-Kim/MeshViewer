@@ -46,14 +46,18 @@ class Ui_MainWindow(object):
         self.gridLayout.addLayout(self.verticalLayout, 1, 0, 1, 1)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
+        self.verticalLayout_solid_Jaco_2 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_solid_Jaco_2.setObjectName("verticalLayout_solid_Jaco_2")
         self.pushButton_openfile = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton_openfile.setMaximumSize(QtCore.QSize(100, 30))
+        self.pushButton_openfile.setMaximumSize(QtCore.QSize(150, 30))
         self.pushButton_openfile.setObjectName("pushButton_openfile")
-        self.horizontalLayout.addWidget(self.pushButton_openfile)
+        self.verticalLayout_solid_Jaco_2.addWidget(self.pushButton_openfile)
         self.pushButton_add_Mesh = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton_add_Mesh.setMaximumSize(QtCore.QSize(100, 30))
+        self.pushButton_add_Mesh.setMinimumSize(QtCore.QSize(150, 0))
+        self.pushButton_add_Mesh.setMaximumSize(QtCore.QSize(150, 30))
         self.pushButton_add_Mesh.setObjectName("pushButton_add_Mesh")
-        self.horizontalLayout.addWidget(self.pushButton_add_Mesh)
+        self.verticalLayout_solid_Jaco_2.addWidget(self.pushButton_add_Mesh)
+        self.horizontalLayout.addLayout(self.verticalLayout_solid_Jaco_2)
         self.verticalLayout_color = QtWidgets.QVBoxLayout()
         self.verticalLayout_color.setObjectName("verticalLayout_color")
         self.comboBox = QtWidgets.QComboBox(self.centralwidget)
@@ -270,7 +274,7 @@ class Ui_MainWindow(object):
 
     def initialize(self): 
         self.meshes=[]; self.points=[]; self.colors=[]; self.edges=[]; self.surfaces=[]; self.nodes=[]
-        self.idx_element=[]; self.elements=[]
+        self.idx_element=[]; self.elements=[]; self.presses=[]
         self.opecity = 1.0
         self.show_edges = False
         self.camera_position=None 
@@ -517,6 +521,12 @@ class Ui_MainWindow(object):
         self.idx_element.append(idx_element)
         self.elements.append(cells) 
 
+        if '.sfric' in self.meshfile: 
+            if isinstance(pvMesh.press, type(None)): 
+                self.presses.append(pvMesh.npress)
+            else: 
+                self.presses.append(pvMesh.press)
+
         xmn = 10**7; xmx=-10**7; ymn = 10**7; ymx=-10**7; zmn = 10**7; zmx=-10**7
         for nodes in self.nodes: 
             mn = np.min(nodes[:,1]); mx = np.max(nodes[:,1])
@@ -543,12 +553,12 @@ class Ui_MainWindow(object):
 
     def openFile(self): 
         
-        self.meshfile, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Select File", self.cwd, "File Open(*.trd *.axi *.ptn *inp)")
+        self.meshfile, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Select File", self.cwd, "File Open(*.trd *.axi *.ptn *.inp *.sfric0* *.sdb0*)")
 
         if self.meshfile: 
             self.cwd = writeworkingdirectory(self.meshfile, dfile=self.dfile)
             self.meshes=[]; self.points=[]; self.colors=[]; self.edges=[]; self.surfaces=[]; self.nodes=[]
-            self.idx_element = []; self.elements=[]
+            self.idx_element = []; self.elements=[]; self.presses=[]
 
             self.horizontalSlider_x_clipping.setSliderPosition(50)
             self.horizontalSlider_y_clipping.setSliderPosition(50)
@@ -561,7 +571,7 @@ class Ui_MainWindow(object):
             self.showMesh()  
 
     def addMesh(self): 
-        self.meshfile, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Select File", self.cwd, "File Open(*.trd *.axi *.ptn *inp)")
+        self.meshfile, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Select File", self.cwd, "File Open(*.trd *.axi *.ptn *inp *.sfric0* *.sdb0*)")
 
         if self.meshfile: 
             self.cwd = writeworkingdirectory(self.meshfile, dfile=self.dfile)
@@ -586,7 +596,29 @@ class Ui_MainWindow(object):
 
         Mesh.lighting()
 
-        if not self.xClipped and not self.yClipped and not self.zClipped: 
+        if ".sfric" in self.meshfile: 
+            for surface, press, clr in zip(self.surfaces, self.presses, self.colors): 
+                self.plotter_surf = self.plotter.add_mesh(surface, show_edges=self.show_meshLine, color=clr, metallic=0.3, pbr=False, diffuse=1, opacity=self.opecity, smooth_shading=False) 
+                if self.show_qualityCheck:
+                    scalars = np.empty(press.n_points)
+                    scalars[press['press'] >= 500000] = 9  # red
+                    scalars[press['press'] < 480000] = 8  # grey
+                    scalars[press['press'] < 440000] = 7  # blue
+                    scalars[press['press'] < 340000] = 6  # blue
+                    scalars[press['press'] < 300000] = 5  # blue
+                    scalars[press['press'] < 250000] = 4  # yellow
+                    scalars[press['press'] < 200000] = 3  # blue
+                    scalars[press['press'] < 180000] = 2  # blue
+                    scalars[press['press'] < 150000] = 1  # blue
+                    scalars[press['press'] < 50000] = 0  # black
+                    colormap = ['black', 'navy', 'blue', 'darkgreen', 'green', 'yellow', 'orange', 'orangered' ,'red', 'firebrick']
+                    psize = 5# float(psize)
+                    self.plotter_qulity = self.plotter.add_mesh(press, scalars=scalars, cmap=colormap, point_size=psize, render_points_as_spheres=True)
+                    self.lineEdit_view_upPosition.setText("0,0,1")
+                    
+                self.plotter.enable_cell_picking(mesh=surface)      
+
+        elif not self.xClipped and not self.yClipped and not self.zClipped: 
             self.clippedMesh= None     
             for mesh, clr, edge, surface in zip(self.meshes, self.colors, self.edges, self.surfaces):
                 if isinstance(surface, type(None)) : 
@@ -609,6 +641,8 @@ class Ui_MainWindow(object):
 
                     self.plotter_surf = self.plotter.add_mesh(surface, show_edges=self.show_meshLine, color=clr, metallic=0.3, pbr=False, diffuse=1, opacity=self.opecity, smooth_shading=False) 
                     self.plotter.enable_cell_picking(mesh=surface)
+
+                # self.plotter.add_mesh(point)
         else: 
             for mesh, clr, edge, surface in zip(self.meshes, self.colors, self.edges, self.surfaces):
                 if isinstance(surface, type(None)) : 

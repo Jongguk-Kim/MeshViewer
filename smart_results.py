@@ -249,7 +249,6 @@ def SDBResult_READ(sdbResult, NODE):
     VisEnergy = []
     StrainLongTerm = []; StrainLongTermHourglass=[]
     Deformed_RIM_ROAD = []
-    Temperature = []
     
     resultsfile.seek(0,2); fend = resultsfile.tell() #find the end position of binary file
     resultsfile.seek(0);   fpos = resultsfile.tell() #find the start position of binary file
@@ -261,7 +260,9 @@ def SDBResult_READ(sdbResult, NODE):
     TREAD_ELMENTNUM= 0
     
     tmpELB = [] 
+    ELB=[]; RR=[]
     
+    SED =[]; SED_Hour=[]
 
     DISP = []
     while resultsfile.tell() < fend:
@@ -341,14 +342,13 @@ def SDBResult_READ(sdbResult, NODE):
                     DISP[i][2] = Value #for making of abaqus odb file
                     NODE[i][3] = NODE[i][3] + Value
                     i = i + 1
-            if RecordValue == 3101:
+
+            if RecordValue == 3101:  ## Temperature 
                 for i in range(READ_NUM):
                     Value = struct.unpack('d', resultsfile.read(8))[0]
                     NODE[i][4] = NODE[i][4] + Value
-            elif RecordValue == 900000054:
-                while i < READ_NUM:
-                    Value = struct.unpack('d', resultsfile.read(8))[0]
-                    i = i + 1
+            
+            
             elif RecordValue == 900001001: # Heat Uniform Generate Rate
                 while i < READ_NUM:
                     Value = struct.unpack('d', resultsfile.read(8))[0]
@@ -375,7 +375,7 @@ def SDBResult_READ(sdbResult, NODE):
                     i = i + 1
                 del tmpELB
                 tmpELB = []
-            elif RecordValue == 900001007: # Strain Uniform Long Term E
+            elif RecordValue == 900001007: # Strain Uniform Long Term E (SED)
                 while i < READ_NUM:
                     Value = struct.unpack('d', resultsfile.read(8))[0]
                     StrainLongTerm.append(Value)
@@ -1005,21 +1005,21 @@ def getSDBModel(sdbresult):
     npn, np2d, np3d, rim_road = readSDB(sdbmodel) 
     d_npn, deformed_Rim_road, iELD, iSED =SDBResult_READ(sdbresult, npn)
 
-    # EnergyLoss =[]
-    # for e, e1, e2 in zip(np3d, iELD[0], iELD[1]): 
-    #     if e1 + e2 < 0: 
-    #         EnergyLoss.append([e[0], 0.0])
-    #     else: 
-    #         EnergyLoss.append([e[0], e1 + e2])
-    # StrainEnergyDensity =[]
-    # for e, e1, e2 in zip(np3d, iSED[0], iSED[1]): 
-    #     if e1 + e2 < 0: 
-    #         StrainEnergyDensity.append([e[0], 0.0])
-    #     else: 
-    #         StrainEnergyDensity.append([e[0], e1 + e2])
+    EnergyLoss =[]
+    for e, e1, e2 in zip(np3d, iELD[0], iELD[1]): 
+        if e1 + e2 < 0: 
+            EnergyLoss.append([e[0], 0.0])
+        else: 
+            EnergyLoss.append([e[0], e1 + e2])
+    StrainEnergyDensity =[]
+    for e, e1, e2 in zip(np3d, iSED[0], iSED[1]): 
+        if e1 + e2 < 0: 
+            StrainEnergyDensity.append([e[0], 0.0])
+        else: 
+            StrainEnergyDensity.append([e[0], e1 + e2])
     
-    # Eloss = np.array(EnergyLoss)
-    # SED = np.array(StrainEnergyDensity)
+    Eloss = np.array(EnergyLoss)
+    SED = np.array(StrainEnergyDensity)
 
     rim_center = deformed_Rim_road[0]
     road = deformed_Rim_road[1]
@@ -1028,4 +1028,4 @@ def getSDBModel(sdbresult):
     e3dM = np.array(np2d)
     e3dS = np.array(np3d)
 
-    return n3d, e3dM, e3dS 
+    return n3d, e3dM, e3dS, np.array(EnergyLoss), np.array(StrainEnergyDensity)

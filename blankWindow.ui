@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>3D Mesh Viewer [ptn, axi, trd]</string>
+   <string>3D Mesh Viewer [ptn, axi, trd, sdb, sfric]</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -63,23 +63,23 @@
           <property name="minimumSize">
            <size>
             <width>80</width>
-            <height>30</height>
+            <height>25</height>
            </size>
           </property>
           <property name="maximumSize">
            <size>
             <width>80</width>
-            <height>30</height>
+            <height>25</height>
            </size>
           </property>
           <item>
            <property name="text">
-            <string>lightblue</string>
+            <string>wheat</string>
            </property>
           </item>
           <item>
            <property name="text">
-            <string>wheat</string>
+            <string>violet</string>
            </property>
           </item>
           <item>
@@ -90,6 +90,11 @@
           <item>
            <property name="text">
             <string>gray</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>coral</string>
            </property>
           </item>
           <item>
@@ -109,22 +114,35 @@
           </item>
           <item>
            <property name="text">
-            <string>steelblue</string>
+            <string>lightblue</string>
            </property>
           </item>
           <item>
            <property name="text">
-            <string>violet</string>
+            <string>steelblue</string>
            </property>
           </item>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="checkBox_colorChanging">
+          <property name="maximumSize">
+           <size>
+            <width>80</width>
+            <height>15</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Next Color</string>
+          </property>
          </widget>
         </item>
         <item>
          <widget class="QPushButton" name="pushButton_replaceCells">
           <property name="maximumSize">
            <size>
-            <width>100</width>
-            <height>30</height>
+            <width>80</width>
+            <height>25</height>
            </size>
           </property>
           <property name="text">
@@ -225,7 +243,7 @@
           <property name="maximumSize">
            <size>
             <width>60</width>
-            <height>30</height>
+            <height>15</height>
            </size>
           </property>
           <property name="text">
@@ -256,6 +274,149 @@
           </property>
           <property name="text">
            <string>Jacobian</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="checkBox_Slicing">
+          <property name="maximumSize">
+           <size>
+            <width>80</width>
+            <height>15</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Slicing</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_solid_Jaco_3">
+        <item>
+         <widget class="QRadioButton" name="radioButton_sdbNone">
+          <property name="maximumSize">
+           <size>
+            <width>60</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>NONE</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="radioButton_SDB_sed">
+          <property name="maximumSize">
+           <size>
+            <width>60</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>SED</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="radioButton_SDB_eld">
+          <property name="maximumSize">
+           <size>
+            <width>60</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Heat G</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="radioButton_cPres">
+          <property name="maximumSize">
+           <size>
+            <width>60</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Pres</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_Extra">
+        <item>
+         <widget class="QRadioButton" name="radioButton_Temperature">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>60</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Tem</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="radioButton_ext2">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>60</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>2</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="radioButton_ext3">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>60</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>3</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="radioButton_ext4">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>60</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>4</string>
           </property>
          </widget>
         </item>
@@ -438,12 +599,12 @@
           </property>
           <property name="maximumSize">
            <size>
-            <width>50</width>
+            <width>60</width>
             <height>15</height>
            </size>
           </property>
           <property name="text">
-           <string>UpView</string>
+           <string>ViewPoint</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>
@@ -466,6 +627,87 @@
           </property>
          </widget>
         </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_preset_View">
+          <item>
+           <widget class="QPushButton" name="pushButton_View_yz">
+            <property name="maximumSize">
+             <size>
+              <width>20</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>yz</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButton_View_xz">
+            <property name="maximumSize">
+             <size>
+              <width>20</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>xz</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButton_View_yx">
+            <property name="maximumSize">
+             <size>
+              <width>20</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>yx</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_view_upPosition_2">
+          <property name="minimumSize">
+           <size>
+            <width>50</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>80</width>
+            <height>15</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Slicing Angle</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="lineEdit_slicingAngle">
+          <property name="maximumSize">
+           <size>
+            <width>50</width>
+            <height>20</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>0</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
        </layout>
       </item>
       <item>
@@ -474,8 +716,8 @@
          <widget class="QLineEdit" name="lineEdit_showNodes">
           <property name="maximumSize">
            <size>
-            <width>75</width>
-            <height>25</height>
+            <width>100</width>
+            <height>20</height>
            </size>
           </property>
          </widget>
@@ -484,8 +726,28 @@
          <widget class="QLineEdit" name="lineEdit_showElements">
           <property name="maximumSize">
            <size>
-            <width>75</width>
-            <height>25</height>
+            <width>100</width>
+            <height>20</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="lineEdit_colorRange">
+          <property name="maximumSize">
+           <size>
+            <width>100</width>
+            <height>20</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="lineEdit_temp">
+          <property name="maximumSize">
+           <size>
+            <width>100</width>
+            <height>20</height>
            </size>
           </property>
          </widget>

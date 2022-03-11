@@ -8,3 +8,4 @@ __pycache__/
 .gitignore
 *.axi
 *.trd
+plot_glyphs.py

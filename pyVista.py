@@ -22,8 +22,12 @@ class MESH():
             # self.press = self.surfpress.interpolate(self.npress)
             # print(" interpolating end.")
         elif '.sdb' in meshfile: 
-            self.grid, self.edges, self.pt_cloud, self.surfaces, self.nodes, self.idx_element, self.cells  = \
+            self.grid, self.edges, self.pt_cloud, self.surfaces, \
+                self.nodes, self.idx_element, self.cells, \
+                eld, sed, self.temperature  = \
                 load_pyVista_mesh(meshfile, centering=centering)
+            self.grid["sed"] = sed[:,1]
+            self.grid["eld"] = eld[:,1]
         else: 
             self.grid, self.edges, self.pt_cloud, self.surfaces, self.nodes, self.idx_element, self.cells  = \
                 load_pyVista_mesh(meshfile, centering=centering)
@@ -113,7 +117,7 @@ def readInp(fname):
 
 def readMesh_pyVista(fname,  files=None, centering=False, sdb=False): 
     if sdb: 
-        nodes, membrane, solid = Smart.getSDBModel(fname)
+        nodes, membrane, solid, eld, sed = Smart.getSDBModel(fname)
         meshtype = 9 
         s8=[]
         idx_element=[]
@@ -125,12 +129,15 @@ def readMesh_pyVista(fname,  files=None, centering=False, sdb=False):
                 s8.append([8, sd[1], sd[2], sd[3], sd[4], sd[5], sd[6], sd[7], sd[8]])
             idx_element.append([sd[0], cnt])
             cnt += 1 
-
+        temperature = pv.PolyData(nodes[:,1:4])
+        temperature["temperature"] = nodes[:,4]
     else: 
         print(" FILE READING", fname)
         nodes, s8, idx_element, meshtype = readInp(fname)
         nodes = np.array(nodes)
         s8 = np.array(s8)
+
+        
 
         if not isinstance(files, type(None)): 
             for file in files: 
@@ -154,13 +161,16 @@ def readMesh_pyVista(fname,  files=None, centering=False, sdb=False):
         npn[int(n[0])][1]=n[1]
         npn[int(n[0])][2]=n[2]
         npn[int(n[0])][3]=n[3]
-    
+
     print (" Number of nodes : %d"%(len(nodes)))
     print (" Number of 8-node elements : %d"%(len(s8)))
     print (" Element Type : %d"%(meshtype-1))
     print (" Max Node ID=%d"%(idmax))
 
-    return npn, np.array(s8).ravel(), idx_element, s8, meshtype
+    if sdb: 
+        return npn, np.array(s8).ravel(), idx_element, s8, meshtype, eld, sed, temperature 
+    else: 
+        return npn, np.array(s8).ravel(), idx_element, s8, meshtype
     
 
 def makePyvisterCells(cells, nodes, meshtype): 
@@ -193,7 +203,7 @@ def load_pyVista_mesh(file_name, centering=False):
     if ".sfric" in file_name: 
         nodes, cells, idx_element, elements, meshtype, pnodes, pcells = readSfric_pyVista(file_name)
     elif '.sdb' in file_name: 
-        nodes, cells, idx_element, elements, meshtype = readMesh_pyVista(file_name, sdb=True)
+        nodes, cells, idx_element, elements, meshtype, eld, sed, temperature = readMesh_pyVista(file_name, sdb=True)
     else: 
         nodes, cells, idx_element, elements, meshtype = readMesh_pyVista(file_name, centering=centering)
     
@@ -217,8 +227,14 @@ def load_pyVista_mesh(file_name, centering=False):
     else: 
         edges = grid.extract_all_edges()
         surfaces = None 
-    
-    return grid, edges, pt_cloud, surfaces, nodes, idx_element, elements
+    if '.sdb' in file_name:
+        
+        # pn_cloud = pv.PolyData(nodes[:, 1:4])
+        # print(" len", pn_cloud, len(temperature))
+        # pn_cloud['temperature'] = temperature
+        return grid, edges, pt_cloud, surfaces, nodes, idx_element, elements, eld, sed, temperature
+    else: 
+        return grid, edges, pt_cloud, surfaces, nodes, idx_element, elements
 
 def lighting(): 
     # setup lighting
@@ -265,12 +281,6 @@ def generateMesh_searched(ids, indexes, elements, nodes):
         return  grid 
     else: 
         return None 
-# def getCameraAngle(camera): 
-
-def readSdb_pyVista(file_name): 
-    nodes, membrane, solid = Smart.getSDBModel(file_name)
-
-
 
 def readSfric_pyVista(file_name): 
 

@@ -22,7 +22,7 @@ def readSDB(sdb):
     file.seek(0,2); fend = file.tell() #find the end position of binary file
     file.seek(0);   fpos = file.tell() #find the start position of binary file
     # # print fpos, fend
-    testfile = open("Node.inp","w")
+    # testfile = open("Node.inp","w")
 
     
     READ_LENGTH = 0
@@ -59,14 +59,14 @@ def readSDB(sdb):
                 NLB.append(Label) #for making of abaqus odb file
                 i = i + 1
             # print "Total Node Number =", len(NLB)
-            testfile.writelines("*NODE,\n")
+            # testfile.writelines("*NODE,\n")
             i = 0
             while i < NodesNUM:
                 X = struct.unpack('d', file.read(8))[0]
                 Y = struct.unpack('d', file.read(8))[0]
                 Z = struct.unpack('d', file.read(8))[0]
                 NODE.append([NLB[i], X, Y, Z, 0.0]) #for making of abaqus odb file
-                testfile.writelines(" %8d, %5.6e, %5.6e, %5.6e\n" % (NLB[i], X, Y, Z))
+                # testfile.writelines(" %8d, %5.6e, %5.6e, %5.6e\n" % (NLB[i], X, Y, Z))
                 i = i + 1
         elif BlockID == 31:
             #we can check the total 3d solid element number(=E3DNUM) and each label & nodes by BlockID 31
@@ -87,7 +87,7 @@ def readSDB(sdb):
         elif BlockID == 32:
             #we can check the total 2d element number(=E2DNUM) and each label & nodes by BlockID 32
             E2DNUM = struct.unpack('i', file.read(4))[0]
-            testfile.writelines("*ELEMENT, TYPE=M3D4R\n")
+            # testfile.writelines("*ELEMENT, TYPE=M3D4R\n")
             # Surf.count = E2DNUM
             i = 0
             while i < E2DNUM:
@@ -97,7 +97,7 @@ def readSDB(sdb):
                 N3 = struct.unpack('i', file.read(4))[0]
                 N4 = struct.unpack('i', file.read(4))[0]
                 ELM2D.append([ID, N1, N2, N3, N4])
-                testfile.writelines(" %8d, %8d, %8d, %8d, %8d\n" % (ID, N1, N2, N3, N4))
+                # testfile.writelines(" %8d, %8d, %8d, %8d, %8d\n" % (ID, N1, N2, N3, N4))
                 i  = i + 1
         elif BlockID == 51 or BlockID == 52:
             #we can check the elset name and each elset number(=ENUM) by BlockID 51&52
@@ -182,17 +182,8 @@ def readSDB(sdb):
             break
 
     # del NLB, XYZ, ELM2D, ELM3D, DISP
-    testfile.close()
+    # testfile.close()
     
-    for e in ELM3D: 
-        if e[7] == e[8]: 
-            e[4] = e[5]; e[5] = e[6]; e[6] = e[7]; e[8] = 0; e[7] =0 
-
-    # ELM3D =  np.array(ELM3D)
-    # ELM2D = np.array(ELM2D)
-    # print ("Node", np.array(NODE))
-    # print ("RIM ROAD", RIM_ROAD)
-
     if len(NODE) > 0: #and len(Surf.surflabel) > 0:
         return NODE, ELM2D, ELM3D, RIM_ROAD
     else:
@@ -272,7 +263,7 @@ def SDBResult_READ(sdbResult, NODE):
             # print"RecordHeaderID = ", RecordHeaderID, "Record Value = ", RecordValue
             # print ("RecordHeaderID", RecordHeaderID, ", Record Value", RecordValue)
             OutputStepTime = struct.unpack('d', resultsfile.read(8))[0]
-            print ("SDB Result Time=%.2f"%OutputStepTime)
+            print ("SDB Result Physical Time=%.2f"%OutputStepTime)
             # printOutputStepTime
             OutputStepID       = struct.unpack('i', resultsfile.read(4))[0]
             # print ("Output step ID", OutputStepID)
@@ -824,25 +815,39 @@ def ResultSfric(model="", result="", sfric='', deformed=1, ht=8.0E-03, sfht=1.0E
 
     resultsfile.close()
     
-    for rdg in DeformedRigid.Node:
-        if rdg[0] == sfric.Rim.Node[0][0]:  
-            sfric.Rim.Node[0][1] += rdg[1]
-            sfric.Rim.Node[0][2] += rdg[2]
-            sfric.Rim.Node[0][3] += rdg[3]
-        if rdg[0] == sfric.Road.Node[0][0]:  
-            sfric.Road.Node[0][1] += rdg[1]
-            sfric.Road.Node[0][2] += rdg[2]
-            sfric.Road.Node[0][3] += rdg[3]
-
-    minz  = sfric.Node.Node[0][3]
-    for nd in sfric.Node.Node:
-        if minz > nd[3]: 
-            minz = nd[3] 
-    for nd in sfric.Node.Node:
-        if nd[3] < minz + ht:
-            sfric.pNode.Add(nd)   ## bottom nodes... 
-
     sfric.Node.Node = np.array(sfric.Node.Node)
+    DeformedRigid.Node = np.array(DeformedRigid.Node)
+    ix = np.where(DeformedRigid.Node[:,0] == sfric.Rim.Node[0][0])[0][0] 
+    sfric.Rim.Node[0][1] += DeformedRigid.Node[ix][1] 
+    sfric.Rim.Node[0][2] += DeformedRigid.Node[ix][2] 
+    sfric.Rim.Node[0][3] += DeformedRigid.Node[ix][3] 
+
+    ix = np.where(DeformedRigid.Node[:,0] == sfric.Road.Node[0][0])[0][0] 
+    sfric.Road.Node[0][1] += DeformedRigid.Node[ix][1] 
+    sfric.Road.Node[0][2] += DeformedRigid.Node[ix][2] 
+    sfric.Road.Node[0][3] += DeformedRigid.Node[ix][3] 
+
+    # for rdg in DeformedRigid.Node:
+    #     if rdg[0] == sfric.Rim.Node[0][0]:  
+    #         sfric.Rim.Node[0][1] += rdg[1]
+    #         sfric.Rim.Node[0][2] += rdg[2]
+    #         sfric.Rim.Node[0][3] += rdg[3]
+    #     if rdg[0] == sfric.Road.Node[0][0]:  
+    #         sfric.Road.Node[0][1] += rdg[1]
+    #         sfric.Road.Node[0][2] += rdg[2]
+    #         sfric.Road.Node[0][3] += rdg[3]
+
+
+
+    # minz  = sfric.Node.Node[0][3]
+    # for nd in sfric.Node.Node:
+    #     if minz > nd[3]: 
+    #         minz = nd[3] 
+    # for nd in sfric.Node.Node:
+    #     if nd[3] < minz + ht:
+    #         sfric.pNode.Add(nd)   ## bottom nodes... 
+
+    
     minz = np.min(sfric.Node.Node[:,3])
     ix = np.where (sfric.Node.Node[:,3] < minz + ht)[0]
     sfric.pNode.Node = sfric.Node.Node[ix]
@@ -1000,32 +1005,64 @@ class SDB:
         self.Node = NODE()
         pass
 
+
+def multiprocessing_SDB(args): 
+    eid, values = args 
+    v1 = np.array(values[0]); v2 = np.array(values[1])
+    smvalue = v1 + v2 
+    smvalue = smvalue.ravel()
+    idx = np.where(smvalue<0)[0]
+    if len(idx): 
+        smvalue[idx] = 0 
+    smvalue = np.c_[eid, smvalue]
+
+    return smvalue 
+
 def getSDBModel(sdbresult): 
     sdbmodel = sdbresult[:-3]
+
+
     npn, np2d, np3d, rim_road = readSDB(sdbmodel) 
     d_npn, deformed_Rim_road, iELD, iSED =SDBResult_READ(sdbresult, npn)
 
-    EnergyLoss =[]
-    for e, e1, e2 in zip(np3d, iELD[0], iELD[1]): 
-        if e1 + e2 < 0: 
-            EnergyLoss.append([e[0], 0.0])
-        else: 
-            EnergyLoss.append([e[0], e1 + e2])
-    StrainEnergyDensity =[]
-    for e, e1, e2 in zip(np3d, iSED[0], iSED[1]): 
-        if e1 + e2 < 0: 
-            StrainEnergyDensity.append([e[0], 0.0])
-        else: 
-            StrainEnergyDensity.append([e[0], e1 + e2])
-    
-    Eloss = np.array(EnergyLoss)
-    SED = np.array(StrainEnergyDensity)
-
-    rim_center = deformed_Rim_road[0]
-    road = deformed_Rim_road[1]
-
+   
     n3d = np.array(d_npn)
     e3dM = np.array(np2d)
     e3dS = np.array(np3d)
 
-    return n3d, e3dM, e3dS, np.array(EnergyLoss), np.array(StrainEnergyDensity)
+    # import time 
+
+    eid = e3dS[:,0].flatten()
+    # t = time.time()
+    eld1 = np.array(iELD[0]); eld2 = np.array(iELD[1])
+    EnergyLoss = eld1 + eld2 
+    EnergyLoss = EnergyLoss.ravel()
+    idx = np.where(EnergyLoss<0)[0]
+    if len(idx): 
+        EnergyLoss[idx] = 0 
+    EnergyLoss = np.c_[eid, EnergyLoss]
+    
+    sed1 = np.array(iSED[0]); sed2 = np.array(iSED[1])
+    StrainEnergyDensity = sed1 + sed2
+    StrainEnergyDensity = StrainEnergyDensity.ravel()
+    idx = np.where(StrainEnergyDensity<0)[0]
+    if len(idx): 
+        StrainEnergyDensity[idx] = 0 
+    StrainEnergyDensity = np.c_[eid, StrainEnergyDensity]
+
+    # t1 = time.time()
+    # from multiprocessing import Pool, Process
+    # t2 = time.time()
+    # pool = Pool(processes=3)
+    # EnergyLoss, StrainEnergyDensity = pool.map(multiprocessing_SDB, [[eid, iELD], [eid, iSED]])
+    # t3 = time.time(); 
+    # print(" TIME =%.2f"%(t1-t))   ## > TIME =0.09 
+    # print(" TIME =%.2f"%(t3-t2))  ## > TIME =1.46
+    
+
+
+    rim_center = deformed_Rim_road[0]
+    road = deformed_Rim_road[1]
+
+
+    return n3d, e3dM, e3dS, EnergyLoss, StrainEnergyDensity

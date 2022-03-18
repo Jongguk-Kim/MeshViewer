@@ -26,7 +26,7 @@
          <widget class="QPushButton" name="pushButton_openfile">
           <property name="maximumSize">
            <size>
-            <width>150</width>
+            <width>120</width>
             <height>30</height>
            </size>
           </property>
@@ -39,18 +39,28 @@
          <widget class="QPushButton" name="pushButton_add_Mesh">
           <property name="minimumSize">
            <size>
-            <width>150</width>
+            <width>120</width>
             <height>0</height>
            </size>
           </property>
           <property name="maximumSize">
            <size>
-            <width>150</width>
+            <width>120</width>
             <height>30</height>
            </size>
           </property>
           <property name="text">
            <string>Add mesh</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="lineEdit_temp">
+          <property name="maximumSize">
+           <size>
+            <width>120</width>
+            <height>20</height>
+           </size>
           </property>
          </widget>
         </item>
@@ -68,13 +78,13 @@
           </property>
           <property name="maximumSize">
            <size>
-            <width>80</width>
+            <width>100</width>
             <height>25</height>
            </size>
           </property>
           <item>
            <property name="text">
-            <string>wheat</string>
+            <string>white</string>
            </property>
           </item>
           <item>
@@ -122,6 +132,11 @@
             <string>steelblue</string>
            </property>
           </item>
+          <item>
+           <property name="text">
+            <string>wheat</string>
+           </property>
+          </item>
          </widget>
         </item>
         <item>
@@ -141,12 +156,25 @@
          <widget class="QPushButton" name="pushButton_replaceCells">
           <property name="maximumSize">
            <size>
-            <width>80</width>
+            <width>100</width>
             <height>25</height>
            </size>
           </property>
           <property name="text">
            <string>Replace</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_SaveSfricSurface">
+          <property name="maximumSize">
+           <size>
+            <width>100</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>save_sfricSurf</string>
           </property>
          </widget>
         </item>
@@ -615,7 +643,7 @@
          <widget class="QLineEdit" name="lineEdit_view_upPosition">
           <property name="maximumSize">
            <size>
-            <width>50</width>
+            <width>80</width>
             <height>20</height>
            </size>
           </property>
@@ -696,7 +724,7 @@
          <widget class="QLineEdit" name="lineEdit_slicingAngle">
           <property name="maximumSize">
            <size>
-            <width>50</width>
+            <width>80</width>
             <height>20</height>
            </size>
           </property>
@@ -716,7 +744,7 @@
          <widget class="QLineEdit" name="lineEdit_showNodes">
           <property name="maximumSize">
            <size>
-            <width>100</width>
+            <width>125</width>
             <height>20</height>
            </size>
           </property>
@@ -726,31 +754,59 @@
          <widget class="QLineEdit" name="lineEdit_showElements">
           <property name="maximumSize">
            <size>
-            <width>100</width>
+            <width>125</width>
             <height>20</height>
            </size>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="lineEdit_colorRange">
-          <property name="maximumSize">
-           <size>
-            <width>100</width>
-            <height>20</height>
-           </size>
-          </property>
-         </widget>
+         <layout class="QHBoxLayout" name="horizontalLayout_cRange">
+          <item>
+           <widget class="QLineEdit" name="lineEdit_colorRange">
+            <property name="maximumSize">
+             <size>
+              <width>60</width>
+              <height>20</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="lineEdit_colorRange1">
+            <property name="maximumSize">
+             <size>
+              <width>60</width>
+              <height>20</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
         <item>
-         <widget class="QLineEdit" name="lineEdit_temp">
-          <property name="maximumSize">
-           <size>
-            <width>100</width>
-            <height>20</height>
-           </size>
-          </property>
-         </widget>
+         <layout class="QHBoxLayout" name="horizontalLayout_colorRange_value">
+          <item>
+           <widget class="QLineEdit" name="lineEdit_colorRange_value">
+            <property name="maximumSize">
+             <size>
+              <width>60</width>
+              <height>20</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="lineEdit_colorRange_value1">
+            <property name="maximumSize">
+             <size>
+              <width>60</width>
+              <height>20</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </item>

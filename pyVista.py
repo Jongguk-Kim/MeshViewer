@@ -11,6 +11,11 @@ import numpy as np
 
 import smart_results as Smart 
 
+def reading_stl(fname): 
+    reader = pv.get_reader(fname) 
+    mesh = reader.read()
+    return mesh 
+
 class MESH(): 
     def __init__(self, meshfile, centering=False) : 
         self.meshfile = meshfile 
@@ -30,9 +35,42 @@ class MESH():
                 load_pyVista_mesh(meshfile, centering=centering)
             self.grid["sed"] = sed[:,1]
             self.grid["eld"] = eld[:,1]
+        elif '.dat' in meshfile: ## grid, edges, pt_cloud, surfaces, nodes, idx_element
+            self.grid, self.edges, self.pt_cloud, self.surfaces, self.nodes, self.idx_element, self.cells,\
+                 self.npress, self.surfpress  = load_pyVista_mesh(meshfile, centering=centering)
+            self.press = None 
+            print(" Interpolating Contact Pressure")
+            self.press = self.surfaces.interpolate(self.npress, radius=0.002)
         else: 
             self.grid, self.edges, self.pt_cloud, self.surfaces, self.nodes, self.idx_element, self.cells  = \
                 load_pyVista_mesh(meshfile, centering=centering)
+
+def read_SMART_postFootshape(fname): 
+    with open(fname) as F: 
+        lines = F.readlines()
+    
+    nodes =[]
+    el =[]
+    index_elements=[]
+    mtype =  5
+    cmd = False 
+    for line in lines: 
+        if "**" in line: continue 
+
+        if '*' in line: 
+            if "*NODE" in line:    cmd = 'n'
+            if "*ELEMENT" in line: cmd = 'e'
+            if '*OFFSET' in line:  cmd ='offset'
+        else: 
+            if cmd =='n': 
+                wds = line.split(",")
+                nodes.append([float(wds[0].strip()), float(wds[1].strip()), float(wds[2].strip()), float(wds[3].strip()), float(wds[4].strip())])
+            if cmd =='e': 
+                wds = line.split(",")
+                el.append([4, int(wds[1].strip()), int(wds[2].strip()), int(wds[3].strip()), int(wds[4].strip())])
+                index_elements.append([int(wds[0].strip()), len(el)]) 
+
+    return nodes, el, index_elements, mtype
 
 def readInp(fname): 
 
@@ -116,28 +154,29 @@ def readInp(fname):
 
 def readMesh_pyVista(fname,  files=None, centering=False, sdb=False): 
     if sdb: 
-        # import time 
+        import time 
         # t = time.time()
         nodes, membrane, solid, eld, sed = Smart.getSDBModel(fname)
         # t1 = time.time(); print(" SDB Reading %.3f"%(t1-t))
-        # print(solid)
         meshtype = 9 
-        
         idx_element=solid[:,0] 
         cnt = np.arange(len(solid))
         idx_element = np.column_stack((idx_element, cnt))
 
         s8=solid 
         s8[:,0] = 8
+    
     else: 
-        
-        nodes, s8, idx_element, meshtype = readInp(fname)
+        if '.dat' in fname: 
+            nodes, s8, idx_element, meshtype = read_SMART_postFootshape(fname)
+        else: 
+            nodes, s8, idx_element, meshtype = readInp(fname)
         nodes = np.array(nodes)
         s8 = np.array(s8)
-        print(" FILE READING", fname)
+        # print(" FILE READING", fname)
         if not isinstance(files, type(None)): 
             for file in files: 
-                print("* FILE READING", file)
+                # print("* FILE READING", file)
                 nds, sd, idx_element, meshtype = readInp(file) 
                 nodes = np.concatenate((nodes, np.array(nds)), axis=0)
                 s8 = np.concatenate((s8, np.array(sd)), axis=0)
@@ -146,7 +185,7 @@ def readMesh_pyVista(fname,  files=None, centering=False, sdb=False):
     if centering: 
         md = np.average(nodes[:,1]) 
         nodes[:,1] -= md 
-        print (" shift %.6f"%(md))
+        # print (" shift %.6f"%(md))
 
     npn = np.zeros(shape=(idmax+1, 4))
     if '.sdb' in fname:
@@ -165,15 +204,17 @@ def readMesh_pyVista(fname,  files=None, centering=False, sdb=False):
             npn[int(n[0])][3]=n[3]
 
     print (" Number of nodes : %d"%(len(nodes)))
-    print (" Number of 8-node elements : %d"%(len(s8)))
+    print (" Number of elements : %d"%(len(s8)))
     print (" Element Type : %d"%(meshtype-1))
     print (" Max Node ID=%d"%(idmax))
 
     if sdb: 
         return npn, np.array(s8).ravel(), idx_element, np.array(s8), meshtype, eld, sed, tn
+    elif '.dat' in fname: 
+        return npn, np.array(s8).ravel(), idx_element, np.array(s8), meshtype, nodes
     else: 
         return npn, np.array(s8).ravel(), idx_element, np.array(s8), meshtype
-    
+
 
 def makePyvisterCells(cells, nodes, meshtype): 
 
@@ -206,6 +247,9 @@ def load_pyVista_mesh(file_name, centering=False):
         nodes, cells, idx_element, elements, meshtype, pnodes, pcells, class_sfric = readSfric_pyVista(file_name)
     elif '.sdb' in file_name: 
         nodes, cells, idx_element, elements, meshtype, eld, sed, temperature = readMesh_pyVista(file_name, sdb=True)
+    elif '.dat' in file_name: 
+        nodes, cells, idx_element, elements, meshtype, n_pres = readMesh_pyVista(file_name, centering=False)
+
     else: 
         nodes, cells, idx_element, elements, meshtype = readMesh_pyVista(file_name, centering=centering)
     
@@ -227,6 +271,13 @@ def load_pyVista_mesh(file_name, centering=False):
             psurf = pgrid.extract_surface()
 
             return grid, edges, pt_cloud, surfaces, nodes, idx_element, elements, pn_cloud, psurf, class_sfric
+        if '.dat' in file_name: 
+            pgrid, pxyz = makePyvisterCells(cells, nodes, meshtype)
+            pn_cloud = pv.PolyData(n_pres[:, 1:4])
+            pn_cloud["press"] = n_pres[:, 4]
+            psurf = pgrid.extract_surface()
+            
+            return grid, edges, pt_cloud, surfaces, nodes, idx_element, elements, pn_cloud, psurf
 
     else: 
         edges = grid.extract_all_edges()
@@ -259,6 +310,9 @@ def lighting():
     # light3 = pv.Light((0, 0, 10), (0, 0, 0), 'white'); lights.append(light)
 
     return lights 
+def addlight(light_type='headlight'): 
+    light = pv.Light(light_type=light_type)
+    return light 
 
 def createCamera(): 
     return pv.Camera()

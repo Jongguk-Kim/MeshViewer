@@ -28,7 +28,7 @@ import matplotlib.pyplot as plt
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QListWidget, QListWidgetItem
 
-import math, struct
+import math, struct, time
 from os import getcwd, remove
 from os.path import isfile
 
@@ -46,7 +46,8 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.patches import Arc
 
-
+import pyVista as Mesh 
+from pyvistaqt import QtInteractor, MainWindow
 
 TireComponents = [
     'BEAD_R', 'BEAD_L', # 'BD1' ,  Bead
@@ -1894,7 +1895,7 @@ def ElementDuplicationCheck(AllElements):
     return dup 
 
 def ChaferDivide(Elements, ChaferName, Elset, Node):
-
+    relement= 0 ; lelement=0
     asymmetric =0
     I = len(Elements)
     J = len(Node)
@@ -4361,6 +4362,45 @@ def Color(elsetname):                ## Define Color set
         c = 'silver'
     return c
 
+def parsingIDs(text): 
+    text = text.split(",")
+    
+    ids =[]
+    for txt in text:
+        txt=txt.strip()
+        if 'N' in txt or 'n' in txt: 
+            continue 
+        try: 
+            if '~' in txt: 
+                t1, t2 = txt.split("~")
+                for i in range(int(t1.strip()), int(t2.strip())+1) : 
+                    ids.append(i) 
+            elif ':' in txt: 
+                t1, t2 = txt.split(":")
+                for i in range(int(t1.strip()), int(t2.strip())+1) : 
+                    ids.append(i) 
+            elif '-' in txt: 
+                t1, t2 = txt.split("-")
+                for i in range(int(t1.strip()), int(t2.strip())+1) : 
+                    ids.append(i) 
+            elif "" == txt: 
+                continue 
+            else: 
+                i = int(txt)
+                if i <=0: continue 
+                ids.append(i)
+
+        except Exception as EX: 
+            print(EX, txt )
+            
+            continue 
+    
+    return ids 
+
+def writingError(ex): 
+    fp = open('error.err', 'w')
+    fp.write(str(ex))
+    fp.close() 
 
 class Ui_MainWindow(object):
 
@@ -4371,7 +4411,692 @@ class Ui_MainWindow(object):
         icon.addPixmap(QtGui.QPixmap("mesh.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         MainWindow.setWindowIcon(icon)
 
-       
+    def setupUi(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(1371, 914)
+        MainWindow.setMinimumSize(QtCore.QSize(0, 25))
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
+        self.gridLayout.setObjectName("gridLayout")
+        self.verticalLayout_viewArea = QtWidgets.QVBoxLayout()
+        self.verticalLayout_viewArea.setContentsMargins(-1, -1, 10, -1)
+        self.verticalLayout_viewArea.setObjectName("verticalLayout_viewArea")
+        self.groupBox_3dMeshControl = QtWidgets.QGroupBox(self.centralwidget)
+        self.groupBox_3dMeshControl.setMinimumSize(QtCore.QSize(900, 102))
+        self.groupBox_3dMeshControl.setMaximumSize(QtCore.QSize(16777215, 102))
+        self.groupBox_3dMeshControl.setCheckable(True)
+        self.groupBox_3dMeshControl.setChecked(False)
+        self.groupBox_3dMeshControl.setObjectName("groupBox_3dMeshControl")
+        self.layoutWidget = QtWidgets.QWidget(self.groupBox_3dMeshControl)
+        self.layoutWidget.setGeometry(QtCore.QRect(0, 16, 886, 91))
+        self.layoutWidget.setObjectName("layoutWidget")
+        self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.layoutWidget)
+        self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
+        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+        self.verticalLayout_Opecity = QtWidgets.QVBoxLayout()
+        self.verticalLayout_Opecity.setObjectName("verticalLayout_Opecity")
+        self.checkBox_meshLine = QtWidgets.QCheckBox(self.layoutWidget)
+        self.checkBox_meshLine.setMaximumSize(QtCore.QSize(90, 20))
+        self.checkBox_meshLine.setChecked(True)
+        self.checkBox_meshLine.setObjectName("checkBox_meshLine")
+        self.verticalLayout_Opecity.addWidget(self.checkBox_meshLine)
+        self.checkBox_pyvistaLighting = QtWidgets.QCheckBox(self.layoutWidget)
+        self.checkBox_pyvistaLighting.setMaximumSize(QtCore.QSize(90, 20))
+        self.checkBox_pyvistaLighting.setChecked(True)
+        self.checkBox_pyvistaLighting.setObjectName("checkBox_pyvistaLighting")
+        self.verticalLayout_Opecity.addWidget(self.checkBox_pyvistaLighting)
+        self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_3.setContentsMargins(0, -1, -1, -1)
+        self.horizontalLayout_3.setSpacing(0)
+        self.horizontalLayout_3.setObjectName("horizontalLayout_3")
+        self.label_opecity = QtWidgets.QLabel(self.layoutWidget)
+        self.label_opecity.setMaximumSize(QtCore.QSize(50, 15))
+        self.label_opecity.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_opecity.setObjectName("label_opecity")
+        self.horizontalLayout_3.addWidget(self.label_opecity)
+        self.lineEdit_opecity = QtWidgets.QLineEdit(self.layoutWidget)
+        self.lineEdit_opecity.setMaximumSize(QtCore.QSize(30, 20))
+        self.lineEdit_opecity.setAlignment(QtCore.Qt.AlignCenter)
+        self.lineEdit_opecity.setObjectName("lineEdit_opecity")
+        self.horizontalLayout_3.addWidget(self.lineEdit_opecity)
+        self.verticalLayout_Opecity.addLayout(self.horizontalLayout_3)
+        self.horizontalSlider_opacity = QtWidgets.QSlider(self.layoutWidget)
+        self.horizontalSlider_opacity.setMaximumSize(QtCore.QSize(90, 15))
+        self.horizontalSlider_opacity.setMaximum(100)
+        self.horizontalSlider_opacity.setSingleStep(5)
+        self.horizontalSlider_opacity.setProperty("value", 100)
+        self.horizontalSlider_opacity.setOrientation(QtCore.Qt.Horizontal)
+        self.horizontalSlider_opacity.setObjectName("horizontalSlider_opacity")
+        self.verticalLayout_Opecity.addWidget(self.horizontalSlider_opacity)
+        self.horizontalLayout_2.addLayout(self.verticalLayout_Opecity)
+        self.verticalLayout_edges = QtWidgets.QVBoxLayout()
+        self.verticalLayout_edges.setObjectName("verticalLayout_edges")
+        self.horizontalLayout_2.addLayout(self.verticalLayout_edges)
+        self.verticalLayout_solid_Jaco = QtWidgets.QVBoxLayout()
+        self.verticalLayout_solid_Jaco.setObjectName("verticalLayout_solid_Jaco")
+        self.checkBox_showEdges = QtWidgets.QCheckBox(self.layoutWidget)
+        self.checkBox_showEdges.setMaximumSize(QtCore.QSize(60, 15))
+        self.checkBox_showEdges.setObjectName("checkBox_showEdges")
+        self.verticalLayout_solid_Jaco.addWidget(self.checkBox_showEdges)
+        self.checkBox_Solid = QtWidgets.QCheckBox(self.layoutWidget)
+        self.checkBox_Solid.setMaximumSize(QtCore.QSize(80, 15))
+        self.checkBox_Solid.setObjectName("checkBox_Solid")
+        self.verticalLayout_solid_Jaco.addWidget(self.checkBox_Solid)
+        self.checkBox_jacobian = QtWidgets.QCheckBox(self.layoutWidget)
+        self.checkBox_jacobian.setMaximumSize(QtCore.QSize(80, 15))
+        self.checkBox_jacobian.setObjectName("checkBox_jacobian")
+        self.verticalLayout_solid_Jaco.addWidget(self.checkBox_jacobian)
+        self.checkBox_Slicing = QtWidgets.QCheckBox(self.layoutWidget)
+        self.checkBox_Slicing.setMaximumSize(QtCore.QSize(80, 15))
+        self.checkBox_Slicing.setObjectName("checkBox_Slicing")
+        self.verticalLayout_solid_Jaco.addWidget(self.checkBox_Slicing)
+        self.horizontalLayout_2.addLayout(self.verticalLayout_solid_Jaco)
+        self.verticalLayout_solid_Jaco_3 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_solid_Jaco_3.setObjectName("verticalLayout_solid_Jaco_3")
+        self.radioButton_sdbNone = QtWidgets.QRadioButton(self.layoutWidget)
+        self.radioButton_sdbNone.setMaximumSize(QtCore.QSize(60, 16777215))
+        self.radioButton_sdbNone.setChecked(True)
+        self.radioButton_sdbNone.setObjectName("radioButton_sdbNone")
+        self.verticalLayout_solid_Jaco_3.addWidget(self.radioButton_sdbNone)
+        self.radioButton_SDB_sed = QtWidgets.QRadioButton(self.layoutWidget)
+        self.radioButton_SDB_sed.setMaximumSize(QtCore.QSize(60, 16777215))
+        self.radioButton_SDB_sed.setObjectName("radioButton_SDB_sed")
+        self.verticalLayout_solid_Jaco_3.addWidget(self.radioButton_SDB_sed)
+        self.radioButton_SDB_eld = QtWidgets.QRadioButton(self.layoutWidget)
+        self.radioButton_SDB_eld.setMaximumSize(QtCore.QSize(60, 16777215))
+        self.radioButton_SDB_eld.setObjectName("radioButton_SDB_eld")
+        self.verticalLayout_solid_Jaco_3.addWidget(self.radioButton_SDB_eld)
+        self.radioButton_cPres = QtWidgets.QRadioButton(self.layoutWidget)
+        self.radioButton_cPres.setMaximumSize(QtCore.QSize(60, 16777215))
+        self.radioButton_cPres.setObjectName("radioButton_cPres")
+        self.verticalLayout_solid_Jaco_3.addWidget(self.radioButton_cPres)
+        self.horizontalLayout_2.addLayout(self.verticalLayout_solid_Jaco_3)
+        self.verticalLayout_Extra = QtWidgets.QVBoxLayout()
+        self.verticalLayout_Extra.setObjectName("verticalLayout_Extra")
+        self.radioButton_Temperature = QtWidgets.QRadioButton(self.layoutWidget)
+        self.radioButton_Temperature.setEnabled(False)
+        self.radioButton_Temperature.setMaximumSize(QtCore.QSize(60, 16777215))
+        self.radioButton_Temperature.setChecked(True)
+        self.radioButton_Temperature.setObjectName("radioButton_Temperature")
+        self.verticalLayout_Extra.addWidget(self.radioButton_Temperature)
+        self.radioButton_ext2 = QtWidgets.QRadioButton(self.layoutWidget)
+        self.radioButton_ext2.setEnabled(False)
+        self.radioButton_ext2.setMaximumSize(QtCore.QSize(60, 16777215))
+        self.radioButton_ext2.setObjectName("radioButton_ext2")
+        self.verticalLayout_Extra.addWidget(self.radioButton_ext2)
+        self.radioButton_ext3 = QtWidgets.QRadioButton(self.layoutWidget)
+        self.radioButton_ext3.setEnabled(False)
+        self.radioButton_ext3.setMaximumSize(QtCore.QSize(60, 16777215))
+        self.radioButton_ext3.setObjectName("radioButton_ext3")
+        self.verticalLayout_Extra.addWidget(self.radioButton_ext3)
+        self.radioButton_ext4 = QtWidgets.QRadioButton(self.layoutWidget)
+        self.radioButton_ext4.setEnabled(False)
+        self.radioButton_ext4.setMaximumSize(QtCore.QSize(60, 16777215))
+        self.radioButton_ext4.setObjectName("radioButton_ext4")
+        self.verticalLayout_Extra.addWidget(self.radioButton_ext4)
+        self.horizontalLayout_2.addLayout(self.verticalLayout_Extra)
+        self.verticalLayout_xClipping = QtWidgets.QVBoxLayout()
+        self.verticalLayout_xClipping.setObjectName("verticalLayout_xClipping")
+        self.checkBox_clipping_X = QtWidgets.QCheckBox(self.layoutWidget)
+        self.checkBox_clipping_X.setMaximumSize(QtCore.QSize(60, 15))
+        self.checkBox_clipping_X.setObjectName("checkBox_clipping_X")
+        self.verticalLayout_xClipping.addWidget(self.checkBox_clipping_X)
+        self.checkBox_clipping_X_reverse = QtWidgets.QCheckBox(self.layoutWidget)
+        self.checkBox_clipping_X_reverse.setMaximumSize(QtCore.QSize(70, 15))
+        self.checkBox_clipping_X_reverse.setObjectName("checkBox_clipping_X_reverse")
+        self.verticalLayout_xClipping.addWidget(self.checkBox_clipping_X_reverse)
+        self.horizontalSlider_x_clipping = QtWidgets.QSlider(self.layoutWidget)
+        self.horizontalSlider_x_clipping.setMaximumSize(QtCore.QSize(80, 30))
+        self.horizontalSlider_x_clipping.setMaximum(100)
+        self.horizontalSlider_x_clipping.setSingleStep(5)
+        self.horizontalSlider_x_clipping.setProperty("value", 50)
+        self.horizontalSlider_x_clipping.setSliderPosition(50)
+        self.horizontalSlider_x_clipping.setOrientation(QtCore.Qt.Horizontal)
+        self.horizontalSlider_x_clipping.setObjectName("horizontalSlider_x_clipping")
+        self.verticalLayout_xClipping.addWidget(self.horizontalSlider_x_clipping)
+        self.horizontalLayout_2.addLayout(self.verticalLayout_xClipping)
+        self.verticalLayout_yClipping = QtWidgets.QVBoxLayout()
+        self.verticalLayout_yClipping.setObjectName("verticalLayout_yClipping")
+        self.checkBox_clipping_Y = QtWidgets.QCheckBox(self.layoutWidget)
+        self.checkBox_clipping_Y.setMaximumSize(QtCore.QSize(60, 15))
+        self.checkBox_clipping_Y.setObjectName("checkBox_clipping_Y")
+        self.verticalLayout_yClipping.addWidget(self.checkBox_clipping_Y)
+        self.checkBox_clipping_Y_reverse = QtWidgets.QCheckBox(self.layoutWidget)
+        self.checkBox_clipping_Y_reverse.setMaximumSize(QtCore.QSize(70, 15))
+        self.checkBox_clipping_Y_reverse.setObjectName("checkBox_clipping_Y_reverse")
+        self.verticalLayout_yClipping.addWidget(self.checkBox_clipping_Y_reverse)
+        self.horizontalSlider_y_clipping = QtWidgets.QSlider(self.layoutWidget)
+        self.horizontalSlider_y_clipping.setMaximumSize(QtCore.QSize(80, 30))
+        self.horizontalSlider_y_clipping.setMaximum(100)
+        self.horizontalSlider_y_clipping.setSingleStep(5)
+        self.horizontalSlider_y_clipping.setProperty("value", 50)
+        self.horizontalSlider_y_clipping.setSliderPosition(50)
+        self.horizontalSlider_y_clipping.setOrientation(QtCore.Qt.Horizontal)
+        self.horizontalSlider_y_clipping.setObjectName("horizontalSlider_y_clipping")
+        self.verticalLayout_yClipping.addWidget(self.horizontalSlider_y_clipping)
+        self.horizontalLayout_2.addLayout(self.verticalLayout_yClipping)
+        self.verticalLayout_zClipping = QtWidgets.QVBoxLayout()
+        self.verticalLayout_zClipping.setObjectName("verticalLayout_zClipping")
+        self.checkBox_clipping_Z = QtWidgets.QCheckBox(self.layoutWidget)
+        self.checkBox_clipping_Z.setMaximumSize(QtCore.QSize(60, 15))
+        self.checkBox_clipping_Z.setObjectName("checkBox_clipping_Z")
+        self.verticalLayout_zClipping.addWidget(self.checkBox_clipping_Z)
+        self.checkBox_clipping_Z_reverse = QtWidgets.QCheckBox(self.layoutWidget)
+        self.checkBox_clipping_Z_reverse.setMaximumSize(QtCore.QSize(70, 15))
+        self.checkBox_clipping_Z_reverse.setObjectName("checkBox_clipping_Z_reverse")
+        self.verticalLayout_zClipping.addWidget(self.checkBox_clipping_Z_reverse)
+        self.horizontalSlider_z_clipping = QtWidgets.QSlider(self.layoutWidget)
+        self.horizontalSlider_z_clipping.setMaximumSize(QtCore.QSize(80, 30))
+        self.horizontalSlider_z_clipping.setMaximum(100)
+        self.horizontalSlider_z_clipping.setSingleStep(5)
+        self.horizontalSlider_z_clipping.setProperty("value", 50)
+        self.horizontalSlider_z_clipping.setSliderPosition(50)
+        self.horizontalSlider_z_clipping.setOrientation(QtCore.Qt.Horizontal)
+        self.horizontalSlider_z_clipping.setObjectName("horizontalSlider_z_clipping")
+        self.verticalLayout_zClipping.addWidget(self.horizontalSlider_z_clipping)
+        self.horizontalLayout_2.addLayout(self.verticalLayout_zClipping)
+        self.verticalLayout_zClipping_2 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_zClipping_2.setObjectName("verticalLayout_zClipping_2")
+        self.label_view_upPosition = QtWidgets.QLabel(self.layoutWidget)
+        self.label_view_upPosition.setMinimumSize(QtCore.QSize(50, 0))
+        self.label_view_upPosition.setMaximumSize(QtCore.QSize(60, 15))
+        self.label_view_upPosition.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_view_upPosition.setObjectName("label_view_upPosition")
+        self.verticalLayout_zClipping_2.addWidget(self.label_view_upPosition)
+        self.lineEdit_view_upPosition = QtWidgets.QLineEdit(self.layoutWidget)
+        self.lineEdit_view_upPosition.setMinimumSize(QtCore.QSize(10, 0))
+        self.lineEdit_view_upPosition.setMaximumSize(QtCore.QSize(120, 20))
+        self.lineEdit_view_upPosition.setAlignment(QtCore.Qt.AlignCenter)
+        self.lineEdit_view_upPosition.setObjectName("lineEdit_view_upPosition")
+        self.verticalLayout_zClipping_2.addWidget(self.lineEdit_view_upPosition)
+        self.label_view_upPosition_2 = QtWidgets.QLabel(self.layoutWidget)
+        self.label_view_upPosition_2.setMinimumSize(QtCore.QSize(80, 0))
+        self.label_view_upPosition_2.setMaximumSize(QtCore.QSize(80, 15))
+        self.label_view_upPosition_2.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_view_upPosition_2.setObjectName("label_view_upPosition_2")
+        self.verticalLayout_zClipping_2.addWidget(self.label_view_upPosition_2)
+        self.lineEdit_slicingAngle = QtWidgets.QLineEdit(self.layoutWidget)
+        self.lineEdit_slicingAngle.setMinimumSize(QtCore.QSize(120, 0))
+        self.lineEdit_slicingAngle.setMaximumSize(QtCore.QSize(120, 20))
+        self.lineEdit_slicingAngle.setAlignment(QtCore.Qt.AlignCenter)
+        self.lineEdit_slicingAngle.setObjectName("lineEdit_slicingAngle")
+        self.verticalLayout_zClipping_2.addWidget(self.lineEdit_slicingAngle)
+        self.horizontalLayout_2.addLayout(self.verticalLayout_zClipping_2)
+        self.verticalLayout_zClipping_3 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_zClipping_3.setObjectName("verticalLayout_zClipping_3")
+        self.horizontalLayout_preset_View = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_preset_View.setObjectName("horizontalLayout_preset_View")
+        self.pushButton_View_yz = QtWidgets.QPushButton(self.layoutWidget)
+        self.pushButton_View_yz.setMaximumSize(QtCore.QSize(20, 20))
+        self.pushButton_View_yz.setObjectName("pushButton_View_yz")
+        self.horizontalLayout_preset_View.addWidget(self.pushButton_View_yz)
+        self.pushButton_View_xz = QtWidgets.QPushButton(self.layoutWidget)
+        self.pushButton_View_xz.setMaximumSize(QtCore.QSize(20, 20))
+        self.pushButton_View_xz.setObjectName("pushButton_View_xz")
+        self.horizontalLayout_preset_View.addWidget(self.pushButton_View_xz)
+        self.pushButton_View_yx = QtWidgets.QPushButton(self.layoutWidget)
+        self.pushButton_View_yx.setMaximumSize(QtCore.QSize(20, 20))
+        self.pushButton_View_yx.setObjectName("pushButton_View_yx")
+        self.horizontalLayout_preset_View.addWidget(self.pushButton_View_yx)
+        self.verticalLayout_zClipping_3.addLayout(self.horizontalLayout_preset_View)
+        self.lineEdit_showNodes = QtWidgets.QLineEdit(self.layoutWidget)
+        self.lineEdit_showNodes.setMaximumSize(QtCore.QSize(125, 20))
+        self.lineEdit_showNodes.setObjectName("lineEdit_showNodes")
+        self.verticalLayout_zClipping_3.addWidget(self.lineEdit_showNodes)
+        self.lineEdit_showElements = QtWidgets.QLineEdit(self.layoutWidget)
+        self.lineEdit_showElements.setMaximumSize(QtCore.QSize(125, 20))
+        self.lineEdit_showElements.setObjectName("lineEdit_showElements")
+        self.verticalLayout_zClipping_3.addWidget(self.lineEdit_showElements)
+        self.horizontalLayout_2.addLayout(self.verticalLayout_zClipping_3)
+        self.verticalLayout_colorRange = QtWidgets.QVBoxLayout()
+        self.verticalLayout_colorRange.setObjectName("verticalLayout_colorRange")
+        self.horizontalLayout_cRange = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_cRange.setObjectName("horizontalLayout_cRange")
+        self.lineEdit_colorRange = QtWidgets.QLineEdit(self.layoutWidget)
+        self.lineEdit_colorRange.setMinimumSize(QtCore.QSize(80, 0))
+        self.lineEdit_colorRange.setMaximumSize(QtCore.QSize(80, 20))
+        self.lineEdit_colorRange.setObjectName("lineEdit_colorRange")
+        self.horizontalLayout_cRange.addWidget(self.lineEdit_colorRange)
+        self.lineEdit_colorRange1 = QtWidgets.QLineEdit(self.layoutWidget)
+        self.lineEdit_colorRange1.setMinimumSize(QtCore.QSize(80, 0))
+        self.lineEdit_colorRange1.setMaximumSize(QtCore.QSize(80, 20))
+        self.lineEdit_colorRange1.setObjectName("lineEdit_colorRange1")
+        self.horizontalLayout_cRange.addWidget(self.lineEdit_colorRange1)
+        self.verticalLayout_colorRange.addLayout(self.horizontalLayout_cRange)
+        self.horizontalLayout_colorRange_value = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_colorRange_value.setObjectName("horizontalLayout_colorRange_value")
+        self.lineEdit_colorRange_value = QtWidgets.QLineEdit(self.layoutWidget)
+        self.lineEdit_colorRange_value.setMinimumSize(QtCore.QSize(80, 0))
+        self.lineEdit_colorRange_value.setMaximumSize(QtCore.QSize(80, 20))
+        self.lineEdit_colorRange_value.setObjectName("lineEdit_colorRange_value")
+        self.horizontalLayout_colorRange_value.addWidget(self.lineEdit_colorRange_value)
+        self.lineEdit_colorRange_value1 = QtWidgets.QLineEdit(self.layoutWidget)
+        self.lineEdit_colorRange_value1.setMinimumSize(QtCore.QSize(80, 0))
+        self.lineEdit_colorRange_value1.setMaximumSize(QtCore.QSize(80, 20))
+        self.lineEdit_colorRange_value1.setObjectName("lineEdit_colorRange_value1")
+        self.horizontalLayout_colorRange_value.addWidget(self.lineEdit_colorRange_value1)
+        self.verticalLayout_colorRange.addLayout(self.horizontalLayout_colorRange_value)
+        self.pushButton_background = QtWidgets.QPushButton(self.layoutWidget)
+        self.pushButton_background.setObjectName("pushButton_background")
+        self.verticalLayout_colorRange.addWidget(self.pushButton_background)
+        self.horizontalLayout_2.addLayout(self.verticalLayout_colorRange)
+        self.verticalLayout_viewArea.addWidget(self.groupBox_3dMeshControl)
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.verticalLayout_viewArea.addLayout(self.verticalLayout_2)
+        self.gridLayout.addLayout(self.verticalLayout_viewArea, 0, 1, 1, 1)
+        self.horizontalLayout = QtWidgets.QHBoxLayout()
+        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.verticalLayout = QtWidgets.QVBoxLayout()
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.groupBox_ISLM = QtWidgets.QGroupBox(self.centralwidget)
+        self.groupBox_ISLM.setMinimumSize(QtCore.QSize(330, 100))
+        self.groupBox_ISLM.setMaximumSize(QtCore.QSize(330, 100))
+        self.groupBox_ISLM.setObjectName("groupBox_ISLM")
+        self.layoutWidget_2 = QtWidgets.QWidget(self.groupBox_ISLM)
+        self.layoutWidget_2.setGeometry(QtCore.QRect(5, 70, 321, 22))
+        self.layoutWidget_2.setObjectName("layoutWidget_2")
+        self.horizontalLayout_simulationCode = QtWidgets.QHBoxLayout(self.layoutWidget_2)
+        self.horizontalLayout_simulationCode.setContentsMargins(0, 0, 0, 0)
+        self.horizontalLayout_simulationCode.setObjectName("horizontalLayout_simulationCode")
+        self.lineEdit_0_Location = QtWidgets.QLineEdit(self.layoutWidget_2)
+        self.lineEdit_0_Location.setMaximumSize(QtCore.QSize(30, 25))
+        self.lineEdit_0_Location.setAlignment(QtCore.Qt.AlignCenter)
+        self.lineEdit_0_Location.setObjectName("lineEdit_0_Location")
+        self.horizontalLayout_simulationCode.addWidget(self.lineEdit_0_Location)
+        self.lineEdit_1_VT_Number = QtWidgets.QLineEdit(self.layoutWidget_2)
+        self.lineEdit_1_VT_Number.setMaximumSize(QtCore.QSize(1000, 25))
+        self.lineEdit_1_VT_Number.setAlignment(QtCore.Qt.AlignCenter)
+        self.lineEdit_1_VT_Number.setObjectName("lineEdit_1_VT_Number")
+        self.horizontalLayout_simulationCode.addWidget(self.lineEdit_1_VT_Number)
+        self.lineEdit_3_VT_Serial = QtWidgets.QLineEdit(self.layoutWidget_2)
+        self.lineEdit_3_VT_Serial.setMaximumSize(QtCore.QSize(30, 25))
+        self.lineEdit_3_VT_Serial.setAlignment(QtCore.Qt.AlignCenter)
+        self.lineEdit_3_VT_Serial.setObjectName("lineEdit_3_VT_Serial")
+        self.horizontalLayout_simulationCode.addWidget(self.lineEdit_3_VT_Serial)
+        self.lineEdit_2_VT_Revision = QtWidgets.QLineEdit(self.layoutWidget_2)
+        self.lineEdit_2_VT_Revision.setMaximumSize(QtCore.QSize(20, 25))
+        self.lineEdit_2_VT_Revision.setAlignment(QtCore.Qt.AlignCenter)
+        self.lineEdit_2_VT_Revision.setObjectName("lineEdit_2_VT_Revision")
+        self.horizontalLayout_simulationCode.addWidget(self.lineEdit_2_VT_Revision)
+        self.lineEdit_4_Sim_Type = QtWidgets.QLineEdit(self.layoutWidget_2)
+        self.lineEdit_4_Sim_Type.setEnabled(True)
+        self.lineEdit_4_Sim_Type.setMaximumSize(QtCore.QSize(35, 25))
+        self.lineEdit_4_Sim_Type.setAlignment(QtCore.Qt.AlignCenter)
+        self.lineEdit_4_Sim_Type.setReadOnly(False)
+        self.lineEdit_4_Sim_Type.setObjectName("lineEdit_4_Sim_Type")
+        self.horizontalLayout_simulationCode.addWidget(self.lineEdit_4_Sim_Type)
+        self.lineEdit_5_Sim_Num = QtWidgets.QLineEdit(self.layoutWidget_2)
+        self.lineEdit_5_Sim_Num.setMaximumSize(QtCore.QSize(20, 25))
+        self.lineEdit_5_Sim_Num.setAlignment(QtCore.Qt.AlignCenter)
+        self.lineEdit_5_Sim_Num.setObjectName("lineEdit_5_Sim_Num")
+        self.horizontalLayout_simulationCode.addWidget(self.lineEdit_5_Sim_Num)
+        self.push_ISLM_Inflated = QtWidgets.QPushButton(self.groupBox_ISLM)
+        self.push_ISLM_Inflated.setGeometry(QtCore.QRect(5, 14, 180, 25))
+        self.push_ISLM_Inflated.setMinimumSize(QtCore.QSize(180, 0))
+        self.push_ISLM_Inflated.setMaximumSize(QtCore.QSize(180, 30))
+        self.push_ISLM_Inflated.setObjectName("push_ISLM_Inflated")
+        self.horizontalLayoutWidget = QtWidgets.QWidget(self.groupBox_ISLM)
+        self.horizontalLayoutWidget.setGeometry(QtCore.QRect(6, 42, 338, 21))
+        self.horizontalLayoutWidget.setObjectName("horizontalLayoutWidget")
+        self.horizontalLayout_simulationType = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget)
+        self.horizontalLayout_simulationType.setContentsMargins(0, 0, 0, 0)
+        self.horizontalLayout_simulationType.setObjectName("horizontalLayout_simulationType")
+        self.radioButton_dim = QtWidgets.QRadioButton(self.horizontalLayoutWidget)
+        self.radioButton_dim.setChecked(True)
+        self.radioButton_dim.setObjectName("radioButton_dim")
+        self.horizontalLayout_simulationType.addWidget(self.radioButton_dim)
+        self.radioButton_staticFootprint = QtWidgets.QRadioButton(self.horizontalLayoutWidget)
+        self.radioButton_staticFootprint.setObjectName("radioButton_staticFootprint")
+        self.horizontalLayout_simulationType.addWidget(self.radioButton_staticFootprint)
+        self.radioButton_dynamicFootprint = QtWidgets.QRadioButton(self.horizontalLayoutWidget)
+        self.radioButton_dynamicFootprint.setObjectName("radioButton_dynamicFootprint")
+        self.horizontalLayout_simulationType.addWidget(self.radioButton_dynamicFootprint)
+        self.radioButton_standingWave = QtWidgets.QRadioButton(self.horizontalLayoutWidget)
+        self.radioButton_standingWave.setObjectName("radioButton_standingWave")
+        self.horizontalLayout_simulationType.addWidget(self.radioButton_standingWave)
+        self.checkBox_Initial_inflated = QtWidgets.QCheckBox(self.groupBox_ISLM)
+        self.checkBox_Initial_inflated.setGeometry(QtCore.QRect(210, 16, 35, 20))
+        self.checkBox_Initial_inflated.setMaximumSize(QtCore.QSize(35, 25))
+        self.checkBox_Initial_inflated.setObjectName("checkBox_Initial_inflated")
+        self.checkBox_inflated_loaded = QtWidgets.QCheckBox(self.groupBox_ISLM)
+        self.checkBox_inflated_loaded.setGeometry(QtCore.QRect(270, 16, 35, 20))
+        self.checkBox_inflated_loaded.setMaximumSize(QtCore.QSize(35, 25))
+        self.checkBox_inflated_loaded.setObjectName("checkBox_inflated_loaded")
+        self.verticalLayout.addWidget(self.groupBox_ISLM)
+        self.groupBox_LoadMesh = QtWidgets.QGroupBox(self.centralwidget)
+        self.groupBox_LoadMesh.setMinimumSize(QtCore.QSize(330, 70))
+        self.groupBox_LoadMesh.setMaximumSize(QtCore.QSize(330, 70))
+        self.groupBox_LoadMesh.setObjectName("groupBox_LoadMesh")
+        self.push_LocalMesh = QtWidgets.QPushButton(self.groupBox_LoadMesh)
+        self.push_LocalMesh.setGeometry(QtCore.QRect(5, 15, 150, 25))
+        self.push_LocalMesh.setMinimumSize(QtCore.QSize(150, 25))
+        self.push_LocalMesh.setMaximumSize(QtCore.QSize(150, 25))
+        self.push_LocalMesh.setObjectName("push_LocalMesh")
+        self.push_LocalMesh_3D = QtWidgets.QPushButton(self.groupBox_LoadMesh)
+        self.push_LocalMesh_3D.setGeometry(QtCore.QRect(170, 15, 150, 25))
+        self.push_LocalMesh_3D.setMinimumSize(QtCore.QSize(0, 25))
+        self.push_LocalMesh_3D.setMaximumSize(QtCore.QSize(150, 30))
+        self.push_LocalMesh_3D.setObjectName("push_LocalMesh_3D")
+        self.push_LocalMesh_SMART = QtWidgets.QPushButton(self.groupBox_LoadMesh)
+        self.push_LocalMesh_SMART.setGeometry(QtCore.QRect(170, 40, 150, 25))
+        self.push_LocalMesh_SMART.setMaximumSize(QtCore.QSize(150, 30))
+        self.push_LocalMesh_SMART.setObjectName("push_LocalMesh_SMART")
+        self.push_comparing = QtWidgets.QPushButton(self.groupBox_LoadMesh)
+        self.push_comparing.setGeometry(QtCore.QRect(5, 40, 150, 25))
+        self.push_comparing.setMinimumSize(QtCore.QSize(150, 0))
+        self.push_comparing.setMaximumSize(QtCore.QSize(150, 30))
+        self.push_comparing.setObjectName("push_comparing")
+        self.verticalLayout.addWidget(self.groupBox_LoadMesh)
+        self.groupBox_Mesh3D = QtWidgets.QGroupBox(self.centralwidget)
+        self.groupBox_Mesh3D.setMinimumSize(QtCore.QSize(330, 50))
+        self.groupBox_Mesh3D.setMaximumSize(QtCore.QSize(330, 50))
+        self.groupBox_Mesh3D.setObjectName("groupBox_Mesh3D")
+        self.comboBox = QtWidgets.QComboBox(self.groupBox_Mesh3D)
+        self.comboBox.setGeometry(QtCore.QRect(10, 20, 81, 25))
+        self.comboBox.setMinimumSize(QtCore.QSize(80, 25))
+        self.comboBox.setMaximumSize(QtCore.QSize(100, 25))
+        self.comboBox.setObjectName("comboBox")
+        self.comboBox.addItem("")
+        self.comboBox.addItem("")
+        self.comboBox.addItem("")
+        self.comboBox.addItem("")
+        self.comboBox.addItem("")
+        self.comboBox.addItem("")
+        self.comboBox.addItem("")
+        self.comboBox.addItem("")
+        self.comboBox.addItem("")
+        self.comboBox.addItem("")
+        self.comboBox.addItem("")
+        self.checkBox_colorChanging = QtWidgets.QCheckBox(self.groupBox_Mesh3D)
+        self.checkBox_colorChanging.setGeometry(QtCore.QRect(100, 25, 83, 15))
+        self.checkBox_colorChanging.setMaximumSize(QtCore.QSize(100, 15))
+        self.checkBox_colorChanging.setObjectName("checkBox_colorChanging")
+        self.pushButton_replaceCells = QtWidgets.QPushButton(self.groupBox_Mesh3D)
+        self.pushButton_replaceCells.setGeometry(QtCore.QRect(190, 20, 100, 25))
+        self.pushButton_replaceCells.setMaximumSize(QtCore.QSize(100, 25))
+        self.pushButton_replaceCells.setObjectName("pushButton_replaceCells")
+        self.verticalLayout.addWidget(self.groupBox_Mesh3D)
+        self.groupBox_CUTELayout = QtWidgets.QGroupBox(self.centralwidget)
+        self.groupBox_CUTELayout.setMinimumSize(QtCore.QSize(330, 310))
+        self.groupBox_CUTELayout.setMaximumSize(QtCore.QSize(330, 310))
+        self.groupBox_CUTELayout.setObjectName("groupBox_CUTELayout")
+        self.pushButton_elsetSeq = QtWidgets.QPushButton(self.groupBox_CUTELayout)
+        self.pushButton_elsetSeq.setGeometry(QtCore.QRect(107, 15, 111, 25))
+        self.pushButton_elsetSeq.setMinimumSize(QtCore.QSize(0, 25))
+        self.pushButton_elsetSeq.setMaximumSize(QtCore.QSize(150, 25))
+        self.pushButton_elsetSeq.setObjectName("pushButton_elsetSeq")
+        self.pushButton_redraw = QtWidgets.QPushButton(self.groupBox_CUTELayout)
+        self.pushButton_redraw.setGeometry(QtCore.QRect(10, 15, 91, 25))
+        self.pushButton_redraw.setMinimumSize(QtCore.QSize(0, 25))
+        self.pushButton_redraw.setObjectName("pushButton_redraw")
+        self.checkBox_NdNo = QtWidgets.QCheckBox(self.groupBox_CUTELayout)
+        self.checkBox_NdNo.setGeometry(QtCore.QRect(10, 50, 95, 16))
+        self.checkBox_NdNo.setMaximumSize(QtCore.QSize(130, 20))
+        self.checkBox_NdNo.setChecked(False)
+        self.checkBox_NdNo.setObjectName("checkBox_NdNo")
+        self.checkBox_ElNo = QtWidgets.QCheckBox(self.groupBox_CUTELayout)
+        self.checkBox_ElNo.setGeometry(QtCore.QRect(10, 70, 95, 20))
+        self.checkBox_ElNo.setMaximumSize(QtCore.QSize(130, 20))
+        self.checkBox_ElNo.setObjectName("checkBox_ElNo")
+        self.checkBox_Surface = QtWidgets.QCheckBox(self.groupBox_CUTELayout)
+        self.checkBox_Surface.setGeometry(QtCore.QRect(10, 90, 95, 20))
+        self.checkBox_Surface.setMaximumSize(QtCore.QSize(130, 20))
+        self.checkBox_Surface.setObjectName("checkBox_Surface")
+        self.checkBox_Tie = QtWidgets.QCheckBox(self.groupBox_CUTELayout)
+        self.checkBox_Tie.setGeometry(QtCore.QRect(10, 110, 95, 20))
+        self.checkBox_Tie.setMaximumSize(QtCore.QSize(130, 20))
+        self.checkBox_Tie.setObjectName("checkBox_Tie")
+        self.checkBox_Spress = QtWidgets.QCheckBox(self.groupBox_CUTELayout)
+        self.checkBox_Spress.setGeometry(QtCore.QRect(170, 50, 146, 16))
+        self.checkBox_Spress.setMaximumSize(QtCore.QSize(150, 20))
+        self.checkBox_Spress.setObjectName("checkBox_Spress")
+        self.checkBox_sRicR = QtWidgets.QCheckBox(self.groupBox_CUTELayout)
+        self.checkBox_sRicR.setGeometry(QtCore.QRect(170, 70, 146, 20))
+        self.checkBox_sRicR.setMaximumSize(QtCore.QSize(150, 20))
+        self.checkBox_sRicR.setObjectName("checkBox_sRicR")
+        self.checkBox_sRicL = QtWidgets.QCheckBox(self.groupBox_CUTELayout)
+        self.checkBox_sRicL.setGeometry(QtCore.QRect(170, 90, 146, 20))
+        self.checkBox_sRicL.setMaximumSize(QtCore.QSize(150, 20))
+        self.checkBox_sRicL.setObjectName("checkBox_sRicL")
+        self.checkBox_Road = QtWidgets.QCheckBox(self.groupBox_CUTELayout)
+        self.checkBox_Road.setGeometry(QtCore.QRect(170, 110, 146, 20))
+        self.checkBox_Road.setMaximumSize(QtCore.QSize(150, 20))
+        self.checkBox_Road.setObjectName("checkBox_Road")
+        self.search_node = QtWidgets.QLabel(self.groupBox_CUTELayout)
+        self.search_node.setGeometry(QtCore.QRect(71, 135, 41, 20))
+        self.search_node.setAlignment(QtCore.Qt.AlignCenter)
+        self.search_node.setObjectName("search_node")
+        self.search_element = QtWidgets.QLabel(self.groupBox_CUTELayout)
+        self.search_element.setGeometry(QtCore.QRect(73, 160, 51, 20))
+        self.search_element.setAlignment(QtCore.Qt.AlignCenter)
+        self.search_element.setObjectName("search_element")
+        self.serach_node_id = QtWidgets.QLineEdit(self.groupBox_CUTELayout)
+        self.serach_node_id.setGeometry(QtCore.QRect(130, 135, 195, 20))
+        self.serach_node_id.setAlignment(QtCore.Qt.AlignCenter)
+        self.serach_node_id.setObjectName("serach_node_id")
+        self.search_el_id = QtWidgets.QLineEdit(self.groupBox_CUTELayout)
+        self.search_el_id.setGeometry(QtCore.QRect(130, 160, 195, 20))
+        self.search_el_id.setAlignment(QtCore.Qt.AlignCenter)
+        self.search_el_id.setObjectName("search_el_id")
+        self.pushButton_search = QtWidgets.QPushButton(self.groupBox_CUTELayout)
+        self.pushButton_search.setGeometry(QtCore.QRect(8, 136, 60, 45))
+        self.pushButton_search.setObjectName("pushButton_search")
+        self.pushButton_dotsize = QtWidgets.QPushButton(self.groupBox_CUTELayout)
+        self.pushButton_dotsize.setGeometry(QtCore.QRect(225, 15, 61, 25))
+        self.pushButton_dotsize.setMaximumSize(QtCore.QSize(150, 25))
+        self.pushButton_dotsize.setObjectName("pushButton_dotsize")
+        self.lineEdit = QtWidgets.QLineEdit(self.groupBox_CUTELayout)
+        self.lineEdit.setGeometry(QtCore.QRect(290, 15, 30, 25))
+        self.lineEdit.setMaximumSize(QtCore.QSize(150, 25))
+        self.lineEdit.setAlignment(QtCore.Qt.AlignCenter)
+        self.lineEdit.setObjectName("lineEdit")
+        self.push_addingPoint = QtWidgets.QPushButton(self.groupBox_CUTELayout)
+        self.push_addingPoint.setGeometry(QtCore.QRect(10, 190, 315, 23))
+        self.push_addingPoint.setObjectName("push_addingPoint")
+        self.txt_coordinate_point = QtWidgets.QLineEdit(self.groupBox_CUTELayout)
+        self.txt_coordinate_point.setGeometry(QtCore.QRect(10, 215, 315, 20))
+        self.txt_coordinate_point.setAlignment(QtCore.Qt.AlignCenter)
+        self.txt_coordinate_point.setObjectName("txt_coordinate_point")
+        self.cdepth_solid = QtWidgets.QLabel(self.groupBox_CUTELayout)
+        self.cdepth_solid.setGeometry(QtCore.QRect(10, 275, 71, 20))
+        self.cdepth_solid.setAlignment(QtCore.Qt.AlignCenter)
+        self.cdepth_solid.setObjectName("cdepth_solid")
+        self.pushButton_colordepth = QtWidgets.QPushButton(self.groupBox_CUTELayout)
+        self.pushButton_colordepth.setGeometry(QtCore.QRect(10, 250, 151, 23))
+        self.pushButton_colordepth.setObjectName("pushButton_colordepth")
+        self.Cdepth_memb_val = QtWidgets.QLineEdit(self.groupBox_CUTELayout)
+        self.Cdepth_memb_val.setGeometry(QtCore.QRect(270, 275, 50, 20))
+        self.Cdepth_memb_val.setAlignment(QtCore.Qt.AlignCenter)
+        self.Cdepth_memb_val.setObjectName("Cdepth_memb_val")
+        self.Cdepth_solid_val = QtWidgets.QLineEdit(self.groupBox_CUTELayout)
+        self.Cdepth_solid_val.setGeometry(QtCore.QRect(109, 275, 51, 20))
+        self.Cdepth_solid_val.setAlignment(QtCore.Qt.AlignCenter)
+        self.Cdepth_solid_val.setObjectName("Cdepth_solid_val")
+        self.cdepth_memb = QtWidgets.QLabel(self.groupBox_CUTELayout)
+        self.cdepth_memb.setGeometry(QtCore.QRect(170, 275, 81, 16))
+        self.cdepth_memb.setAlignment(QtCore.Qt.AlignCenter)
+        self.cdepth_memb.setObjectName("cdepth_memb")
+        self.verticalLayout.addWidget(self.groupBox_CUTELayout)
+        self.horizontalLayout_elsetControl = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_elsetControl.setObjectName("horizontalLayout_elsetControl")
+        self.checkBox_ElsetNode = QtWidgets.QCheckBox(self.centralwidget)
+        self.checkBox_ElsetNode.setMaximumSize(QtCore.QSize(80, 25))
+        self.checkBox_ElsetNode.setObjectName("checkBox_ElsetNode")
+        self.horizontalLayout_elsetControl.addWidget(self.checkBox_ElsetNode)
+        self.checkBox_ElsetElement = QtWidgets.QCheckBox(self.centralwidget)
+        self.checkBox_ElsetElement.setMaximumSize(QtCore.QSize(120, 25))
+        self.checkBox_ElsetElement.setObjectName("checkBox_ElsetElement")
+        self.horizontalLayout_elsetControl.addWidget(self.checkBox_ElsetElement)
+        self.pushButton_SurfaceSeq = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_SurfaceSeq.setMaximumSize(QtCore.QSize(100, 25))
+        self.pushButton_SurfaceSeq.setObjectName("pushButton_SurfaceSeq")
+        self.horizontalLayout_elsetControl.addWidget(self.pushButton_SurfaceSeq)
+        self.verticalLayout.addLayout(self.horizontalLayout_elsetControl)
+        self.verticalLayout_9 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_9.setObjectName("verticalLayout_9")
+        self.list_widget = QtWidgets.QListWidget(self.centralwidget)
+        self.list_widget.setMaximumSize(QtCore.QSize(330, 16777215))
+        self.list_widget.setObjectName("list_widget")
+        self.verticalLayout_9.addWidget(self.list_widget)
+        self.textBrowser = QtWidgets.QTextBrowser(self.centralwidget)
+        self.textBrowser.setMaximumSize(QtCore.QSize(330, 16777215))
+        self.textBrowser.setObjectName("textBrowser")
+        self.verticalLayout_9.addWidget(self.textBrowser)
+        self.groupBox_processing = QtWidgets.QGroupBox(self.centralwidget)
+        self.groupBox_processing.setMinimumSize(QtCore.QSize(330, 50))
+        self.groupBox_processing.setMaximumSize(QtCore.QSize(330, 50))
+        self.groupBox_processing.setObjectName("groupBox_processing")
+        self.push_regen_mesh = QtWidgets.QPushButton(self.groupBox_processing)
+        self.push_regen_mesh.setGeometry(QtCore.QRect(5, 15, 100, 25))
+        self.push_regen_mesh.setMinimumSize(QtCore.QSize(100, 25))
+        self.push_regen_mesh.setMaximumSize(QtCore.QSize(100, 30))
+        self.push_regen_mesh.setObjectName("push_regen_mesh")
+        self.pushButton_FeatureEdges = QtWidgets.QPushButton(self.groupBox_processing)
+        self.pushButton_FeatureEdges.setGeometry(QtCore.QRect(109, 15, 81, 25))
+        self.pushButton_FeatureEdges.setMinimumSize(QtCore.QSize(50, 25))
+        self.pushButton_FeatureEdges.setMaximumSize(QtCore.QSize(100, 25))
+        self.pushButton_FeatureEdges.setObjectName("pushButton_FeatureEdges")
+        self.pushButton_SaveSfricSurface = QtWidgets.QPushButton(self.groupBox_processing)
+        self.pushButton_SaveSfricSurface.setGeometry(QtCore.QRect(194, 15, 61, 25))
+        self.pushButton_SaveSfricSurface.setMaximumSize(QtCore.QSize(100, 25))
+        self.pushButton_SaveSfricSurface.setObjectName("pushButton_SaveSfricSurface")
+        self.pushButton_SaveSfricSTL = QtWidgets.QPushButton(self.groupBox_processing)
+        self.pushButton_SaveSfricSTL.setGeometry(QtCore.QRect(263, 15, 61, 25))
+        self.pushButton_SaveSfricSTL.setMaximumSize(QtCore.QSize(100, 25))
+        self.pushButton_SaveSfricSTL.setObjectName("pushButton_SaveSfricSTL")
+        self.verticalLayout_9.addWidget(self.groupBox_processing)
+        self.verticalLayout.addLayout(self.verticalLayout_9)
+        self.horizontalLayout.addLayout(self.verticalLayout)
+        self.gridLayout.addLayout(self.horizontalLayout, 0, 0, 1, 1)
+        MainWindow.setCentralWidget(self.centralwidget)
+        self.menubar = QtWidgets.QMenuBar(MainWindow)
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1371, 21))
+        self.menubar.setObjectName("menubar")
+        self.menuFILE = QtWidgets.QMenu(self.menubar)
+        self.menuFILE.setObjectName("menuFILE")
+        MainWindow.setMenuBar(self.menubar)
+        self.statusbar = QtWidgets.QStatusBar(MainWindow)
+        self.statusbar.setObjectName("statusbar")
+        MainWindow.setStatusBar(self.statusbar)
+        self.actionOPEN = QtWidgets.QAction(MainWindow)
+        self.actionOPEN.setObjectName("actionOPEN")
+        self.actionCLOSE = QtWidgets.QAction(MainWindow)
+        self.actionCLOSE.setObjectName("actionCLOSE")
+        self.menuFILE.addAction(self.actionCLOSE)
+        self.menubar.addAction(self.menuFILE.menuAction())
+
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.groupBox_3dMeshControl.setTitle(_translate("MainWindow", "3D Mesh Control"))
+        self.checkBox_meshLine.setText(_translate("MainWindow", "Mesh Line"))
+        self.checkBox_pyvistaLighting.setText(_translate("MainWindow", "Lighting"))
+        self.label_opecity.setText(_translate("MainWindow", "Opecity "))
+        self.lineEdit_opecity.setText(_translate("MainWindow", "100"))
+        self.checkBox_showEdges.setText(_translate("MainWindow", "Edges"))
+        self.checkBox_Solid.setText(_translate("MainWindow", "Solid"))
+        self.checkBox_jacobian.setText(_translate("MainWindow", "Jacobian"))
+        self.checkBox_Slicing.setText(_translate("MainWindow", "Slicing"))
+        self.radioButton_sdbNone.setText(_translate("MainWindow", "NONE"))
+        self.radioButton_SDB_sed.setText(_translate("MainWindow", "SED"))
+        self.radioButton_SDB_eld.setText(_translate("MainWindow", "Heat G"))
+        self.radioButton_cPres.setText(_translate("MainWindow", "Pres"))
+        self.radioButton_Temperature.setText(_translate("MainWindow", "Tem"))
+        self.radioButton_ext2.setText(_translate("MainWindow", "2"))
+        self.radioButton_ext3.setText(_translate("MainWindow", "3"))
+        self.radioButton_ext4.setText(_translate("MainWindow", "4"))
+        self.checkBox_clipping_X.setText(_translate("MainWindow", "Clip X"))
+        self.checkBox_clipping_X_reverse.setText(_translate("MainWindow", "Invert"))
+        self.checkBox_clipping_Y.setText(_translate("MainWindow", "Clip Y"))
+        self.checkBox_clipping_Y_reverse.setText(_translate("MainWindow", "Inverst"))
+        self.checkBox_clipping_Z.setText(_translate("MainWindow", "Clip Z"))
+        self.checkBox_clipping_Z_reverse.setText(_translate("MainWindow", "Invert"))
+        self.label_view_upPosition.setText(_translate("MainWindow", "ViewPoint"))
+        self.lineEdit_view_upPosition.setText(_translate("MainWindow", "1, 0, 0"))
+        self.label_view_upPosition_2.setText(_translate("MainWindow", "Slicing Angle"))
+        self.lineEdit_slicingAngle.setText(_translate("MainWindow", "0"))
+        self.pushButton_View_yz.setText(_translate("MainWindow", "yz"))
+        self.pushButton_View_xz.setText(_translate("MainWindow", "xz"))
+        self.pushButton_View_yx.setText(_translate("MainWindow", "yx"))
+        self.pushButton_background.setText(_translate("MainWindow", "Gray/White Background"))
+        self.groupBox_ISLM.setTitle(_translate("MainWindow", "ISLM Profile Compare"))
+        self.lineEdit_0_Location.setText(_translate("MainWindow", "RND"))
+        self.lineEdit_1_VT_Number.setText(_translate("MainWindow", "1020605"))
+        self.lineEdit_3_VT_Serial.setText(_translate("MainWindow", "151"))
+        self.lineEdit_2_VT_Revision.setText(_translate("MainWindow", "0"))
+        self.lineEdit_4_Sim_Type.setText(_translate("MainWindow", "D103"))
+        self.lineEdit_5_Sim_Num.setText(_translate("MainWindow", "1"))
+        self.push_ISLM_Inflated.setText(_translate("MainWindow", "ISLM Inflated/Loaded"))
+        self.radioButton_dim.setText(_translate("MainWindow", "Dim"))
+        self.radioButton_staticFootprint.setText(_translate("MainWindow", "Static Foot"))
+        self.radioButton_dynamicFootprint.setText(_translate("MainWindow", "Rolling Foot"))
+        self.radioButton_standingWave.setText(_translate("MainWindow", "StandingWave"))
+        self.checkBox_Initial_inflated.setText(_translate("MainWindow", "C1"))
+        self.checkBox_inflated_loaded.setText(_translate("MainWindow", "C2"))
+        self.groupBox_LoadMesh.setTitle(_translate("MainWindow", "Local Mesh"))
+        self.push_LocalMesh.setText(_translate("MainWindow", "CUTE Layout Mesh"))
+        self.push_LocalMesh_3D.setText(_translate("MainWindow", "Mesh 3D"))
+        self.push_LocalMesh_SMART.setText(_translate("MainWindow", "SMART Result "))
+        self.push_comparing.setText(_translate("MainWindow", "Add Mesh"))
+        self.groupBox_Mesh3D.setTitle(_translate("MainWindow", "3D Mesh"))
+        self.comboBox.setItemText(0, _translate("MainWindow", "white"))
+        self.comboBox.setItemText(1, _translate("MainWindow", "violet"))
+        self.comboBox.setItemText(2, _translate("MainWindow", "lightgreen"))
+        self.comboBox.setItemText(3, _translate("MainWindow", "gray"))
+        self.comboBox.setItemText(4, _translate("MainWindow", "coral"))
+        self.comboBox.setItemText(5, _translate("MainWindow", "aqua"))
+        self.comboBox.setItemText(6, _translate("MainWindow", "pink"))
+        self.comboBox.setItemText(7, _translate("MainWindow", "coral"))
+        self.comboBox.setItemText(8, _translate("MainWindow", "lightblue"))
+        self.comboBox.setItemText(9, _translate("MainWindow", "steelblue"))
+        self.comboBox.setItemText(10, _translate("MainWindow", "wheat"))
+        self.checkBox_colorChanging.setText(_translate("MainWindow", "Next Color"))
+        self.pushButton_replaceCells.setText(_translate("MainWindow", "Select Show"))
+        self.groupBox_CUTELayout.setTitle(_translate("MainWindow", "CUTE Layout Mesh"))
+        self.pushButton_elsetSeq.setText(_translate("MainWindow", "Feature Edges"))
+        self.pushButton_redraw.setText(_translate("MainWindow", "All"))
+        self.checkBox_NdNo.setText(_translate("MainWindow", "Node No"))
+        self.checkBox_ElNo.setText(_translate("MainWindow", "Element No"))
+        self.checkBox_Surface.setText(_translate("MainWindow", "Surface"))
+        self.checkBox_Tie.setText(_translate("MainWindow", "Tie"))
+        self.checkBox_Spress.setText(_translate("MainWindow", "Surface Pressure"))
+        self.checkBox_sRicR.setText(_translate("MainWindow", "Surface RIC_R"))
+        self.checkBox_sRicL.setText(_translate("MainWindow", "Surface RIC_L"))
+        self.checkBox_Road.setText(_translate("MainWindow", "Surface Road Contact"))
+        self.search_node.setText(_translate("MainWindow", "Nodes"))
+        self.search_element.setText(_translate("MainWindow", "Elements"))
+        self.serach_node_id.setText(_translate("MainWindow", "0"))
+        self.search_el_id.setText(_translate("MainWindow", "0"))
+        self.pushButton_search.setText(_translate("MainWindow", "Show"))
+        self.pushButton_dotsize.setText(_translate("MainWindow", "Dot Size"))
+        self.lineEdit.setText(_translate("MainWindow", "0"))
+        self.push_addingPoint.setText(_translate("MainWindow", "Add Point"))
+        self.txt_coordinate_point.setText(_translate("MainWindow", "[x, y]"))
+        self.cdepth_solid.setText(_translate("MainWindow", "Solid"))
+        self.pushButton_colordepth.setText(_translate("MainWindow", "Set Transparency (0~1)"))
+        self.Cdepth_memb_val.setText(_translate("MainWindow", "0.8"))
+        self.Cdepth_solid_val.setText(_translate("MainWindow", "0.5"))
+        self.cdepth_memb.setText(_translate("MainWindow", "            Membrane            "))
+        self.checkBox_ElsetNode.setText(_translate("MainWindow", "Node No"))
+        self.checkBox_ElsetElement.setText(_translate("MainWindow", "ELement No"))
+        self.pushButton_SurfaceSeq.setText(_translate("MainWindow", "Clear sets"))
+        self.groupBox_processing.setTitle(_translate("MainWindow", "Save "))
+        self.push_regen_mesh.setText(_translate("MainWindow", "2D Pre-Process"))
+        self.pushButton_FeatureEdges.setText(_translate("MainWindow", "2D F-Edges"))
+        self.pushButton_SaveSfricSurface.setText(_translate("MainWindow", "sfric Surf"))
+        self.pushButton_SaveSfricSTL.setText(_translate("MainWindow", "sfric *.stl"))
+        self.menuFILE.setTitle(_translate("MainWindow", "FILE"))
+        self.actionOPEN.setText(_translate("MainWindow", "OPEN"))
+        self.actionOPEN.setShortcut(_translate("MainWindow", "Ctrl+O"))
+        self.actionCLOSE.setText(_translate("MainWindow", "CLOSE"))
+        self.actionCLOSE.setShortcut(_translate("MainWindow", "Ctrl+Q"))
+
+
 
     def dragEnterEvent(self, e):
         """
@@ -4411,356 +5136,8 @@ class Ui_MainWindow(object):
             
         self.call2Dmesh(manualfile=fname)
 
-    def setupUi(self, MainWindow):
-        MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1190, 803)
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
-        self.centralwidget.setObjectName("centralwidget")
-        self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
-        self.gridLayout.setObjectName("gridLayout")
-        self.push_origin = QtWidgets.QPushButton(self.centralwidget)
-        self.push_origin.setMaximumSize(QtCore.QSize(150, 30))
-        self.push_origin.setObjectName("push_origin")
-        self.gridLayout.addWidget(self.push_origin, 6, 2, 1, 1)
-        self.horizontalLayout_simulationCode = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_simulationCode.setObjectName("horizontalLayout_simulationCode")
-        self.lineEdit_0_Location = QtWidgets.QLineEdit(self.centralwidget)
-        self.lineEdit_0_Location.setMaximumSize(QtCore.QSize(30, 25))
-        self.lineEdit_0_Location.setAlignment(QtCore.Qt.AlignCenter)
-        self.lineEdit_0_Location.setObjectName("lineEdit_0_Location")
-        self.horizontalLayout_simulationCode.addWidget(self.lineEdit_0_Location)
-        self.lineEdit_1_VT_Number = QtWidgets.QLineEdit(self.centralwidget)
-        self.lineEdit_1_VT_Number.setMaximumSize(QtCore.QSize(100, 25))
-        self.lineEdit_1_VT_Number.setAlignment(QtCore.Qt.AlignCenter)
-        self.lineEdit_1_VT_Number.setObjectName("lineEdit_1_VT_Number")
-        self.horizontalLayout_simulationCode.addWidget(self.lineEdit_1_VT_Number)
-        self.lineEdit_3_VT_Serial = QtWidgets.QLineEdit(self.centralwidget)
-        self.lineEdit_3_VT_Serial.setMaximumSize(QtCore.QSize(30, 25))
-        self.lineEdit_3_VT_Serial.setAlignment(QtCore.Qt.AlignCenter)
-        self.lineEdit_3_VT_Serial.setObjectName("lineEdit_3_VT_Serial")
-        self.horizontalLayout_simulationCode.addWidget(self.lineEdit_3_VT_Serial)
-        self.lineEdit_2_VT_Revision = QtWidgets.QLineEdit(self.centralwidget)
-        self.lineEdit_2_VT_Revision.setMaximumSize(QtCore.QSize(20, 25))
-        self.lineEdit_2_VT_Revision.setAlignment(QtCore.Qt.AlignCenter)
-        self.lineEdit_2_VT_Revision.setObjectName("lineEdit_2_VT_Revision")
-        self.horizontalLayout_simulationCode.addWidget(self.lineEdit_2_VT_Revision)
-        self.lineEdit_4_Sim_Type = QtWidgets.QLineEdit(self.centralwidget)
-        self.lineEdit_4_Sim_Type.setEnabled(True)
-        self.lineEdit_4_Sim_Type.setMaximumSize(QtCore.QSize(35, 25))
-        self.lineEdit_4_Sim_Type.setAlignment(QtCore.Qt.AlignCenter)
-        self.lineEdit_4_Sim_Type.setReadOnly(False)
-        self.lineEdit_4_Sim_Type.setObjectName("lineEdit_4_Sim_Type")
-        self.horizontalLayout_simulationCode.addWidget(self.lineEdit_4_Sim_Type)
-        self.lineEdit_5_Sim_Num = QtWidgets.QLineEdit(self.centralwidget)
-        self.lineEdit_5_Sim_Num.setMaximumSize(QtCore.QSize(20, 25))
-        self.lineEdit_5_Sim_Num.setAlignment(QtCore.Qt.AlignCenter)
-        self.lineEdit_5_Sim_Num.setObjectName("lineEdit_5_Sim_Num")
-        self.horizontalLayout_simulationCode.addWidget(self.lineEdit_5_Sim_Num)
-        self.checkBox_Initial_inflated = QtWidgets.QCheckBox(self.centralwidget)
-        self.checkBox_Initial_inflated.setMaximumSize(QtCore.QSize(35, 25))
-        self.checkBox_Initial_inflated.setObjectName("checkBox_Initial_inflated")
-        self.horizontalLayout_simulationCode.addWidget(self.checkBox_Initial_inflated)
-        self.checkBox_inflated_loaded = QtWidgets.QCheckBox(self.centralwidget)
-        self.checkBox_inflated_loaded.setMaximumSize(QtCore.QSize(35, 25))
-        self.checkBox_inflated_loaded.setObjectName("checkBox_inflated_loaded")
-        self.horizontalLayout_simulationCode.addWidget(self.checkBox_inflated_loaded)
-        self.gridLayout.addLayout(self.horizontalLayout_simulationCode, 1, 1, 1, 2)
-        self.push_comparing = QtWidgets.QPushButton(self.centralwidget)
-        self.push_comparing.setMaximumSize(QtCore.QSize(150, 30))
-        self.push_comparing.setObjectName("push_comparing")
-        self.gridLayout.addWidget(self.push_comparing, 5, 1, 1, 1)
-        self.verticalLayout_8 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_8.setObjectName("verticalLayout_8")
-        self.list_widget = QtWidgets.QListWidget(self.centralwidget)
-        self.list_widget.setObjectName("list_widget")
-        self.verticalLayout_8.addWidget(self.list_widget)
-        self.textBrowser = QtWidgets.QTextBrowser(self.centralwidget)
-        self.textBrowser.setObjectName("textBrowser")
-        self.verticalLayout_8.addWidget(self.textBrowser)
-        self.push_addingPoint = QtWidgets.QPushButton(self.centralwidget)
-        self.push_addingPoint.setObjectName("push_addingPoint")
-        self.verticalLayout_8.addWidget(self.push_addingPoint)
-        self.txt_coordinate_point = QtWidgets.QLineEdit(self.centralwidget)
-        self.txt_coordinate_point.setAlignment(QtCore.Qt.AlignCenter)
-        self.txt_coordinate_point.setObjectName("txt_coordinate_point")
-        self.verticalLayout_8.addWidget(self.txt_coordinate_point)
-        self.pushButton_colordepth = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton_colordepth.setObjectName("pushButton_colordepth")
-        self.verticalLayout_8.addWidget(self.pushButton_colordepth)
-        self.gridLayout.addLayout(self.verticalLayout_8, 17, 1, 1, 2)
-        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        self.verticalLayout_6 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_6.setObjectName("verticalLayout_6")
-        self.search_node = QtWidgets.QLabel(self.centralwidget)
-        self.search_node.setAlignment(QtCore.Qt.AlignCenter)
-        self.search_node.setObjectName("search_node")
-        self.verticalLayout_6.addWidget(self.search_node)
-        self.search_element = QtWidgets.QLabel(self.centralwidget)
-        self.search_element.setAlignment(QtCore.Qt.AlignCenter)
-        self.search_element.setObjectName("search_element")
-        self.verticalLayout_6.addWidget(self.search_element)
-        self.horizontalLayout_2.addLayout(self.verticalLayout_6)
-        self.verticalLayout_7 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_7.setObjectName("verticalLayout_7")
-        self.serach_node_id = QtWidgets.QLineEdit(self.centralwidget)
-        self.serach_node_id.setAlignment(QtCore.Qt.AlignCenter)
-        self.serach_node_id.setObjectName("serach_node_id")
-        self.verticalLayout_7.addWidget(self.serach_node_id)
-        self.search_el_id = QtWidgets.QLineEdit(self.centralwidget)
-        self.search_el_id.setAlignment(QtCore.Qt.AlignCenter)
-        self.search_el_id.setObjectName("search_el_id")
-        self.verticalLayout_7.addWidget(self.search_el_id)
-        self.horizontalLayout_2.addLayout(self.verticalLayout_7)
-        self.gridLayout.addLayout(self.horizontalLayout_2, 13, 1, 1, 2)
-        self.push_regen_mesh = QtWidgets.QPushButton(self.centralwidget)
-        self.push_regen_mesh.setMaximumSize(QtCore.QSize(150, 30))
-        self.push_regen_mesh.setObjectName("push_regen_mesh")
-        self.gridLayout.addWidget(self.push_regen_mesh, 5, 2, 1, 1)
-        self.horizontalLayout_5 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_5.setObjectName("horizontalLayout_5")
-        self.checkBox_NodeOut = QtWidgets.QCheckBox(self.centralwidget)
-        self.checkBox_NodeOut.setMaximumSize(QtCore.QSize(130, 20))
-        self.checkBox_NodeOut.setObjectName("checkBox_NodeOut")
-        self.horizontalLayout_5.addWidget(self.checkBox_NodeOut)
-        self.checkBox_ElsetNode = QtWidgets.QCheckBox(self.centralwidget)
-        self.checkBox_ElsetNode.setMaximumSize(QtCore.QSize(80, 20))
-        self.checkBox_ElsetNode.setObjectName("checkBox_ElsetNode")
-        self.horizontalLayout_5.addWidget(self.checkBox_ElsetNode)
-        self.checkBox_ElsetElement = QtWidgets.QCheckBox(self.centralwidget)
-        self.checkBox_ElsetElement.setMaximumSize(QtCore.QSize(120, 20))
-        self.checkBox_ElsetElement.setObjectName("checkBox_ElsetElement")
-        self.horizontalLayout_5.addWidget(self.checkBox_ElsetElement)
-        self.gridLayout.addLayout(self.horizontalLayout_5, 15, 1, 1, 2)
-        self.verticalLayout_2 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_2.setObjectName("verticalLayout_2")
-        self.gridLayout.addLayout(self.verticalLayout_2, 1, 0, 19, 1)
-        self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_4.setObjectName("horizontalLayout_4")
-        self.pushButton_elsetSeq = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton_elsetSeq.setObjectName("pushButton_elsetSeq")
-        self.horizontalLayout_4.addWidget(self.pushButton_elsetSeq)
-        self.pushButton_SurfaceSeq = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton_SurfaceSeq.setObjectName("pushButton_SurfaceSeq")
-        self.horizontalLayout_4.addWidget(self.pushButton_SurfaceSeq)
-        self.gridLayout.addLayout(self.horizontalLayout_4, 14, 1, 1, 2)
-        self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_3.setObjectName("horizontalLayout_3")
-        self.verticalLayout_9 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_9.setObjectName("verticalLayout_9")
-        self.cdepth_solid = QtWidgets.QLabel(self.centralwidget)
-        self.cdepth_solid.setAlignment(QtCore.Qt.AlignCenter)
-        self.cdepth_solid.setObjectName("cdepth_solid")
-        self.verticalLayout_9.addWidget(self.cdepth_solid)
-        self.Cdepth_solid_val = QtWidgets.QLineEdit(self.centralwidget)
-        self.Cdepth_solid_val.setAlignment(QtCore.Qt.AlignCenter)
-        self.Cdepth_solid_val.setObjectName("Cdepth_solid_val")
-        self.verticalLayout_9.addWidget(self.Cdepth_solid_val)
-        self.horizontalLayout_3.addLayout(self.verticalLayout_9)
-        self.verticalLayout_10 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_10.setObjectName("verticalLayout_10")
-        self.cdepth_memb = QtWidgets.QLabel(self.centralwidget)
-        self.cdepth_memb.setAlignment(QtCore.Qt.AlignCenter)
-        self.cdepth_memb.setObjectName("cdepth_memb")
-        self.verticalLayout_10.addWidget(self.cdepth_memb)
-        self.Cdepth_memb_val = QtWidgets.QLineEdit(self.centralwidget)
-        self.Cdepth_memb_val.setAlignment(QtCore.Qt.AlignCenter)
-        self.Cdepth_memb_val.setObjectName("Cdepth_memb_val")
-        self.verticalLayout_10.addWidget(self.Cdepth_memb_val)
-        self.horizontalLayout_3.addLayout(self.verticalLayout_10)
-        self.gridLayout.addLayout(self.horizontalLayout_3, 19, 1, 1, 2)
-        self.horizontalLayout_6 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_6.setContentsMargins(-1, 0, -1, -1)
-        self.horizontalLayout_6.setObjectName("horizontalLayout_6")
-        self.push_LocalMesh = QtWidgets.QPushButton(self.centralwidget)
-        self.push_LocalMesh.setMaximumSize(QtCore.QSize(150, 30))
-        self.push_LocalMesh.setObjectName("push_LocalMesh")
-        self.horizontalLayout_6.addWidget(self.push_LocalMesh)
-        self.push_ISLM_Inflated = QtWidgets.QPushButton(self.centralwidget)
-        self.push_ISLM_Inflated.setMaximumSize(QtCore.QSize(150, 30))
-        self.push_ISLM_Inflated.setObjectName("push_ISLM_Inflated")
-        self.horizontalLayout_6.addWidget(self.push_ISLM_Inflated)
-        self.gridLayout.addLayout(self.horizontalLayout_6, 0, 1, 1, 2)
-        self.verticalLayout_11 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_11.setObjectName("verticalLayout_11")
-        self.checkBox_Spress = QtWidgets.QCheckBox(self.centralwidget)
-        self.checkBox_Spress.setMaximumSize(QtCore.QSize(150, 20))
-        self.checkBox_Spress.setObjectName("checkBox_Spress")
-        self.verticalLayout_11.addWidget(self.checkBox_Spress)
-        self.checkBox_sRicR = QtWidgets.QCheckBox(self.centralwidget)
-        self.checkBox_sRicR.setMaximumSize(QtCore.QSize(150, 20))
-        self.checkBox_sRicR.setObjectName("checkBox_sRicR")
-        self.verticalLayout_11.addWidget(self.checkBox_sRicR)
-        self.checkBox_sRicL = QtWidgets.QCheckBox(self.centralwidget)
-        self.checkBox_sRicL.setMaximumSize(QtCore.QSize(150, 20))
-        self.checkBox_sRicL.setObjectName("checkBox_sRicL")
-        self.verticalLayout_11.addWidget(self.checkBox_sRicL)
-        self.checkBox_Road = QtWidgets.QCheckBox(self.centralwidget)
-        self.checkBox_Road.setMaximumSize(QtCore.QSize(150, 20))
-        self.checkBox_Road.setObjectName("checkBox_Road")
-        self.verticalLayout_11.addWidget(self.checkBox_Road)
-        self.checkBox_EnergyLoss = QtWidgets.QCheckBox(self.centralwidget)
-        self.checkBox_EnergyLoss.setMaximumSize(QtCore.QSize(150, 20))
-        self.checkBox_EnergyLoss.setObjectName("checkBox_EnergyLoss")
-        self.verticalLayout_11.addWidget(self.checkBox_EnergyLoss)
-        self.checkBox_SED = QtWidgets.QCheckBox(self.centralwidget)
-        self.checkBox_SED.setMaximumSize(QtCore.QSize(150, 20))
-        self.checkBox_SED.setObjectName("checkBox_SED")
-        self.verticalLayout_11.addWidget(self.checkBox_SED)
-        self.gridLayout.addLayout(self.verticalLayout_11, 11, 2, 1, 1)
-        self.verticalLayout_5 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_5.setObjectName("verticalLayout_5")
-        self.pushButton_redraw = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton_redraw.setObjectName("pushButton_redraw")
-        self.verticalLayout_5.addWidget(self.pushButton_redraw)
-        self.pushButton_search = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton_search.setObjectName("pushButton_search")
-        self.verticalLayout_5.addWidget(self.pushButton_search)
-        self.gridLayout.addLayout(self.verticalLayout_5, 12, 1, 1, 2)
-        self.horizontalLayout = QtWidgets.QHBoxLayout()
-        self.horizontalLayout.setObjectName("horizontalLayout")
-        self.pushButton_dotsize = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton_dotsize.setMaximumSize(QtCore.QSize(150, 25))
-        self.pushButton_dotsize.setObjectName("pushButton_dotsize")
-        self.horizontalLayout.addWidget(self.pushButton_dotsize)
-        self.lineEdit = QtWidgets.QLineEdit(self.centralwidget)
-        self.lineEdit.setMaximumSize(QtCore.QSize(150, 25))
-        self.lineEdit.setAlignment(QtCore.Qt.AlignCenter)
-        self.lineEdit.setObjectName("lineEdit")
-        self.horizontalLayout.addWidget(self.lineEdit)
-        self.gridLayout.addLayout(self.horizontalLayout, 9, 1, 1, 2)
-        self.verticalLayout_4 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_4.setObjectName("verticalLayout_4")
-        self.checkBox_NdNo = QtWidgets.QCheckBox(self.centralwidget)
-        self.checkBox_NdNo.setMaximumSize(QtCore.QSize(130, 20))
-        self.checkBox_NdNo.setChecked(False)
-        self.checkBox_NdNo.setObjectName("checkBox_NdNo")
-        self.verticalLayout_4.addWidget(self.checkBox_NdNo)
-        self.checkBox_ElNo = QtWidgets.QCheckBox(self.centralwidget)
-        self.checkBox_ElNo.setMaximumSize(QtCore.QSize(130, 20))
-        self.checkBox_ElNo.setObjectName("checkBox_ElNo")
-        self.verticalLayout_4.addWidget(self.checkBox_ElNo)
-        self.checkBox_Surface = QtWidgets.QCheckBox(self.centralwidget)
-        self.checkBox_Surface.setMaximumSize(QtCore.QSize(130, 20))
-        self.checkBox_Surface.setObjectName("checkBox_Surface")
-        self.verticalLayout_4.addWidget(self.checkBox_Surface)
-        self.checkBox_Tie = QtWidgets.QCheckBox(self.centralwidget)
-        self.checkBox_Tie.setMaximumSize(QtCore.QSize(130, 20))
-        self.checkBox_Tie.setObjectName("checkBox_Tie")
-        self.verticalLayout_4.addWidget(self.checkBox_Tie)
-        self.checkBox_Temperaure = QtWidgets.QCheckBox(self.centralwidget)
-        self.checkBox_Temperaure.setMaximumSize(QtCore.QSize(130, 20))
-        self.checkBox_Temperaure.setObjectName("checkBox_Temperaure")
-        self.verticalLayout_4.addWidget(self.checkBox_Temperaure)
-        self.gridLayout.addLayout(self.verticalLayout_4, 11, 1, 1, 1)
-        self.verticalLayout = QtWidgets.QVBoxLayout()
-        self.verticalLayout.setContentsMargins(-1, 0, -1, -1)
-        self.verticalLayout.setObjectName("verticalLayout")
-        self.Label_fName = QtWidgets.QLabel(self.centralwidget)
-        self.Label_fName.setMinimumSize(QtCore.QSize(0, 25))
-        self.Label_fName.setMaximumSize(QtCore.QSize(16777215, 25))
-        self.Label_fName.setFrameShape(QtWidgets.QFrame.Box)
-        self.Label_fName.setText("")
-        self.Label_fName.setObjectName("Label_fName")
-        self.verticalLayout.addWidget(self.Label_fName)
-        self.gridLayout.addLayout(self.verticalLayout, 0, 0, 1, 1)
-        MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1190, 21))
-        self.menubar.setObjectName("menubar")
-        self.menuFILE = QtWidgets.QMenu(self.menubar)
-        self.menuFILE.setObjectName("menuFILE")
-        MainWindow.setMenuBar(self.menubar)
-        self.statusbar = QtWidgets.QStatusBar(MainWindow)
-        self.statusbar.setObjectName("statusbar")
-        MainWindow.setStatusBar(self.statusbar)
-        self.actionOpen = QtWidgets.QAction(MainWindow)
-        self.actionOpen.setObjectName("actionOpen")
-        self.actionClose = QtWidgets.QAction(MainWindow)
-        self.actionClose.setObjectName("actionClose")
-        self.actionAxiOpen = QtWidgets.QAction(MainWindow)
-        self.actionAxiOpen.setObjectName("actionAxiOpen")
-        self.actionTrdOpen = QtWidgets.QAction(MainWindow)
-        self.actionTrdOpen.setObjectName("actionTrdOpen")
-        self.actionSDBOpen = QtWidgets.QAction(MainWindow)
-        self.actionSDBOpen.setObjectName("actionSDBOpen")
-        self.menuFILE.addAction(self.actionOpen)
-        self.menuFILE.addAction(self.actionClose)
-        self.menuFILE.addAction(self.actionAxiOpen)
-        self.menuFILE.addAction(self.actionTrdOpen)
-        self.menuFILE.addAction(self.actionSDBOpen)
-        self.menubar.addAction(self.menuFILE.menuAction())
-
-        self.retranslateUi(MainWindow)
-        self.actionClose.triggered.connect(MainWindow.close)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
-
-    def retranslateUi(self, MainWindow):
-        _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.push_origin.setText(_translate("MainWindow", "reLoad"))
-        self.lineEdit_0_Location.setText(_translate("MainWindow", "RND"))
-        self.lineEdit_1_VT_Number.setText(_translate("MainWindow", "1020605"))
-        self.lineEdit_3_VT_Serial.setText(_translate("MainWindow", "151"))
-        self.lineEdit_2_VT_Revision.setText(_translate("MainWindow", "0"))
-        self.lineEdit_4_Sim_Type.setText(_translate("MainWindow", "D103"))
-        self.lineEdit_5_Sim_Num.setText(_translate("MainWindow", "1"))
-        self.checkBox_Initial_inflated.setText(_translate("MainWindow", "C1"))
-        self.checkBox_inflated_loaded.setText(_translate("MainWindow", "C2"))
-        self.push_comparing.setText(_translate("MainWindow", "Add profile to compare"))
-        self.push_addingPoint.setText(_translate("MainWindow", "Add Point"))
-        self.txt_coordinate_point.setText(_translate("MainWindow", "x, y"))
-        self.pushButton_colordepth.setText(_translate("MainWindow", "Set Transparency (0~1)"))
-        self.search_node.setText(_translate("MainWindow", "NODE"))
-        self.search_element.setText(_translate("MainWindow", "        ELEMENT        "))
-        self.serach_node_id.setText(_translate("MainWindow", "0"))
-        self.search_el_id.setText(_translate("MainWindow", "0"))
-        self.push_regen_mesh.setText(_translate("MainWindow", "Save as"))
-        self.checkBox_NodeOut.setText(_translate("MainWindow", "Save Outer Nodes"))
-        self.checkBox_ElsetNode.setText(_translate("MainWindow", "Node No"))
-        self.checkBox_ElsetElement.setText(_translate("MainWindow", "ELement No"))
-        self.pushButton_elsetSeq.setText(_translate("MainWindow", "view Mode"))
-        self.pushButton_SurfaceSeq.setText(_translate("MainWindow", "Delete sets"))
-        self.cdepth_solid.setText(_translate("MainWindow", "Solid"))
-        self.Cdepth_solid_val.setText(_translate("MainWindow", "0.5"))
-        self.cdepth_memb.setText(_translate("MainWindow", "            Membrane            "))
-        self.Cdepth_memb_val.setText(_translate("MainWindow", "0.8"))
-        self.push_LocalMesh.setText(_translate("MainWindow", "Open Local Mesh (inp)"))
-        self.push_ISLM_Inflated.setText(_translate("MainWindow", "ISLM Inflated/Loaded"))
-        self.checkBox_Spress.setText(_translate("MainWindow", "Surface Pressure"))
-        self.checkBox_sRicR.setText(_translate("MainWindow", "Surface RIC_R"))
-        self.checkBox_sRicL.setText(_translate("MainWindow", "Surface RIC_L"))
-        self.checkBox_Road.setText(_translate("MainWindow", "Surface Road Contact"))
-        self.checkBox_EnergyLoss.setText(_translate("MainWindow", "E-Loss(Sum)"))
-        self.checkBox_SED.setText(_translate("MainWindow", "SED(Max.)"))
-        self.pushButton_redraw.setText(_translate("MainWindow", "Redraw"))
-        self.pushButton_search.setText(_translate("MainWindow", "Search the Node / Element"))
-        self.pushButton_dotsize.setText(_translate("MainWindow", "Node Size              "))
-        self.lineEdit.setText(_translate("MainWindow", "0"))
-        self.checkBox_NdNo.setText(_translate("MainWindow", "Node No"))
-        self.checkBox_ElNo.setText(_translate("MainWindow", "Element No"))
-        self.checkBox_Surface.setText(_translate("MainWindow", "Surface"))
-        self.checkBox_Tie.setText(_translate("MainWindow", "Tie"))
-        self.checkBox_Temperaure.setText(_translate("MainWindow", "Temperature"))
-        self.menuFILE.setTitle(_translate("MainWindow", "FILE"))
-        self.actionOpen.setText(_translate("MainWindow", "Open"))
-        self.actionOpen.setShortcut(_translate("MainWindow", "Ctrl+O"))
-        self.actionClose.setText(_translate("MainWindow", "Close"))
-        self.actionClose.setShortcut(_translate("MainWindow", "Ctrl+C"))
-        self.actionAxiOpen.setText(_translate("MainWindow", "Axi 3D Open"))
-        self.actionAxiOpen.setShortcut(_translate("MainWindow", "Shift+A"))
-        self.actionTrdOpen.setText(_translate("MainWindow", "Trd 3D Open"))
-        self.actionTrdOpen.setShortcut(_translate("MainWindow", "Shift+T"))
-        self.actionSDBOpen.setText(_translate("MainWindow", "SDB Result Open"))
-        self.actionSDBOpen.setShortcut(_translate("MainWindow", "Shift+O"))
-
+    
     def actions(self, MainWindow): 
-        
-        self.actionClose.triggered.connect(MainWindow.close)
-        self.actionOpen.triggered.connect(self.read2DMeshFile)
-        self.actionAxiOpen.triggered.connect(self.callAxi)
-        self.actionTrdOpen.triggered.connect(self.callTrd)
-        self.actionSDBOpen.triggered.connect(self.callSDB)
         
         self.push_LocalMesh.clicked.connect(self.read2DMeshFile)
         self.push_ISLM_Inflated.clicked.connect(self.callISLM_Dim_Inflated)
@@ -4768,12 +5145,9 @@ class Ui_MainWindow(object):
         self.lineEdit.returnPressed.connect(self.drawDots)
         self.pushButton_redraw.clicked.connect(self.Redraw)
         self.push_comparing.clicked.connect(self.AddComparingLayouts)
-        # self.pushButton_redraw.clicked.connect(self.DisplayElset.clear)
-        # self.pushButton_redraw.clicked.connect(self.DisplaySurface.clear)
-        # self.pushButton_redraw.clicked.connect(self.draw2Dmesh)
 
         self.push_regen_mesh.clicked.connect(self.RegenMesh)
-        self.push_origin.clicked.connect(self.ReloadMesh)
+        # self.push_origin.clicked.connect(self.ReloadMesh)
 
         
         self.list_widget.setGeometry(0,0, 300, 200)
@@ -4796,12 +5170,12 @@ class Ui_MainWindow(object):
         self.checkBox_sRicL.stateChanged.connect(self.checkBoxState)
         self.checkBox_Spress.stateChanged.connect(self.checkBoxState)
         self.checkBox_Road.stateChanged.connect(self.checkBoxState)
-        self.checkBox_Temperaure.stateChanged.connect(self.add_results)
-        self.checkBox_EnergyLoss.stateChanged.connect(self.add_results)
-        self.checkBox_SED.stateChanged.connect(self.add_results)
-        self.checkBox_Temperaure.setDisabled(True)
-        self.checkBox_EnergyLoss.setDisabled(True)
-        self.checkBox_SED.setDisabled(True)
+        # self.checkBox_Temperaure.stateChanged.connect(self.add_results)
+        # self.checkBox_EnergyLoss.stateChanged.connect(self.add_results)
+        # self.checkBox_SED.stateChanged.connect(self.add_results)
+        # self.checkBox_Temperaure.setDisabled(True)
+        # self.checkBox_EnergyLoss.setDisabled(True)
+        # self.checkBox_SED.setDisabled(True)
         
         self.pushButton_elsetSeq.clicked.connect(self.ConvertToProfile)
         self.pushButton_SurfaceSeq.clicked.connect(self.clearElset)
@@ -4843,9 +5217,14 @@ class Ui_MainWindow(object):
         self.lineEdit_5_Sim_Num.editingFinished.connect(self.saveSimulationCode)
         self.lineEdit_4_Sim_Type.editingFinished.connect(self.saveSimulationCode)
 
+        self.pushButton_FeatureEdges.clicked.connect(self.saveFeatureEdges)
+        self.lineEdit_4_Sim_Type.setDisabled(True)
+        self.radioButton_dim.clicked.connect(self.changeSimType)
+        self.radioButton_staticFootprint.clicked.connect(self.changeSimType)
+        self.radioButton_dynamicFootprint.clicked.connect(self.changeSimType)
+        self.radioButton_standingWave.clicked.connect(self.changeSimType)
+
         ############################################################# 
-        
-        
           ## QDialog : self.setLayout(self.verticalLayout_2)
         ###### #######################################################
 
@@ -4928,9 +5307,154 @@ class Ui_MainWindow(object):
             f.close()
             self.cwd =line[0]
 
-
-        self.usingLog()
         
+        self.usingLog()
+
+        self.view3D = False 
+
+        self.push_LocalMesh.clicked.connect(self.changeToView2D)
+        self.push_ISLM_Inflated.clicked.connect(self.changeToView2D)
+        
+        self.push_LocalMesh_3D.clicked.connect(self.changeToView3D)
+        self.push_LocalMesh_SMART.clicked.connect(self.changeToView3D)
+        self.push_LocalMesh_3D.clicked.connect(self.openFile)
+        self.push_LocalMesh_SMART.clicked.connect(self.openSMARTFile)
+        
+        self.horizontalSlider_opacity.valueChanged.connect(self.get_OpecityValue)
+        self.lineEdit_opecity.returnPressed.connect(self.change_OpecityValue)
+        
+        self.checkBox_showEdges.clicked.connect(self.showEdges)
+        self.checkBox_jacobian.clicked.connect(self.showQualityCheck)
+        self.checkBox_meshLine.clicked.connect(self.show_MeshLine)
+        self.checkBox_Solid.clicked.connect(self.choose_solid_surface)
+
+        self.checkBox_clipping_X.clicked.connect(self.clipping_X)
+        self.checkBox_clipping_Y.clicked.connect(self.clipping_Y)
+        self.checkBox_clipping_Z.clicked.connect(self.clipping_Z)
+        self.horizontalSlider_x_clipping.valueChanged.connect(self.clipping_X)
+        self.horizontalSlider_y_clipping.valueChanged.connect(self.clipping_Y)
+        self.horizontalSlider_z_clipping.valueChanged.connect(self.clipping_Z)
+        self.checkBox_clipping_X_reverse.clicked.connect(self.clipping_X)
+        self.checkBox_clipping_Y_reverse.clicked.connect(self.clipping_Y)
+        self.checkBox_clipping_Z_reverse.clicked.connect(self.clipping_Z)
+
+        self.radioButton_SDB_sed.clicked.connect(self.showMesh)
+        self.radioButton_SDB_eld.clicked.connect(self.showMesh)
+        self.radioButton_Temperature.clicked.connect(self.showMesh)
+        self.radioButton_cPres.clicked.connect(self.showMesh)
+        self.radioButton_sdbNone.clicked.connect(self.showMesh)
+        self.lineEdit_slicingAngle.returnPressed.connect(self.slicing)
+        self.checkBox_Slicing.clicked.connect(self.slicing)
+
+        # self.actionToggle_Background_color.triggered.connect(self.toggling_color_background) 
+        self.lineEdit_view_upPosition.returnPressed.connect(self.changeViewPosition)
+        self.pushButton_View_xz.clicked.connect(self.viewxz)
+        self.pushButton_View_yz.clicked.connect(self.viewyz)
+        self.pushButton_View_yx.clicked.connect(self.viewyx)
+
+        self.lineEdit_showNodes.returnPressed.connect(self.showSearchedNodes)
+        self.lineEdit_showElements.returnPressed.connect(self.showSearchedElements)
+
+        self.lineEdit_colorRange_value.editingFinished.connect(self.changeRatio)
+        self.lineEdit_colorRange_value1.editingFinished.connect(self.changeRatio)
+        
+
+        self.pushButton_replaceCells.clicked.connect(self.replaceCells)
+
+        self.pushButton_SaveSfricSurface.clicked.connect(self.saveSurface_sfric)
+        self.pushButton_background.clicked.connect(self.toggling_color_background)
+        self.pushButton_SaveSfricSTL.clicked.connect(self.saveSFRICasSTL)
+        self.checkBox_pyvistaLighting.clicked.connect(self.showMesh)
+
+        self.initialize() 
+    def changeToView3D(self): 
+        if not self.view3D: 
+            del(self.figure)
+            self.groupBox_3dMeshControl.setChecked(True)
+            self.view3D=True 
+            self.groupBox_3dMeshControl.setMinimumSize(QtCore.QSize(900, 102))
+            self.groupBox_3dMeshControl.setMaximumSize(QtCore.QSize(16777215, 102))
+        
+    
+    def changeToView2D(self):
+        if self.view3D: 
+            self.clearFrame()
+            self.figure = myCanvas()
+            self.canvas = self.figure.canvas
+            self.toolbar = self.figure.toolbar
+            self.verticalLayout_2.addWidget(self.toolbar)
+            self.verticalLayout_2.addWidget(self.canvas)
+            self.groupBox_3dMeshControl.setChecked(False)
+            self.view3D=False 
+            self.groupBox_3dMeshControl.setMinimumSize(QtCore.QSize(900, 15))
+            self.groupBox_3dMeshControl.setMaximumSize(QtCore.QSize(16777215, 15))
+        
+    
+
+    def initialize(self): 
+        icon = QtGui.QIcon()
+        try: 
+            icon.addPixmap(QtGui.QPixmap("pyMesh.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            MainWindow.setWindowIcon(icon)
+        except: 
+            pass 
+
+        self.meshfile = False 
+        self.meshes=[]; self.points=[]; self.colors=[]; self.edges=[]; self.surfaces=[]; self.nodes=[]
+        self.idx_element=[]; self.elements=[]; self.presses=[]; self.temperatures =[]
+        self.valueStart = 0.0; self.valueEnd = 0.0; self.vgap = 0
+        self.opecity = 1.0
+        self.show_edges = False
+        self.camera_position=None 
+        self.show_qualityCheck = False
+        self.show_meshLine = True 
+        self.click_meshLine = 0 
+        self.color_meshLine = 'black'
+        self.clippedMesh = None 
+        self.xClipped = False
+        self.yClipped = False
+        self.zClipped = False
+        self.solidClip = False 
+        self.x_revClipping = False 
+        self.y_revClipping = False 
+        self.z_revClipping = False 
+
+        self.xClippingShift = 0.0
+        self.yClippingShift = 0.0
+        self.zClippingShift = 0.0
+        self.xclippingScale = 1.0
+        self.yclippingScale = 1.0
+        self.zclippingScale = 1.0
+
+        self.view_upPosition = '1, 1, 1'
+        self.lineEdit_view_upPosition.setText("1, 1, 1")
+        self.xmx = 0; self.xmn = 0
+        self.ymx = 0; self.ymn = 0
+        self.zmx = 0; self.zmn = 0
+
+        self.copiedView=None 
+
+        self.defaultColor_Background = True 
+
+        self.color_edge_line = [('black', 2), ('red', 2)]
+        self.click_show_edge = 0 
+        self.nColor_edge_line = len(self.color_edge_line)
+
+        self.lineEdit_showNodes.setPlaceholderText("node id")
+        self.lineEdit_showNodes.setFocus()
+        self.lineEdit_showElements.setPlaceholderText("element id")
+        self.lineEdit_showElements.setFocus()
+        self.lineEdit_colorRange.setPlaceholderText("C-Range: 0.0,1.0")
+        self.lineEdit_colorRange.setFocus()
+        self.lineEdit_colorRange.setText("0.01")
+        self.lineEdit_colorRange1.setText("0.1")
+        self.searched_points=[]; self.searchedNodes=[]; self.searchedElements=[]; self.searchedCells=[]
+        self.radioButton_sdbNone.setChecked(True)
+        self.radioButton_Temperature.setEnabled(False)
+
+        self.groupBox_3dMeshControl.setMinimumSize(QtCore.QSize(900, 15))
+        self.groupBox_3dMeshControl.setMaximumSize(QtCore.QSize(16777215, 15))
+
     def redirect(self): 
         self._stdout = StdoutRedirect()
         self._stdout.start()
@@ -4997,8 +5521,14 @@ class Ui_MainWindow(object):
             remove(locallog)
         self.ftp.close()
 
-
+    def changeSimType(self): 
+        if self.radioButton_dim.isChecked(): self.lineEdit_4_Sim_Type.setText("D103")
+        if self.radioButton_staticFootprint.isChecked(): self.lineEdit_4_Sim_Type.setText("D101")
+        if self.radioButton_dynamicFootprint.isChecked(): self.lineEdit_4_Sim_Type.setText("D104")
+        if self.radioButton_standingWave.isChecked(): self.lineEdit_4_Sim_Type.setText("D105")
+        
     def selectionQt_list(self): 
+        if self.view3D: return 
         self.figure.Clear_ElsetBoundary()
 
         items = self.list_widget.selectedItems()
@@ -5050,6 +5580,7 @@ class Ui_MainWindow(object):
 
     def addElsetBoundary(self):
         try: 
+            if self.view3D: return 
             row = self.list_widget.currentRow()
             print (" Selected Elset : %s"%(self.ElsetNames[row]), end=" ")
             if self.checkBox_ElsetNode.isChecked() == True: 
@@ -5070,6 +5601,7 @@ class Ui_MainWindow(object):
         self.textBrowser.insertPlainText(msg)
         QtWidgets.QApplication.processEvents(QtCore.QEventLoop.ExcludeUserInputEvents)
     def clearElset(self): 
+        if self.view3D: return 
         self.list_widget.clearSelection()
         self.figure.Clear_ElsetBoundary()
 
@@ -5212,7 +5744,7 @@ class Ui_MainWindow(object):
             self.AddComparingLayouts(cwd+fname)
 
         if self.checkBox_inflated_loaded.isChecked(): 
-            fDfmd = False 
+            fDfmd = False; maxDname=False
             if simType == 'D105' :  
                 maxDname = simCode + "-MaxDeformed.inp"
                 jobFile = jobDir +"/" + maxDname 
@@ -5221,23 +5753,27 @@ class Ui_MainWindow(object):
                 maxDname = simCode + "-Inflated.inp"
                 jobFile = jobDir +"/" + maxDname
 
-            for lst in dirList:
-                if maxDname == lst: 
-                    self.sftp.get(jobFile, cwd+ maxDname)
-                    fDfmd = True 
-                    break 
-            else: 
-                print ("Cannot get the deformed layout!!") 
+            if maxDname: 
+                for lst in dirList:
+                    if maxDname == lst: 
+                        self.sftp.get(jobFile, cwd+ maxDname)
+                        fDfmd = True 
+                        break 
+                else: 
+                    print ("Cannot get the deformed layout!!") 
 
             if fDfmd: 
                 print("* MESH FILE: %s"%(maxDname))
                 self.AddComparingLayouts(cwd+maxDname)
+            try: 
+                if isfile(cwd+ maxDname): remove(cwd+ maxDname)
+            except:
+                pass 
 
-            if isfile(cwd+ maxDname): remove(cwd+ maxDname)
-
-        
-        if isfile(cwd+ fname): remove(cwd+ fname)
-        if isfile(cwd+ initFile): remove(cwd+ initFile)
+        try: 
+            if isfile(cwd+ fname): remove(cwd+ fname)
+            if isfile(cwd+ initFile): remove(cwd+ initFile)
+        except:   pass
 
         self.ftp.close()
 
@@ -5265,6 +5801,7 @@ class Ui_MainWindow(object):
         
     
     def read2DMeshFile(self): 
+        self.changeToView2D()
         self.meshfile, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Select File", self.cwd, "File Open(*.inp *.msh)")
         self.layoutcomparing = -1
         self.textBrowser.clear()
@@ -5273,8 +5810,9 @@ class Ui_MainWindow(object):
             self.Cdepth_solid_val.setText("0.5")
             self.call2Dmesh(manualfile=self.meshfile)
 
-
+      
     def call2Dmesh(self, manualfile='', pattern=False): 
+        if self.view3D: self.changeToView2D()
         self.meshfile = manualfile 
         if self.meshfile and isfile(self.meshfile):
             self.layoutcounting = 1
@@ -5283,10 +5821,10 @@ class Ui_MainWindow(object):
             self.node, self.element, self.elset, self.surface, self.tie, self.xy, self.rims = Mesh2DInformation(self.meshfile)
             self.npn = np.array(self.node.Node)
             
-            if len(self.npn[0]) > 4 : self.checkBox_Temperaure.setEnabled(True)
-            else: self.checkBox_Temperaure.setEnabled(False)
-            self.checkBox_EnergyLoss.setEnabled(False)
-            self.checkBox_SED.setEnabled(False)
+            # if len(self.npn[0]) > 4 : self.checkBox_Temperaure.setEnabled(True)
+            # else: self.checkBox_Temperaure.setEnabled(False)
+            # self.checkBox_EnergyLoss.setEnabled(False)
+            # self.checkBox_SED.setEnabled(False)
             
             print ("**** Done reading mesh file")
             # sys.exit()
@@ -5343,7 +5881,8 @@ class Ui_MainWindow(object):
                 self.list_widget.addItem(item)
             
             # self.draw2Dmesh(self.meshfile)
-            self.Label_fName.setText(self.meshfile)
+            # self.Label_fName.setText(self.meshfile)
+            MainWindow.setWindowTitle(self.meshfile)
 
             self.checkBox_NdNo.setChecked(False)
             self.checkBox_ElNo.setChecked(False)
@@ -5390,11 +5929,13 @@ class Ui_MainWindow(object):
             self.draw2Dmesh(self.meshfile)
 
     def callAxi(self): 
+        if self.view3D: return 
         self.axifile, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Select File", self.cwd, "File Open(*.axi)")
         if self.axifile: 
             nodes = LayoutMesh_From_axi(self.axifile, output=self.tmpaxi, limit=self.limit_offset)
             self.call2Dmesh(manualfile = self.tmpaxi)
     def callTrd(self): 
+        if self.view3D: return 
         self.trdfile, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Select File", self.cwd, "File Open(*.trd)")
         if self.trdfile: 
             nodes, sectors = PatternMesh_from_trd(self.trdfile, output=self.tmptrd, limit=self.limit_offset)
@@ -5405,6 +5946,7 @@ class Ui_MainWindow(object):
 
             self.call2Dmesh(manualfile = self.tmptrd, pattern=ptn)
     def callSDB(self): 
+        if self.view3D: return 
         self.sdbresult, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Select File", self.cwd, "File Open(*.sdb0*)")
         if self.sdbresult: 
             self.temprature_contour=[]
@@ -5448,7 +5990,8 @@ class Ui_MainWindow(object):
             self.checkBox_SED.setEnabled(True)
 
 
-    def RegenMesh(self): 
+    def RegenMesh(self):
+        if self.view3D: return 
         self.layoutcomparing = -1
         if self.meshfile =="": 
             print ("\n* Need to load a mesh\n") 
@@ -5484,8 +6027,6 @@ class Ui_MainWindow(object):
                 self.node, self.element, self.elset, self.surface, self.tie, self.xy, self.rims = Mesh2DInformation(self.meshfile)
                 
                 print ("\n## Original Mesh reloaded.")
-            if len(self.node.Node[0]) > 4 or len(self.temprature_contour): self.checkBox_Temperaure.setEnabled(True)
-            else: self.checkBox_Temperaure.setEnabled(False)
 
             self.list_widget.clear()
             self.ElsetNames=[]
@@ -5554,9 +6095,10 @@ class Ui_MainWindow(object):
 
             self.figure.getplotinformation(self.node, self.element, self.elset, self.surface, self.tie,  xy=self.xy, add2d=self.TieError)
             self.draw2Dmesh(self.savefile)
-            self.Label_fName.setText(self.savefile)
+            MainWindow.setWindowTitle(self.savefile)
 
     def ReloadMesh(self): 
+        if self.view3D: return 
         # self.figure = myCanvas()
         # self.canvas = self.figure.canvas
         # self.toolbar = self.figure.toolbar
@@ -5657,9 +6199,10 @@ class Ui_MainWindow(object):
 
         self.figure.getplotinformation(self.node, self.element, self.elset, self.surface, self.tie,  xy=self.xy)
         self.draw2Dmesh(self.meshfile)
-        self.Label_fName.setText(self.meshfile)
+        MainWindow.setWindowTitle(self.meshfile)
 
     def Redraw(self):
+        if self.view3D: return 
         self.layoutcomparing = -1
         self.layoutcounting = 1
         self.figure.clearplot()
@@ -5670,6 +6213,7 @@ class Ui_MainWindow(object):
         self.draw2Dmesh(self.meshfile)
         
     def drawDots(self):
+        if self.view3D: return 
         try: 
             size = float(self.lineEdit.text())
             self.figure.AddNodes(self.node, size)
@@ -5678,6 +6222,7 @@ class Ui_MainWindow(object):
 
     def addPoint(self): 
         # try: 
+            if self.view3D: return 
             text = self.txt_coordinate_point.text()
             PT = NODE()
             if ']' in text: 
@@ -5715,9 +6260,11 @@ class Ui_MainWindow(object):
         #     pass 
 
     def checkBoxState(self):
+        if self.view3D: return 
         self.draw2Dmesh(self.meshfile)
 
     def sdb_elementValue(self, e_value, vtype='sum', log=False): 
+        if self.view3D: return 
         value_element=[]
         for el in self.element.Element:
             if el[3] ==0: continue  
@@ -5754,6 +6301,7 @@ class Ui_MainWindow(object):
         # self.Eloss =[];  self.SED =[];   self.n3d = [];    self.e3dM=[];   self.e3dS=[]
         # self.element.Element = [E_id, N1, N2, N3, N4, 'Name', node_counting, Center_2, Center_3, Area, [[n1x, n1y], ...[n4x, n4y] ], 1]
         # nodes_slave, nodes_master = nodes_Master_Slave_Tie(self.tie, self.surface, self.element.Element)
+        if self.view3D: return 
         size = float(self.lineEdit.text())
         self.np_nodes =  np.array(self.node.Node)
         num = int(float(self.Cdepth_memb_val.text()))
@@ -5911,12 +6459,14 @@ class Ui_MainWindow(object):
             
 
     def Add_Rem_NodeID(self): 
+        if self.view3D: return 
         if self.checkBox_NdNo.isChecked(): 
             self.figure.NIDShow(show=1)  
         else: 
             self.figure.NIDShow(show=0)  
 
     def Add_Rem_ELID(self): 
+        if self.view3D: return 
         if self.checkBox_ElNo.isChecked(): 
             self.figure.EIDShow(show=1) 
         else: 
@@ -5924,6 +6474,7 @@ class Ui_MainWindow(object):
 
     def setColordepth(self): 
         try: 
+            if self.view3D: return 
             self.solidepth = float(self.Cdepth_solid_val.text())
             self.membdepth = float(self.Cdepth_memb_val.text())
         
@@ -5948,29 +6499,34 @@ class Ui_MainWindow(object):
         
     def AddComparingLayouts(self, comparingMesh=False): 
         ## def LayoutToProfile(element, node, output='edge', color='darkgray', lw=0.5): 
-        
-        if self.layoutcounting ==0: 
-            print ("\n* Need to load a mesh first.\n")
-            return
-        elif self.layoutcounting == 1: 
-            self.Bead_Min_R = []
-            self.Profiles = []
-            basic_line_width = 0.5
-            profile0, mr0= LayoutToProfile(self.element, self.node, output='line', color=lst_colors[0], lw=basic_line_width, counting=0)
-            if mr0 : 
-                self.Bead_Min_R.append(mr0)
-            self.Profiles.append(profile0)
-        if not comparingMesh: 
-            self.comparingmesh, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Select File", self.cwd, "File Open(*.inp *.msh)")
-        else: 
-            self.comparingmesh = comparingMesh 
 
-        if self.comparingmesh: 
-            self.putAnotherLayout(self.comparingmesh)
+        if not self.view3D: 
+        
+            if self.layoutcounting ==0: 
+                print ("\n* Need to load a mesh first.\n")
+                return
+            elif self.layoutcounting == 1: 
+                self.Bead_Min_R = []
+                self.Profiles = []
+                basic_line_width = 0.5
+                profile0, mr0= LayoutToProfile(self.element, self.node, output='line', color=lst_colors[0], lw=basic_line_width, counting=0)
+                if mr0 : 
+                    self.Bead_Min_R.append(mr0)
+                self.Profiles.append(profile0)
+            if not comparingMesh: 
+                self.comparingmesh, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Select File", self.cwd, "File Open(*.inp *.msh)")
+            else: 
+                self.comparingmesh = comparingMesh 
+
+            if self.comparingmesh: 
+                self.putAnotherLayout(self.comparingmesh)
+            else: 
+                self.figure.Draw_profiles(self.Profiles, self.Bead_Min_R)
         else: 
-            self.figure.Draw_profiles(self.Profiles, self.Bead_Min_R)
+            self.addMesh()
 
     def putAnotherLayout(self, comparingmesh): 
+            if self.view3D: return 
             nameadded = comparingmesh.split("/")[-1]
             
             basic_line_width = 0.5
@@ -6005,6 +6561,7 @@ class Ui_MainWindow(object):
             ## plotting image 
 
     def LayoutToProfile(self, element, node, output='edge', color='darkgray', lw=0.5, counting=1, meshfile=None, nodeout=False): 
+        if self.view3D: return 
         if isinstance(node, list): npn = np.array(node)
         else:                      npn = np.array(node.Node)
 
@@ -6090,7 +6647,7 @@ class Ui_MainWindow(object):
 
         
     def Comparing(self):
-
+        if self.view3D: return 
         self.layoutcomparing = self.layoutcomparing * -1
         if self.layoutcomparing == 1: 
             if len(self.element.Element) ==0: 
@@ -6154,7 +6711,8 @@ class Ui_MainWindow(object):
                 except:
                     pass 
 
-    def ConvertToProfile(self): 
+    def ConvertToProfile(self, saving=False): 
+        if self.view3D: return 
         basic_line_width = 0.5
         if self.layoutcounting ==0: 
             print ("\n* Need to load a mesh first.\n")
@@ -6164,15 +6722,19 @@ class Ui_MainWindow(object):
             self.Bead_Min_R = []
             self.Profiles = []
             profile0, mr0= self.LayoutToProfile(self.element, self.node, output='line', color=lst_colors[0], lw=basic_line_width, counting=0,\
-                 meshfile=self.meshfile, nodeout=self.checkBox_NodeOut.isChecked())
+                 meshfile=self.meshfile, nodeout=saving)
             self.Bead_Min_R.append(mr0)
             self.Profiles.append(profile0)
             self.figure.Draw_profiles(self.Profiles, self.Bead_Min_R)
         else: 
             self.Redraw()
 
+    def saveFeatureEdges(self): 
+        if self.view3D: return 
+        self.ConvertToProfile(saving=True)
 
     def addSearchObjects(self):
+        if self.view3D: return 
         self.searchnode = []
         self.searchelement = []
         maxnid = 0
@@ -6268,6 +6830,7 @@ class Ui_MainWindow(object):
 
     
     def drawSurface(self): 
+        if self.view3D: return 
         try: 
             self.surfaceshow=1
             self.countsurface +=1
@@ -6281,6 +6844,7 @@ class Ui_MainWindow(object):
     
             
     def drawElset(self): 
+        if self.view3D: return 
         try: 
             self.elsetshow = 1
             self.countelset += 1
@@ -6294,6 +6858,7 @@ class Ui_MainWindow(object):
 
     
     def draw2Dmesh(self, fileName, add2d=[] ):
+        if self.view3D: return 
         # print (self.meshfile)
         self.layoutcomparing = -1
         if self.meshfile !="":
@@ -6324,6 +6889,892 @@ class Ui_MainWindow(object):
                 size=size, ni=nd, ei=el, si=sf, ti=ti, srr=srr, srl=srl, spr=spr, srd=srd, cdepth=self.solidepth, \
                 mdepth=self.membdepth, snode=self.searchnode, sel=self.searchelement, rims=self.rims)
     
+    def viewyz(self): 
+        if not self.view3D: return 
+        self.lineEdit_view_upPosition.setText('1, 0, 0')
+        self.changeViewPosition()
+    def viewxz(self): 
+        if not self.view3D: return 
+        try: 
+            self.plotter.camera.up=(0, 0, 1)
+        except: 
+            pass 
+        self.lineEdit_view_upPosition.setText('0, -1, 0')
+        self.changeViewPosition()
+    def viewyx(self): 
+        if not self.view3D: return 
+        if ".ptn" in self.meshfile: 
+            self.lineEdit_view_upPosition.setText('0, 0, -1')
+        else: 
+            self.lineEdit_view_upPosition.setText('0, 0, 1')
+        self.changeViewPosition()
+        if ".ptn" in self.meshfile: 
+            self.plotter.camera.roll += 90
+            # self.plotter.camera.azimuth += 90
+            # self.plotter.camera.elevation += 90
+
+    def copyView(self): 
+        if not self.view3D: return 
+        self.get_camera_position()
+    def pasteView(self): 
+        if not self.view3D: return 
+        self.plotter.show()
+
+    def changeViewPosition(self): 
+        if not self.view3D: return 
+        self.view_upPosition = self.lineEdit_view_upPosition.text().strip()
+
+        vx=1; vy=0; vz=0 
+        listText = self.view_upPosition.split(",")
+        for i, v in enumerate(listText): 
+            try: v = float(v)
+            except: v = 0.0 
+            if i ==0: vx = v 
+            if i ==1: vy = v 
+            if i ==2: vz = v 
+        if vx ==0 and vy ==0 and vz ==0: 
+            vx = vy = vz = 1 
+            self.lineEdit_view_upPosition.setText("1, 1, 1")
+        ### plotter.camera_position = [(11.7, 4.7, -4.33),  (0.0, 0.0, 0.0), (0.3, 0.07, 0.9)]
+        # A good starting camera position - the three values are the camera position,
+        # the camera focus, and the up vector of the viewport
+        if vx == 0 and vy ==0 and vz !=0: 
+            if vz > 0: self.plotter.camera_position = 'yx' #self.plotter.camera.up=(1, 0, 0)
+            else: 
+                self.plotter.set_viewup([-1, 0, 0])
+                self.plotter.camera_position = 'xy' 
+                # self.plotter.camera.up=(-1, 0, 0)
+        elif vx != 0 and vy ==0 and vz==0: 
+            if vx > 0: self.plotter.camera_position = 'yz'
+            else: 
+                self.plotter.set_viewup([0, 0, -1])
+                self.plotter.camera_position = 'zy' 
+                # self.plotter.camera.up=(0, 0, -1)
+        elif vx == 0 and vy !=0 and vz==0: 
+            if vy > 0: self.plotter.camera_position = 'zx'
+            else: 
+                self.plotter.set_viewup([-1, 0, 0])
+                self.plotter.camera_position = 'xz' 
+                # self.plotter.camera.up=(-1, 0, 0)
+        else: 
+            self.plotter.camera_position  = (vx, vy, vz)
+        self.showMesh()
+    
+    def toggling_color_background(self): 
+        if not self.view3D: return 
+        if self.defaultColor_Background: 
+            self.defaultColor_Background=False 
+        else: 
+            self.defaultColor_Background = True 
+        self.get_camera_position()
+        self.showMesh()
+
+    def choose_solid_surface(self): 
+        if not self.view3D: return 
+        if self.checkBox_Solid.isChecked(): self.solidClip = True 
+        else: self.solidClip = False 
+        self.get_camera_position()
+        self.showMesh()
+    def clipping_X(self): 
+        if not self.view3D: return 
+        self.xClippingShift = (self.horizontalSlider_x_clipping.value() - 50) * self.xclippingScale #float(self.lineEdit_x_clip_offset.text())
+        if self.checkBox_clipping_X.isChecked(): self.xClipped = True 
+        else: self.xClipped = False 
+        if self.checkBox_clipping_X_reverse.isChecked(): self.x_revClipping = True 
+        else: self.x_revClipping = False 
+        self.get_camera_position()
+        self.showMesh()
+    
+    def clipping_Y(self): 
+        if not self.view3D: return 
+        self.yClippingShift = (self.horizontalSlider_y_clipping.value() - 50) * self.yclippingScale #float(self.lineEdit_y_clip_offset.text())
+        if self.checkBox_clipping_Y.isChecked(): self.yClipped = True 
+        else: self.yClipped = False 
+        if self.checkBox_clipping_Y_reverse.isChecked(): self.y_revClipping = True 
+        else: self.y_revClipping = False 
+        self.get_camera_position()
+        self.showMesh()
+
+    def clipping_Z(self): 
+        if not self.view3D: return 
+        self.zClippingShift = (self.horizontalSlider_z_clipping.value() - 50)*self.zclippingScale #float(self.lineEdit_z_clip_offset.text())
+        if self.checkBox_clipping_Z.isChecked(): self.zClipped = True 
+        else: self.zClipped = False 
+        if self.checkBox_clipping_Z_reverse.isChecked(): self.z_revClipping = True 
+        else: self.z_revClipping = False 
+        self.get_camera_position()
+        self.showMesh()
+
+    def get_camera_position(self): 
+        if not self.view3D: return 
+        try: 
+            self.camera_position = self.plotter.camera_position
+            self.copied_camera = self.plotter.camera
+        except: 
+            self.camera_position = None 
+    def show_MeshLine(self): 
+        if not self.view3D: return 
+        if self.checkBox_meshLine.isChecked(): 
+            self.show_meshLine = True 
+            if self.color_meshLine == 'black': self.color_meshLine = 'gray'
+            elif self.color_meshLine == 'gray': self.color_meshLine = 'blue'
+            elif self.color_meshLine == 'blue': self.color_meshLine = 'red'
+            elif self.color_meshLine == 'red': self.color_meshLine = 'black'
+
+        else: self.show_meshLine = False
+
+        self.get_camera_position()
+        
+        self.showMesh()
+
+    def showQualityCheck(self): 
+        if not self.view3D: return 
+        if self.checkBox_jacobian.isChecked(): 
+            self.show_qualityCheck = True 
+        else: self.show_qualityCheck = False
+
+        self.get_camera_position()
+        self.showMesh()
+        
+    def showEdges(self): 
+        if not self.view3D: return 
+        if self.checkBox_showEdges.isChecked(): 
+            self.show_edges = True 
+            self.click_show_edge += 1 
+        else: self.show_edges = False
+        self.get_camera_position()
+        self.showMesh()
+
+    def get_OpecityValue(self): 
+        self.opecity = self.horizontalSlider_opacity.value() / 100.0
+        # self.label_opecity.setText("Opecity : %d"%(self.opecity*100))
+        self.lineEdit_opecity.setText(str(int(self.opecity*100)))
+        if not self.view3D: return 
+        self.get_camera_position() 
+        self.showMesh()
+
+    def change_OpecityValue(self): 
+        opecity = int(self.lineEdit_opecity.text()) 
+        self.horizontalSlider_opacity.setSliderPosition(opecity)
+        if not self.view3D: return
+        self.get_OpecityValue()
+
+
+
+    def clearFrame(self):
+        try:  
+            for i in range(self.verticalLayout_2.count()): self.verticalLayout_2.itemAt(i).widget().close()
+        except: pass 
+
+    def createFrame(self): 
+        self.frame = QtWidgets.QFrame() 
+        self.plotter = QtInteractor(self.frame)
+        self.verticalLayout_2.addWidget(self.plotter.interactor) 
+        
+    
+    def get_pyVistaMesh(self): 
+        # print(self.meshfile)
+        MainWindow.setWindowTitle(self.meshfile)
+        if ".ptn" in self.meshfile: 
+            pvMesh = Mesh.MESH(self.meshfile, centering=True)
+            # trd, edges, pt1, surface, npn, idx_element,_ = Mesh.load_pyVista_mesh(self.meshfile, centering=True) 
+        else: 
+            pvMesh = Mesh.MESH(self.meshfile, centering=False)
+            # trd, edges, pt1, surface, npn, idx_element, _ = Mesh.load_pyVista_mesh(self.meshfile) 
+        # self.lineEdit_temp.setText(self.meshfile.split("/")[-1])
+        MainWindow.setWindowTitle(self.meshfile)
+
+        trd = pvMesh.grid
+        edges = pvMesh.edges 
+        pt1   = pvMesh.pt_cloud
+        surface = pvMesh.surfaces
+        npn = pvMesh.nodes 
+        idx_element = pvMesh.idx_element
+        cells = pvMesh.cells 
+
+        if '.sfric' in self.meshfile: 
+            self.class_sfric = pvMesh.class_sfric
+
+        self.meshes.append(trd)
+        self.points.append(pt1)
+        self.edges.append(edges)
+        self.surfaces.append(surface)
+        self.nodes.append(npn)
+        self.idx_element.append(idx_element)
+        self.elements.append(cells) 
+
+        if '.sfric' in self.meshfile or '.dat' in self.meshfile: 
+            if isinstance(pvMesh.press, type(None)): 
+                self.presses.append(pvMesh.npress)
+            else: 
+                self.presses.append(pvMesh.press)
+        if '.sdb' in self.meshfile: 
+            self.temperatures.append(pvMesh.temperature)
+
+        self.lineEdit_colorRange.setText("0.0")
+        self.lineEdit_colorRange1.setText("0.1")
+        if '.sdb' in self.meshfile: 
+            self.radioButton_SDB_sed.setEnabled(True)
+            self.radioButton_SDB_eld.setEnabled(True)
+            self.radioButton_Temperature.setEnabled(True)
+            self.radioButton_cPres.setEnabled(False)
+            
+        elif '.sfric' in self.meshfile or '.dat' in self.meshfile: 
+            self.radioButton_SDB_sed.setEnabled(False)
+            self.radioButton_SDB_eld.setEnabled(False)
+            self.radioButton_Temperature.setEnabled(False)
+            self.radioButton_cPres.setEnabled(True)
+            self.lineEdit_colorRange_value.setText("50000")
+            self.lineEdit_colorRange_value1.setText("500000")
+        else: 
+            self.radioButton_SDB_sed.setEnabled(False)
+            self.radioButton_SDB_eld.setEnabled(False)
+            self.radioButton_Temperature.setEnabled(False)
+            self.radioButton_cPres.setEnabled(False)
+        self.radioButton_sdbNone.setChecked(True)
+
+        xmn = 10**7; xmx=-10**7; ymn = 10**7; ymx=-10**7; zmn = 10**7; zmx=-10**7
+        for nodes in self.nodes: 
+            mn = np.min(nodes[:,1]); mx = np.max(nodes[:,1])
+            if xmn > mn: xmn = mn 
+            if xmx < mx: xmx = mx 
+
+            mn = np.min(nodes[:,2]); mx = np.max(nodes[:,2])
+            if ymn > mn: ymn = mn 
+            if ymx < mx: ymx = mx 
+
+            mn = np.min(nodes[:,3]); mx = np.max(nodes[:,3])
+            if zmn > mn: zmn = mn 
+            if zmx < mx: zmx = mx  
+
+        self.xclippingScale=(xmx-xmn)/99
+        self.yclippingScale=(ymx-ymn)/99
+        self.zclippingScale=(zmx-zmn)/99
+        self.xmx = xmx; self.xmn = xmn 
+        self.ymx = ymx; self.ymn = ymn 
+        self.zmx = zmx; self.zmn = zmn 
+
+        print (" Scaling x=%.3E, y=%.3E, z=%.3E"%(self.xclippingScale, self.yclippingScale, self.zclippingScale))
+        print (" min y=%.6f, max y=%.6f"%(ymn*self.yclippingScale, ymx*self.yclippingScale))
+
+    def changingCurrentColor(self): 
+        
+        if self.checkBox_colorChanging.isChecked(): 
+            index = self.comboBox.currentIndex() + 1 
+            count = self.comboBox.count() 
+            if index >= count: index -= count  
+            self.comboBox.setCurrentIndex(index)
+
+    def openSMARTFile(self): 
+        self.meshes=[]; self.points=[]; self.colors=[]; self.edges=[]; self.surfaces=[]; self.nodes=[]
+        self.idx_element = []; self.elements=[]; self.presses=[]
+
+        self.horizontalSlider_x_clipping.setSliderPosition(50)
+        self.horizontalSlider_y_clipping.setSliderPosition(50)
+        self.horizontalSlider_z_clipping.setSliderPosition(50)
+        self.camera_position = None
+        self.gettingPyvistaMesh(filetypes="File Open( *.sfric0* *.sdb0* *-postfoot.dat)")
+        
+        
+    def openFile(self): 
+        
+        self.meshes=[]; self.points=[]; self.colors=[]; self.edges=[]; self.surfaces=[]; self.nodes=[]
+        self.idx_element = []; self.elements=[]; self.presses=[]
+
+        self.horizontalSlider_x_clipping.setSliderPosition(50)
+        self.horizontalSlider_y_clipping.setSliderPosition(50)
+        self.horizontalSlider_z_clipping.setSliderPosition(50)
+        self.camera_position = None 
+        self.gettingPyvistaMesh(filetypes="File Open(*.trd *.axi *.ptn *.inp *.stl)")
+
+    def addMesh(self): 
+        self.gettingPyvistaMesh(filetypes="File Open(*.trd *.axi *.ptn *.inp *.sfric0* *.sdb0* *-postfoot.dat *.stl)") 
+
+
+    def gettingPyvistaMesh(self, filetypes='File Open(*.ptn)'): 
+        
+        meshfiles, _ = QtWidgets.QFileDialog.getOpenFileNames(None, "Select File", self.cwd, filetypes)
+        if meshfiles: 
+            for meshfile in meshfiles: 
+                self.meshfile = meshfile 
+
+                self.cwd = writeworkingdirectory(self.meshfile, dfile=self.dfile)
+                try:
+                    t= time.time()
+                    if '.stl' in self.meshfile:
+                        mesh = Mesh.reading_stl(self.meshfile)
+                        self.meshes.append(mesh)
+                        self.checkBox_meshLine.setChecked(False)
+                        self.show_meshLine = False
+                    else: 
+                        self.get_pyVistaMesh()
+                    t1 = time.time()
+                    print("Time to read : %.3f"%(t1-t))
+                except Exception as ex: 
+                    etext = str(ex) + "\n\n" + "Error to open file \n " + "%s"%(self.meshfile)
+                    writingError(etext)
+                    print(etext)
+                
+                self.colors.append(self.comboBox.currentText())
+                self.showMesh() 
+                if len(meshfiles) > 1: self.checkBox_colorChanging.setChecked(True)
+                self.changingCurrentColor()
+
+    def saveSFRICasSTL(self): 
+        if '.sfric' in self.meshfile: 
+            nameBase = self.meshfile[:-9] + ".stl"
+            savefile, _= QtWidgets.QFileDialog.getSaveFileName(None, "Save mash as", nameBase, "Standard Tessellation Language(*.stl)")
+            if savefile: 
+                self.surfaces[-1].save(savefile)
+
+    def saveSurface_sfric(self): 
+        if ".sfric" in self.meshfile: 
+            results =  self.meshfile[:-9]+"-sfric_surface.inp"
+            savefile, _= QtWidgets.QFileDialog.getSaveFileName(None, "Save files as", results, "SFRIC Surface Mesh(*.inp)")
+            if savefile: 
+                fp = open(savefile, 'w') 
+
+                fp.write("*NODE\n")
+                for n in self.class_sfric.Node.Node: 
+                    fp.write("%10d, %10.6f, %10.6f, %10.6f\n"%(n[0], n[1], n[2], n[3]))
+
+                fp.write("*ELEMENT, TYPE=M3D4R\n")
+                for sf in self.class_sfric.Surface.Surface: 
+                    fp.write("%10d, %10d, %10d, %10d, %10d\n"%(sf[0], sf[1], sf[2], sf[3], sf[4]))
+
+                fp.close()
+
+    def clearPlotter(self):
+
+        self.clearFrame()
+        self.createFrame()
+        self.plotter.clear()
+
+    def showMesh(self):
+        if not self.view3D: return
+        self.clearPlotter()
+        try: 
+            self.plotting()
+        except Exception as ex: 
+            etext = str(ex) + "\n\n" + "Error to plotting \n"
+            writingError(etext)
+            print(etext)
+
+    def slicing(self):
+        if not self.view3D: return
+        
+        if self.checkBox_Slicing.isChecked():  
+            self.lineEdit_opecity.setText("1")
+            if not '.ptn' in self.meshfile: 
+                opecity = int(self.lineEdit_opecity.text()) 
+                self.horizontalSlider_opacity.setSliderPosition(opecity)
+                self.opecity = self.horizontalSlider_opacity.value() / 100.0
+                self.lineEdit_opecity.setText(str(int(self.opecity*100)))
+
+                angle = float(self.lineEdit_slicingAngle.text().strip())
+                radian_angle = math.radians(angle)
+                self.lineEdit_view_upPosition.setText("%.3f, 0, %.3f"%(math.cos(radian_angle), math.sin(radian_angle)))
+
+        else: 
+            if not '.ptn' in self.meshfile: 
+                angle = float(self.lineEdit_slicingAngle.text().strip())
+                radian_angle = math.radians(angle)
+                self.lineEdit_view_upPosition.setText("%.3f, 0, %.3f"%(math.cos(radian_angle), math.sin(radian_angle)))
+            self.lineEdit_opecity.setText("100")
+        self.change_OpecityValue()
+
+    def changeRatio(self): 
+        if not self.view3D: return
+        if '.sdb' in self.meshfile or '.sfric' in self.meshfile or '.dat' in self.meshfile:
+            if self.vgap != 0  : 
+                low = float(self.lineEdit_colorRange_value.text().strip())
+                lpst = (low-self.vmin) / self.vgap
+                self.lineEdit_colorRange.setText("%.6f"%(lpst))
+
+                high = float(self.lineEdit_colorRange_value1.text().strip())
+                hpst = (high-self.vmin) / self.vgap
+                self.lineEdit_colorRange1.setText("%.6f"%(hpst))
+
+    def plotting(self, nodeplotRecursive=False): 
+        if not self.view3D: return
+        if not self.meshfile: return 
+        self.valueStart = 0.0; self.valueEnd = 0.0; self.vgap = 0 
+
+        ilow  =  self.lineEdit_colorRange.text().strip()
+        ihigh =  self.lineEdit_colorRange1.text().strip()
+        psize = 5  
+
+        if self.defaultColor_Background: 
+            self.plotter.set_background('gray', top='white')
+        else: 
+            self.plotter.set_background('white')
+
+        self.plotter.enable_parallel_projection()
+        self.plotter.add_axes()
+        
+
+        if '.sdb' in self.meshfile: 
+            if self.radioButton_SDB_sed.isChecked(): item = 'sed'
+            elif self.radioButton_SDB_eld.isChecked(): item = 'eld'
+            elif self.radioButton_Temperature.isChecked(): item = 'temperature'
+            else: item = False
+
+        elif '.sfric' in self.meshfile or '.dat' in self.meshfile: 
+            item = 'press'
+        else: 
+            item = False 
+        
+        if '.stl' in self.meshfile:
+            mesh = self.meshes[-1]
+            clr = self.colors[-1]
+            if not self.xClipped and not self.yClipped and not self.zClipped:
+                self.plotter_surf = self.plotter.add_mesh(mesh, show_edges=self.show_meshLine, color=clr, metallic=0.3, pbr=False, diffuse=1, opacity=self.opecity, smooth_shading=False, edge_color=self.color_meshLine) 
+                if self.checkBox_Slicing.isChecked(): 
+                    angle = float(self.lineEdit_slicingAngle.text().strip())
+                    radian_angle = math.radians(angle)
+                    sliced = mesh.slice(normal=[math.cos(radian_angle), 0, math.sin(radian_angle)])
+                    self.plotter_slicing = self.plotter.add_mesh(sliced,color='red', opacity=1.0)
+                    
+            else: 
+                clippedMesh = self.clipping(mesh)
+                self.plotter_surf = self.plotter.add_mesh(clippedMesh , show_edges=self.show_meshLine, color=clr, metallic=0.3, pbr=False, diffuse=1, opacity=self.opecity, smooth_shading=False, edge_color=self.color_meshLine) 
+                if self.checkBox_Slicing.isChecked(): 
+                    angle = float(self.lineEdit_slicingAngle.text().strip())
+                    radian_angle = math.radians(angle)
+                    sliced = clippedMesh.slice(normal=[math.cos(radian_angle), 0, math.sin(radian_angle)])
+                    self.plotter_slicing = self.plotter.add_mesh(sliced, color='red', opacity=1.0)
+            # self.plotter.enable_eye_dome_lighting()
+
+        elif ".sfric" in self.meshfile or ".dat" in self.meshfile: 
+            if not self.xClipped and not self.yClipped and not self.zClipped: 
+                for surface, press, clr in zip(self.surfaces, self.presses, self.colors): 
+                    if item: 
+                        vmax = press[item].max(); vmin = press[item].min()
+                        vgap = vmax - vmin  
+                        low = float(ilow); high = float(ihigh)
+                        start = vmin + vgap * low; end = vmin + vgap * high
+                        self.lineEdit_colorRange_value.setText("%.1f"%(start))
+                        self.lineEdit_colorRange_value1.setText("%.1f"%(end))
+                        self.valueStart = start; self.valueEnd = end 
+                        self.vmin = vmin; self.vmax = vmax; self.vgap= vgap 
+                        # print ('Value Min %.3E, Max %.3E'%(self.vmin, self.vmax) )  ## this line 'print' made plotting slow 
+                    
+                    self.plotter_surf = self.plotter.add_mesh(surface, show_edges=self.show_meshLine, color=clr, metallic=0.3, pbr=False, diffuse=1, opacity=self.opecity, smooth_shading=False, edge_color=self.color_meshLine) 
+                    
+                    if self.checkBox_Slicing.isChecked(): 
+                        angle = float(self.lineEdit_slicingAngle.text().strip())
+                        radian_angle = math.radians(angle)
+                        sliced = surface.slice(normal=[math.cos(radian_angle), 0, math.sin(radian_angle)])
+                        self.plotter_slicing = self.plotter.add_mesh(sliced,color='red', opacity=1.0)
+                    
+                    if self.radioButton_cPres.isChecked():
+                        dargs = dict(scalars=item, cmap='rainbow', show_edges=self.show_meshLine, n_colors=150, clim=[start, end], below_color='white', edge_color=self.color_meshLine)
+                        self.plotter_press = self.plotter.add_mesh(press, interpolate_before_map=True, opacity=1, 
+                             scalar_bar_args={'title': ' %s  - interpolated'%(item)}, smooth_shading=True, **dargs)
+                    self.plotter.enable_cell_picking(mesh=surface)
+                        
+            else: 
+                for surface, press, clr in zip(self.surfaces, self.presses, self.colors): 
+                    if item: 
+                        vmax = press[item].max(); vmin = press[item].min()
+                        vgap = vmax - vmin  
+                        low = float(ilow); high = float(ihigh)
+                        start = vmin + vgap * low; end = vmin + vgap * high
+                        self.lineEdit_colorRange_value.setText("%.1f"%(start))
+                        self.lineEdit_colorRange_value1.setText("%.1f"%(end))
+                        self.valueStart = start; self.valueEnd = end 
+                        self.vmin = vmin; self.vmax = vmax; self.vgap= vgap 
+
+                    clippedMesh = self.clipping(surface)
+                    clippedPress = self.clipping(press)
+                    self.plotter_surf = self.plotter.add_mesh(clippedMesh, show_edges=self.show_meshLine, color=clr, metallic=0.3, \
+                        pbr=False, diffuse=1, opacity=self.opecity, smooth_shading=False, edge_color=self.color_meshLine) 
+                    
+                    if self.checkBox_Slicing.isChecked(): 
+                        angle = float(self.lineEdit_slicingAngle.text().strip())
+                        radian_angle = math.radians(angle)
+                        sliced = clippedMesh.slice(normal=[math.cos(radian_angle), 0, math.sin(radian_angle)])
+                        self.plotter_slicing = self.plotter.add_mesh(sliced,color='red', opacity=1.0)
+
+                    if self.radioButton_cPres.isChecked():
+                        dargs = dict(scalars=item, cmap='rainbow', show_edges=self.show_meshLine, n_colors=150, clim=[start, end], below_color='white')
+                        self.plotter_pres = self.plotter.add_mesh(clippedPress, interpolate_before_map=True, opacity=self.opecity, edge_color=self.color_meshLine, 
+                            scalar_bar_args={'title': ' %s  - interpolated'%(item)}, **dargs)
+                        self.lineEdit_view_upPosition.setText("0,0,1")
+                    
+                    self.plotter.enable_cell_picking(mesh=clippedMesh)
+        elif '.sdb' in self.meshfile: 
+            if not self.xClipped and not self.yClipped and not self.zClipped: 
+                self.clippedMesh= None 
+                cnt = 0     
+                for mesh, clr, edge, surface in zip(self.meshes, self.colors, self.edges, self.surfaces):
+                    
+                    if item: 
+                        vmax = mesh[item].max(); vmin = mesh[item].min()
+                        vgap = vmax - vmin 
+                        low = float(ilow); high = float(ihigh) 
+                        start = vmin + vgap * low; end = vmin + vgap * high
+                        self.lineEdit_colorRange_value.setText("%.1f"%(start))
+                        self.lineEdit_colorRange_value1.setText("%.1f"%(end))
+                        self.valueStart = start; self.valueEnd = end 
+                        self.vmin = vmin; self.vmax = vmax; self.vgap= vgap 
+                    
+                    if self.show_edges: 
+                        self.plotter_edges = self.plotter.add_mesh(edge, color=self.color_edge_line[self.click_show_edge%self.nColor_edge_line][0], line_width=self.color_edge_line[self.click_show_edge%self.nColor_edge_line][1])
+                    if self.radioButton_SDB_sed.isChecked() or self.radioButton_SDB_eld.isChecked(): 
+                        dargs = dict(scalars=item, cmap='rainbow', show_edges=self.show_meshLine, n_colors=150, clim=[start, end], below_color='white', edge_color=self.color_meshLine)
+                        self.plotter_qulity = self.plotter.add_mesh(mesh, interpolate_before_map=True, opacity=self.opecity, 
+                             scalar_bar_args={'title': ' %s  - interpolated'%(item)}, **dargs)
+                        if self.checkBox_Slicing.isChecked(): 
+                            angle = float(self.lineEdit_slicingAngle.text().strip())
+                            radian_angle = math.radians(angle)
+                            sliced = mesh.slice(normal=[math.cos(radian_angle), 0, math.sin(radian_angle)])
+                            self.plotter_qulity = self.plotter.add_mesh(sliced, interpolate_before_map=True, opacity=1.0, 
+                                scalar_bar_args={'title': ' %s  - interpolated'%(item)}, **dargs)
+
+                        self.plotter.enable_cell_picking(mesh=mesh)
+                    elif self.radioButton_Temperature.isChecked(): 
+                        dargs = dict(scalars=item, cmap='rainbow', show_edges=self.show_meshLine, n_colors=150, clim=[start, end], below_color='white', edge_color=self.color_meshLine)
+                        self.plotter_qulity = self.plotter.add_mesh(mesh, interpolate_before_map=True, opacity=self.opecity, 
+                             scalar_bar_args={'title': ' %s  - interpolated'%(item)}, **dargs)
+
+                        if self.checkBox_Slicing.isChecked(): 
+                            angle = float(self.lineEdit_slicingAngle.text().strip())
+                            radian_angle = math.radians(angle)
+                            try: 
+                                sliced = mesh.slice(normal=[math.cos(radian_angle), 0, math.sin(radian_angle)])
+                                self.plotter_qulity = self.plotter.add_mesh(sliced, interpolate_before_map=True, opacity=1.0, 
+                                    scalar_bar_args={'title': ' %s  - interpolated'%(item)}, **dargs)
+                            except Exception as ex: 
+                                print(ex)
+
+
+                    else: 
+                        if self.show_qualityCheck:        
+                            showmesh = mesh.compute_cell_quality('jacobian')
+                            self.plotter_qulity = self.plotter.add_mesh(showmesh, show_edges=self.show_meshLine, pbr=False, diffuse=1, opacity=self.opecity, edge_color=self.color_meshLine )
+                        elif self.solidClip :             
+                            showmesh = mesh 
+                            self.plotter_qulity = self.plotter.add_mesh(showmesh, color=clr, show_edges=self.show_meshLine, pbr=False, diffuse=1, opacity=self.opecity, edge_color=self.color_meshLine )
+                        else:                             
+                            showmesh = surface 
+                            self.plotter_qulity = self.plotter.add_mesh(showmesh, color=clr, show_edges=self.show_meshLine, pbr=False, diffuse=1, opacity=self.opecity, edge_color=self.color_meshLine )
+                        self.plotter.enable_cell_picking(mesh=showmesh)
+
+                        if self.checkBox_Slicing.isChecked(): 
+                            angle = float(self.lineEdit_slicingAngle.text().strip())
+                            radian_angle = math.radians(angle)
+                            if self.show_qualityCheck: 
+                                sliced = showmesh.slice(normal=[math.cos(radian_angle), 0, math.sin(radian_angle)])
+                                self.plotter_qulity = self.plotter.add_mesh(sliced, opacity=1.0, show_edges=True)
+                            elif self.solidClip: 
+                                sliced = showmesh.slice(normal=[math.cos(radian_angle), 0, math.sin(radian_angle)])
+                                self.plotter_qulity = self.plotter.add_mesh(sliced, opacity=1.0, show_edges=True, color=clr)
+                            else: 
+                                sliced = surface.slice(normal=[math.cos(radian_angle), 0, math.sin(radian_angle)])
+                                self.plotter_qulity = self.plotter.add_mesh(sliced,color='red', opacity=1.0)
+                            
+                        
+                    cnt += 1 
+            else: 
+                cnt = 0 
+                for mesh, clr, edge, surface in zip(self.meshes, self.colors, self.edges, self.surfaces):
+                    try: 
+                        if item: 
+                            vmax = mesh[item].max(); vmin = mesh[item].min()
+                            vgap = vmax - vmin 
+                            low = float(ilow); high = float(ihigh) 
+                            start = vmin + vgap * low; end = vmin + vgap * high
+                            self.lineEdit_colorRange_value.setText("%.1f"%(start))
+                            self.lineEdit_colorRange_value1.setText("%.1f"%(end))
+                            self.valueStart = start; self.valueEnd = end 
+                            self.vmin = vmin; self.vmax = vmax; self.vgap= vgap 
+
+                        if self.show_edges: 
+                            clippedEdge =  self.clipping(edge)
+                            self.plotter_clippedEdges = self.plotter.add_mesh(clippedEdge, color=self.color_edge_line[self.click_show_edge%self.nColor_edge_line][0], line_width=self.color_edge_line[self.click_show_edge%self.nColor_edge_line][1])
+                        
+                        if self.radioButton_SDB_sed.isChecked() or self.radioButton_SDB_eld.isChecked():  
+                            clippedMesh = self.clipping(mesh)
+                            dargs = dict(scalars=item, cmap='rainbow', show_edges=self.show_meshLine, n_colors=150, clim=[start, end], below_color='white', edge_color=self.color_meshLine)
+                            self.plotter_qulity = self.plotter.add_mesh(clippedMesh, interpolate_before_map=True, opacity=self.opecity, 
+                                scalar_bar_args={'title': ' %s  - interpolated'%(item)}, **dargs)
+                            if self.checkBox_Slicing.isChecked(): 
+                                angle = float(self.lineEdit_slicingAngle.text().strip())
+                                radian_angle = math.radians(angle)
+                                sliced = clippedMesh.slice(normal=[math.cos(radian_angle), 0, math.sin(radian_angle)])
+                                self.plotter_qulity = self.plotter.add_mesh(sliced, interpolate_before_map=True, opacity=1.0, 
+                                    scalar_bar_args={'title': ' %s  - interpolated'%(item)}, **dargs)
+
+                             
+                            self.plotter.enable_cell_picking(mesh=clippedMesh)
+                        elif self.radioButton_Temperature.isChecked(): 
+                            clippedMesh = self.clipping(mesh)
+                            dargs = dict(scalars=item, cmap='rainbow', show_edges=self.show_meshLine, n_colors=150, clim=[start, end], below_color='white', edge_color=self.color_meshLine)
+                            self.plotter_qulity = self.plotter.add_mesh(clippedMesh, interpolate_before_map=True, opacity=self.opecity, 
+                                scalar_bar_args={'title': ' %s  - interpolated'%(item)}, **dargs)
+                            if self.checkBox_Slicing.isChecked(): 
+                                angle = float(self.lineEdit_slicingAngle.text().strip())
+                                radian_angle = math.radians(angle)
+                                try: 
+                                    sliced = clippedMesh.slice(normal=[math.cos(radian_angle), 0, math.sin(radian_angle)])
+                                    self.plotter_qulity = self.plotter.add_mesh(sliced, interpolate_before_map=True, opacity=1.0, 
+                                        scalar_bar_args={'title': ' %s  - interpolated'%(item)}, **dargs)
+                                except Exception as ex: 
+                                    print(ex)
+                        else: 
+                            if self.show_qualityCheck:
+                                qmesh = mesh.compute_cell_quality('jacobian')
+                                clippedMesh =  self.clipping(qmesh)
+                                self.plotter_qulity = self.plotter.add_mesh(clippedMesh, show_edges=self.show_meshLine, pbr=False, diffuse=1, opacity=self.opecity, edge_color=self.color_meshLine )
+                            elif self.solidClip :   
+                                clippedMesh = self.clipping(mesh)          
+                                self.plotter_qulity = self.plotter.add_mesh(clippedMesh, color=clr, show_edges=self.show_meshLine, pbr=False, diffuse=1, opacity=self.opecity, edge_color=self.color_meshLine )
+                            else:               
+                                clippedMesh = self.clipping(surface)              
+                                self.plotter_qulity = self.plotter.add_mesh(clippedMesh, color=clr, show_edges=self.show_meshLine, pbr=False, diffuse=1, opacity=self.opecity, edge_color=self.color_meshLine )
+
+                            if self.checkBox_Slicing.isChecked():
+                                angle = float(self.lineEdit_slicingAngle.text().strip())
+                                radian_angle = math.radians(angle)
+                                sliced = clippedMesh.slice(normal=[math.cos(radian_angle), 0, math.sin(radian_angle)])
+
+                                if self.show_qualityCheck: 
+                                    self.plotter_qulity = self.plotter.add_mesh(sliced, opacity=1.0, show_edges=True)
+                                elif self.solidClip: 
+                                    self.plotter_qulity = self.plotter.add_mesh(sliced, opacity=1.0, show_edges=True, color=clr)
+                                else: 
+                                    self.plotter_qulity = self.plotter.add_mesh(sliced,color='red', opacity=1.0)
+
+                            self.plotter.enable_cell_picking(mesh=clippedMesh)
+                    except Exception as EX: 
+                        print (EX)
+                        cnt += 1 
+                        continue 
+                    cnt += 1 
+                    
+        else: 
+            if not self.xClipped and not self.yClipped and not self.zClipped: 
+                self.clippedMesh= None     
+                for mesh, clr, edge, surface in zip(self.meshes, self.colors, self.edges, self.surfaces):
+                    if isinstance(surface, type(None)) : 
+                        self.checkBox_Solid.setChecked(True)
+                        self.solidClip = True 
+                    if self.show_edges: 
+                        self.plotter_edges = self.plotter.add_mesh(edge, color=self.color_edge_line[self.click_show_edge%self.nColor_edge_line][0],\
+                            line_width=self.color_edge_line[self.click_show_edge%self.nColor_edge_line][1])
+                    if self.show_qualityCheck: 
+                        meshQuality = mesh.compute_cell_quality('jacobian')
+                        self.plotter_qulity = self.plotter.add_mesh(meshQuality, show_edges=self.show_meshLine,\
+                            pbr=False, diffuse=1, opacity=self.opecity, edge_color=self.color_meshLine)
+                        self.plotter.enable_cell_picking(mesh=meshQuality)
+                    
+                    elif self.solidClip: 
+                        self.plotter_surf = self.plotter.add_mesh(mesh, show_edges=self.show_meshLine, \
+                            color=clr, metallic=0.3, pbr=False, diffuse=1, opacity=self.opecity, smooth_shading=False, edge_color=self.color_meshLine) 
+                        self.plotter.enable_cell_picking(mesh=mesh)
+                    else: 
+                        self.plotter_surf = self.plotter.add_mesh(surface, show_edges=self.show_meshLine, color=clr, metallic=0.3, pbr=False, \
+                            diffuse=1, opacity=self.opecity, smooth_shading=False, edge_color=self.color_meshLine) 
+                        self.plotter.enable_cell_picking(mesh=surface)
+
+                    if self.checkBox_Slicing.isChecked(): 
+                        if '.ptn' in self.meshfile: 
+                            if self.show_qualityCheck:
+                                self.plotter_qulity = self.plotter.add_mesh_slice(meshQuality,  opacity=1.0, show_edges=True)
+                            elif self.solidClip: 
+                                self.plotter_qulity = self.plotter.add_mesh_slice(mesh, color=clr, opacity=1.0, show_edges=True)
+                            else: 
+                                self.plotter_qulity = self.plotter.add_mesh_slice(surface, color='red', opacity=1.0)
+                        else: 
+                            angle = float(self.lineEdit_slicingAngle.text().strip())
+                            radian_angle = math.radians(angle)
+                            
+                            if self.show_qualityCheck:
+                                sliced = meshQuality.slice(normal=[math.cos(radian_angle), 0, math.sin(radian_angle)])
+                                self.plotter_qulity = self.plotter.add_mesh(sliced, opacity=1.0, show_edges=True, colors=True, edge_color=self.color_meshLine)
+                            elif self.solidClip: 
+                                sliced = mesh.slice(normal=[math.cos(radian_angle), 0, math.sin(radian_angle)])
+                                self.plotter_qulity = self.plotter.add_mesh(sliced, opacity=1.0, show_edges=True, color=clr, edge_color=self.color_meshLine)
+                            else: 
+                                sliced = surface.slice(normal=[math.cos(radian_angle), 0, math.sin(radian_angle)])
+                                self.plotter_qulity = self.plotter.add_mesh(sliced, opacity=1.0, color='red')
+
+            else: 
+                for mesh, clr, edge, surface in zip(self.meshes, self.colors, self.edges, self.surfaces):
+                    if isinstance(surface, type(None)) : 
+                        self.checkBox_Solid.setChecked(True)
+                        self.solidClip = True
+                        
+                    if self.solidClip: clippedMesh = mesh 
+                    else: clippedMesh = surface 
+
+                    clippedMesh = self.clipping(clippedMesh) 
+                    try: 
+                        if self.show_edges: 
+                            clippedEdge = self.clipping(edge) 
+                            self.plotter_clippedEdges = self.plotter.add_mesh(clippedEdge, \
+                                color=self.color_edge_line[self.click_show_edge%self.nColor_edge_line][0],\
+                                    line_width=self.color_edge_line[self.click_show_edge%self.nColor_edge_line][1])
+                        if self.show_qualityCheck:  
+                            meshQuality = clippedMesh.compute_cell_quality('jacobian')
+                            self.plotter_clippedQuality = self.plotter.add_mesh(meshQuality, show_edges=self.show_meshLine, \
+                                pbr=False, diffuse=1, opacity=self.opecity, edge_color=self.color_meshLine)
+                            self.plotter.enable_cell_picking(mesh=meshQuality)
+                        else: 
+                            self.plotter_clippedMesh = self.plotter.add_mesh(clippedMesh, show_edges=self.show_meshLine, \
+                                color=clr, metallic=0.3, pbr=False, diffuse=1, opacity=self.opecity, smooth_shading=False, edge_color=self.color_meshLine) 
+                            self.plotter.enable_cell_picking(mesh=clippedMesh)
+                    except Exception as EX: 
+                        print (EX)
+                        continue 
+
+                    if self.checkBox_Slicing.isChecked(): 
+                        if '.ptn' in self.meshfile: 
+                            if self.show_qualityCheck:
+                                self.plotter_qulity = self.plotter.add_mesh_slice(meshQuality,  opacity=1.0, show_edges=True, edge_color=self.color_meshLine)
+                            elif self.solidClip: 
+                                self.plotter_qulity = self.plotter.add_mesh_slice(clippedMesh, color=clr, opacity=1.0, show_edges=True, edge_color=self.color_meshLine)
+                            else: 
+                                self.plotter_qulity = self.plotter.add_mesh_slice(clippedMesh, color='red', opacity=1.0)
+
+                        else: 
+
+                            angle = float(self.lineEdit_slicingAngle.text().strip())
+                            radian_angle = math.radians(angle)
+
+                            if self.show_qualityCheck:
+                                sliced = meshQuality.slice(normal=[math.cos(radian_angle), 0, math.sin(radian_angle)])
+                            else: 
+                                sliced = clippedMesh.slice(normal=[math.cos(radian_angle), 0, math.sin(radian_angle)])
+
+                            if self.solidClip: 
+                                self.plotter_qulity = self.plotter.add_mesh(sliced, opacity=1.0, show_edges=True, edge_color=self.color_meshLine)                             
+                            else: 
+                                self.plotter_qulity = self.plotter.add_mesh(sliced, color='red', opacity=1.0)                             
+                    
+        # if not self.radioButton_cPres.isChecked():
+        #     lights = Mesh.lighting()
+        #     for light in lights: 
+        #         self.plotter.add_light(light)    
+        if self.checkBox_pyvistaLighting.isChecked(): 
+            light = Mesh.addlight('headlight')
+            self.plotter.add_light(light)
+            self.plotter.enable_shadows()
+
+        if not isinstance(self.camera_position, type(None)): 
+            self.plotter.camera = self.copied_camera 
+        else: 
+            self.get_camera_position()
+
+        self.showMesh_addingSearchedElements(changeOpecity=False)
+        if nodeplotRecursive: self.showMesh_addingSearchedNodes()
+        self.plotter.show()
+
+    def clipping(self, clipped): 
+        
+        if self.xClipped : 
+            if self.x_revClipping: 
+                clipped = clipped.clip(normal=(-1, 0, 0), value=self.xClippingShift)
+            else: 
+                clipped = clipped.clip(normal=(1, 0, 0), value=self.xClippingShift)
+        if self.yClipped :
+            if self.y_revClipping: 
+                clipped = clipped.clip(normal=(0, -1, 0), value=self.yClippingShift)
+            else: 
+                clipped = clipped.clip(normal='y', value=self.yClippingShift)
+        if self.zClipped :
+            if self.z_revClipping:
+                clipped = clipped.clip(normal=(0, 0, -1), value=self.zClippingShift)
+            else: 
+                clipped = clipped.clip(normal='z', value=self.zClippingShift)
+        return clipped
+
+    def defineColorMap(self, mesh, item, vmin, vmax, div, isSurf=False):
+        if isSurf: 
+            scalars = np.empty(mesh.n_points)
+        else: 
+            scalars = np.empty(mesh.number_of_cells)
+        vgap = vmax - vmin  
+        scalars[mesh[item] >= vmin + vgap * div[9] ] = 9  # red
+        scalars[mesh[item] <  vmin + vgap * div[8] ] = 8  # grey
+        scalars[mesh[item] <  vmin + vgap * div[7] ] = 7  # blue
+        scalars[mesh[item] <  vmin + vgap * div[6] ] = 6  # blue
+        scalars[mesh[item] <  vmin + vgap * div[5] ] = 5  # blue
+        scalars[mesh[item] <  vmin + vgap * div[4] ] = 4  # yellow
+        scalars[mesh[item] <  vmin + vgap * div[3] ] = 3  # blue
+        scalars[mesh[item] <  vmin + vgap * div[2] ] = 2  # blue
+        scalars[mesh[item] <  vmin + vgap * div[1] ] = 1  # blue
+        scalars[mesh[item] <= vmin + vgap * div[0] ] = 0  # black
+        colormap = ['gray', 'navy', 'blue', 'darkgreen', 'green', 'yellow', 'orange', 'orangered' ,'red', 'firebrick']
+
+        return colormap, scalars 
+
+    def replaceCells(self) :
+        if not self.view3D: return
+        try: 
+            picked = self.plotter.picked_cells
+            self.clearPlotter()
+            self.plotter.add_mesh(picked, show_edges=self.show_meshLine, color='gray', metallic=0.3, pbr=False, diffuse=1, opacity=self.opecity, smooth_shading=False, edge_color='gray') 
+            lights = Mesh.lighting()
+            for light in lights: 
+                self.plotter.add_light(light)    
+
+            if self.defaultColor_Background: 
+                self.plotter.set_background('gray', top='white')
+            else: 
+                self.plotter.set_background('white')
+            self.plotter.enable_parallel_projection()
+            self.plotter.add_axes()
+
+            self.plotter.show()
+        except: 
+            self.plotting()
+
+    def showSearchedNodes(self): 
+        if not self.view3D: return
+        self.searchedNodes=[]
+        text = self.lineEdit_showNodes.text()
+        self.searchedNodes = parsingIDs(text) 
+        self.showMesh_addingSearchedNodes()
+
+    def showSearchedElements(self): 
+        if not self.view3D: return
+        self.searchedElements=[]
+        text = self.lineEdit_showElements.text()
+        self.searchedElements = parsingIDs(text)
+        self.showMesh_addingSearchedElements()
+
+
+    def showMesh_addingSearchedNodes(self): 
+        if not self.view3D: return
+        for pts in self.searched_points: 
+            self.plotter.remove_actor(pts)
+
+        self.searched_points=[]
+        self.searched_pointcloud = Mesh.generatePointCloud(self.searchedNodes, self.nodes)
+        # print(self.searched_pointcloud.n_cells)
+        if self.searched_pointcloud.n_cells > 0: 
+            self.searched_points.append(self.plotter.add_point_labels(self.searched_pointcloud, 'label', point_size=10, font_size=10,  shape_color='gray', point_color='maroon') )  # , color='maroon', render_points_as_spheres=True)
+        else: 
+            self.get_OpecityValue()
+
+    def showMesh_addingSearchedElements(self, changeOpecity=True): 
+        if not self.view3D: return
+        for sCells in self.searchedCells: 
+            self.plotter.remove_actor(sCells)
+
+        self.searchedCells =[]
+        for idx, elements, nodes in zip(self.idx_element, self.elements, self.nodes): 
+            searched_cells = Mesh.generateMesh_searched(self.searchedElements,idx, elements, nodes)
+            if not isinstance(searched_cells, type(None)): 
+                self.searchedCells.append(self.plotter.add_mesh(searched_cells, color='red', line_width=2) )
+        if changeOpecity: 
+            self.horizontalSlider_opacity.setSliderPosition(30)
+            self.opecity = self.horizontalSlider_opacity.value() / 100.0
+            self.lineEdit_opecity.setText(str(int(self.opecity*100)))
+                
+       
 class myCanvas(FigureCanvas):
     def __init__(self, parent=None, *args, **kwargs):
         self.figure = plt.figure()

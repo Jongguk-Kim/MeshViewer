@@ -684,6 +684,7 @@ class Ui_MainWindow(object):
         
     
     def get_pyVistaMesh(self): 
+        print(self.meshfile)
         if ".ptn" in self.meshfile: 
             pvMesh = Mesh.MESH(self.meshfile, centering=True)
             # trd, edges, pt1, surface, npn, idx_element,_ = Mesh.load_pyVista_mesh(self.meshfile, centering=True) 
@@ -708,11 +709,11 @@ class Ui_MainWindow(object):
         self.edges.append(edges)
         self.surfaces.append(surface)
         self.nodes.append(npn)
-
+        print(" >>>>>>>>>>>>>>", pvMesh.surfaces)
         self.idx_element.append(idx_element)
         self.elements.append(cells) 
 
-        if '.sfric' in self.meshfile: 
+        if '.sfric' in self.meshfile or '.dat' in self.meshfile: 
             if isinstance(pvMesh.press, type(None)): 
                 self.presses.append(pvMesh.npress)
             else: 
@@ -728,7 +729,7 @@ class Ui_MainWindow(object):
             self.radioButton_Temperature.setEnabled(True)
             self.radioButton_cPres.setEnabled(False)
             
-        elif '.sfric' in self.meshfile: 
+        elif '.sfric' in self.meshfile or '.dat' in self.meshfile: 
             self.radioButton_SDB_sed.setEnabled(False)
             self.radioButton_SDB_eld.setEnabled(False)
             self.radioButton_Temperature.setEnabled(False)
@@ -774,48 +775,35 @@ class Ui_MainWindow(object):
             self.comboBox.setCurrentIndex(index)
 
     def openFile(self): 
-        
-        self.meshfile, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Select File", self.cwd, "File Open(*.trd *.axi *.ptn *.inp *.sfric0* *.sdb0*)")
+        self.meshes=[]; self.points=[]; self.colors=[]; self.edges=[]; self.surfaces=[]; self.nodes=[]
+        self.idx_element = []; self.elements=[]; self.presses=[]
 
-        if self.meshfile: 
-            self.cwd = writeworkingdirectory(self.meshfile, dfile=self.dfile)
-            self.meshes=[]; self.points=[]; self.colors=[]; self.edges=[]; self.surfaces=[]; self.nodes=[]
-            self.idx_element = []; self.elements=[]; self.presses=[]
+        self.horizontalSlider_x_clipping.setSliderPosition(50)
+        self.horizontalSlider_y_clipping.setSliderPosition(50)
+        self.horizontalSlider_z_clipping.setSliderPosition(50)
+        self.camera_position = None 
 
-            self.horizontalSlider_x_clipping.setSliderPosition(50)
-            self.horizontalSlider_y_clipping.setSliderPosition(50)
-            self.horizontalSlider_z_clipping.setSliderPosition(50)
-            self.camera_position = None 
-            
-            t= time.time()
-            try: 
-                self.get_pyVistaMesh()
-            except Exception as ex: 
-                etext = str(ex) + "\n\n" + "Error to open file \n " + "%s"%(self.meshfile)
-                writingError(etext)
-                print(etext)
-            t1 = time.time()
-            print("Time to read : %.3f"%(t1-t))
-            self.colors.append(self.comboBox.currentText())
-             
-            self.showMesh() 
-            self.changingCurrentColor() 
+        self.gettingPyvistaMesh()
 
     def addMesh(self): 
-        self.meshfile, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Select File", self.cwd, "File Open(*.trd *.axi *.ptn *inp *.sfric0* *.sdb0*)")
+        self.gettingPyvistaMesh()
 
+
+    def gettingPyvistaMesh(self): 
+        self.meshfile, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Select File", self.cwd, "File Open(*.trd *.axi *.ptn *.inp *.sfric0* *.sdb0* *-postfoot.dat)")
         if self.meshfile: 
             self.cwd = writeworkingdirectory(self.meshfile, dfile=self.dfile)
-            
             try:
+                t= time.time()
                 self.get_pyVistaMesh()
+                t1 = time.time()
+                print("Time to read : %.3f"%(t1-t))
             except Exception as ex: 
                 etext = str(ex) + "\n\n" + "Error to open file \n " + "%s"%(self.meshfile)
                 writingError(etext)
                 print(etext)
 
             self.colors.append(self.comboBox.currentText())
-
             self.showMesh() 
             self.changingCurrentColor()
     
@@ -823,8 +811,8 @@ class Ui_MainWindow(object):
         if ".sfric" in self.meshfile: 
             results =  self.meshfile[:-9]+"-sfric_surface.inp"
             savefile, _= QtWidgets.QFileDialog.getSaveFileName(None, "Save files as", results, "SFRIC Surface Mesh(*.inp)")
-
-            fp = open(results, 'w') 
+            
+            fp = open(savefile, 'w') 
 
             fp.write("*NODE\n")
             for n in self.class_sfric.Node.Node: 
@@ -874,7 +862,7 @@ class Ui_MainWindow(object):
         self.change_OpecityValue()
 
     def changeRatio(self): 
-        if '.sdb' in self.meshfile or '.sfric' in self.meshfile:
+        if '.sdb' in self.meshfile or '.sfric' in self.meshfile or '.dat' in self.meshfile:
             if self.vgap != 0  : 
                 low = float(self.lineEdit_colorRange_value.text().strip())
                 lpst = (low-self.vmin) / self.vgap
@@ -898,13 +886,13 @@ class Ui_MainWindow(object):
             elif self.radioButton_Temperature.isChecked(): item = 'temperature'
             else: item = False
 
-        elif '.sfric' in self.meshfile: 
+        elif '.sfric' in self.meshfile or '.dat' in self.meshfile: 
             item = 'press'
         else: 
             item = False 
         
         
-        if ".sfric" in self.meshfile: 
+        if ".sfric" in self.meshfile or ".dat" in self.meshfile: 
             if not self.xClipped and not self.yClipped and not self.zClipped: 
                 for surface, press, clr in zip(self.surfaces, self.presses, self.colors): 
                     if item: 

@@ -464,11 +464,10 @@ def SDBResult_READ(sdbResult, NODE):
 
     print ("SDB results are loaded")
     
-    
     if len(HeatGen) > 0:
         return np.array(NODE), Deformed_RIM_ROAD, HeatGen, iSED
     else:
-        return -1
+        return np.array(NODE), Deformed_RIM_ROAD, HeatGen, iSED
 
 def ResultSfric(model="", result="", sfric='', deformed=1, ht=8.0E-03, sfht=1.0E-03, contact = False):
 
@@ -816,16 +815,19 @@ def ResultSfric(model="", result="", sfric='', deformed=1, ht=8.0E-03, sfht=1.0E
     resultsfile.close()
     
     sfric.Node.Node = np.array(sfric.Node.Node)
-    DeformedRigid.Node = np.array(DeformedRigid.Node)
-    ix = np.where(DeformedRigid.Node[:,0] == sfric.Rim.Node[0][0])[0][0] 
-    sfric.Rim.Node[0][1] += DeformedRigid.Node[ix][1] 
-    sfric.Rim.Node[0][2] += DeformedRigid.Node[ix][2] 
-    sfric.Rim.Node[0][3] += DeformedRigid.Node[ix][3] 
+    
+    try: 
+        DeformedRigid.Node = np.array(DeformedRigid.Node)
+        ix = np.where(DeformedRigid.Node[:,0] == sfric.Rim.Node[0][0])[0][0] 
+        sfric.Rim.Node[0][1] += DeformedRigid.Node[ix][1] 
+        sfric.Rim.Node[0][2] += DeformedRigid.Node[ix][2] 
+        sfric.Rim.Node[0][3] += DeformedRigid.Node[ix][3] 
 
-    ix = np.where(DeformedRigid.Node[:,0] == sfric.Road.Node[0][0])[0][0] 
-    sfric.Road.Node[0][1] += DeformedRigid.Node[ix][1] 
-    sfric.Road.Node[0][2] += DeformedRigid.Node[ix][2] 
-    sfric.Road.Node[0][3] += DeformedRigid.Node[ix][3] 
+        ix = np.where(DeformedRigid.Node[:,0] == sfric.Road.Node[0][0])[0][0] 
+        sfric.Road.Node[0][1] += DeformedRigid.Node[ix][1] 
+        sfric.Road.Node[0][2] += DeformedRigid.Node[ix][2] 
+        sfric.Road.Node[0][3] += DeformedRigid.Node[ix][3] 
+    except : pass 
 
     # for rdg in DeformedRigid.Node:
     #     if rdg[0] == sfric.Rim.Node[0][0]:  
@@ -1024,14 +1026,12 @@ def getSDBModel(sdbresult):
 
     npn, np2d, np3d, rim_road = readSDB(sdbmodel) 
     d_npn, deformed_Rim_road, iELD, iSED =SDBResult_READ(sdbresult, npn)
-
    
     n3d = np.array(d_npn)
     e3dM = np.array(np2d)
     e3dS = np.array(np3d)
 
     # import time 
-
     eid = e3dS[:,0].flatten()
     # t = time.time()
     eld1 = np.array(iELD[0]); eld2 = np.array(iELD[1])
@@ -1041,7 +1041,6 @@ def getSDBModel(sdbresult):
     if len(idx): 
         EnergyLoss[idx] = 0 
     EnergyLoss = np.c_[eid, EnergyLoss]
-    
     sed1 = np.array(iSED[0]); sed2 = np.array(iSED[1])
     StrainEnergyDensity = sed1 + sed2
     StrainEnergyDensity = StrainEnergyDensity.ravel()
@@ -1049,7 +1048,7 @@ def getSDBModel(sdbresult):
     if len(idx): 
         StrainEnergyDensity[idx] = 0 
     StrainEnergyDensity = np.c_[eid, StrainEnergyDensity]
-
+    
     # t1 = time.time()
     # from multiprocessing import Pool, Process
     # t2 = time.time()
@@ -1060,9 +1059,11 @@ def getSDBModel(sdbresult):
     # print(" TIME =%.2f"%(t3-t2))  ## > TIME =1.46
     
 
-
-    rim_center = deformed_Rim_road[0]
-    road = deformed_Rim_road[1]
+    # try: 
+    #     rim_center = deformed_Rim_road[0]
+    #     road = deformed_Rim_road[1]
+    # except: 
+    #     pass 
 
 
     return n3d, e3dM, e3dS, EnergyLoss, StrainEnergyDensity

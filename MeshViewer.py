@@ -49,6 +49,8 @@ from matplotlib.patches import Arc
 import pyVista as Mesh 
 from pyvistaqt import QtInteractor, MainWindow
 
+viewerVersion=1
+componentsfile="c:\\Hankook\\tirecomponents.dat"
 TireComponents = [
     'BEAD_R', 'BEAD_L', # 'BD1' ,  Bead
     'BEC' , # Belt Edge Cushion
@@ -101,8 +103,109 @@ TireComponents = [
     'BDC'  , # bead cover 
     'SPC'  ,  ## spiral coil
     'SWS'  ,  # temporary component for Endurance simulation 
-    'JPC1'   
+    'JPC1' , 
+    ## ATC COMPONENTS
+    'CCU-1', 'CCU-2','CCU-3',
+    'BT-1', 'BT-2', 'BT-3', 'BT-4', 
+    'JFC-1', 'JFC-2', 'JEC-1', 'JEC-2',
+    'CCU_SKIM-1', 'BT_SKIM-1', 'JFC_SKIM-1', 
+    'BDS-1', 'FIL-1', 'RIC-1', 'ILC-1', 'BSW-1', 'TRW-1', 
+    'CTB-1', 'SUT-1', 
+    'BT-1_Surf','BT-2_Surf', 'BT-3_Surf', 'BT-4_Surf', 
+    'JFC-1_Surf', 'JFC-2_Surf', 'JEC-1_Surf', 'JEC-2_Surf',
+    'CH-1', 'BDC-1', 'CH-2', 'CH-3',
+    'UBF-1', 'SHW-1', 'LBF-1', 'HUS-1'
 ]
+
+
+preComponentColor = {  "CTR":"darkgray",       "CTB":"darkgray", 
+                    "SUT" : "lightpink",    "UTR" : "lightpink", 
+                    "CC1":"lightsalmon",    "C01":"lightsalmon",    "CCU":"lightsalmon",
+                    "BTT":"steelblue",      "BT_SKIM":"steelblue",
+                    "FIL":"green",          "LBF":"green",          "UBF":"lightpink",
+                    "IL1":"y","L11":"y", "ILC":"y", 
+                    "BSW":"yellowgreen",
+                    "HUS":"steelblue",
+                    "RIC":"darkgray",
+                    "SHW":"darkcyan",
+                    "BD1":"dimgray", "BDS": "dimgray",
+                    "BDC":"black",
+                    "MEMB":"black",
+                    "RIM":"red",
+                    "TDBASE":"aqua",
+                    "DOT":"red",
+                    "PRESS":"blue",
+                    "TDROAD":"coral",
+                    "BDTOP":"gray",
+                    "TRW":"steelblue"#,
+                    # "":"",
+
+}
+
+def generateComponentfile(fname=componentsfile): 
+    fp = open(fname, 'w')
+    fp.write("*Version=%d\n"%(viewerVersion))
+    fp.write("*TIRE COMPONENTS\n")
+    for tc in TireComponents: 
+        fp.write("%s\n"%(tc))
+    fp.write("******************************\n")
+    fp.write("** Elset Color Definition\n")
+    fp.write("******************************\n")
+    fp.write('*Color\n')
+    for key, value in preComponentColor.items(): 
+        fp.write("%6s=%s\n"%(key, value))
+    fp.close()
+
+
+def readTireComponents(fname, color=False): 
+
+    if not isfile(componentsfile) : 
+        generateComponentfile()
+       
+    Components=[]
+    colors={}
+    with open(fname) as TC: 
+        lines = TC.readlines()
+    cmd = False 
+    for line in lines: 
+        if '**' in line: continue
+        if '*' in line: 
+            if "*TIRE COMPONENTS" in line: 
+                cmd = 'tc'
+            elif '*Version' in line: 
+                wd = line.split("=")[1].strip() 
+                currentVersion = int(wd) 
+                if currentVersion < viewerVersion: 
+                    generateComponentfile()
+                    readTireComponents(fname)
+            elif '*Color' in line: 
+                cmd ='c'
+            else: 
+                cmd = False 
+        else: 
+            if cmd == 'tc': 
+                Components.append(line.strip()) 
+            if cmd == 'c': 
+                wd = line.split("=")
+                colors[str(wd[0].strip())] = str(wd[1].strip())
+    if color : 
+        return colors 
+
+    return Components
+
+def readingTireComponentFile(): 
+    if not isfile(componentsfile):    
+        print(" GENERATE file which has materail components")
+        generateComponentfile(componentsfile)
+element_color = readTireComponents(componentsfile, color=True)
+def Color(elsetname): 
+    for key, value in element_color.items(): 
+        if key.upper() in  elsetname.upper(): 
+            color = value 
+            break 
+    else: 
+        color = 'silver'
+    return color
 
 
 TreadElset = ['CTB', 'SUT', 'CTR', 'UTR', 'TRW']
@@ -2502,7 +2605,7 @@ def Surfaces(OutEdges, Node, OffsetLeftRight, TreadElset, AllElements):
         Press.append(OutEdges[edgeNo])
         count = 0
         while OutEdges[i][1] != opposite:
-            print(OutEdges[i])
+            # print(OutEdges[i])
             nextedge = FindNextEdge(i, OutEdges)
             i = nextedge[0]
             # print ('**', OutEdges[i])
@@ -3255,7 +3358,7 @@ class ELEMENT:
         OEdges = OuterEdge(FEdges, Node, self)
         return OEdges
 
-def Mesh2DInformation(InpFileName, comments=True):
+def Mesh2DInformation(InpFileName, comments=True, components=False):
     
 
     with open(InpFileName) as INP:
@@ -3525,26 +3628,43 @@ def Mesh2DInformation(InpFileName, comments=True):
         i += 1
         if i > 10000: break 
     # print ("STEP 3")
-    ename = ''
-    for eset in Elset.Elset: 
-        f = 0 
-        for cmpn in TireComponents: 
-            if eset[0].upper() == cmpn: 
-                f = 1
-                break 
-        if f ==1: 
-            for i, es in enumerate(eset): 
-                if i == 0: 
-                    ename = es
-                for j, el in enumerate(Element.Element): 
-                    if el[0] == es: 
-                        Element.Element[j][5] = ename
-                        Element.Element[j][11] = 1
+    if not components: 
+        ename = ''
+        for eset in Elset.Elset: 
+            f = 0 
+            for cmpn in TireComponents: 
+                if eset[0].upper() == cmpn.upper() or eset[0].upper()+"-1" ==  cmpn.upper():  
+                    f = 1
+                    break 
+            if f ==1: 
+                for i, es in enumerate(eset): 
+                    if i == 0: 
+                        ename = es
+                    for j, el in enumerate(Element.Element): 
+                        if el[0] == es: 
+                            Element.Element[j][5] = ename
+                            Element.Element[j][11] = 1
 
+    else: 
+        ename = ''
+        for eset in Elset.Elset: 
+            f = 0 
+            for cmpn in components: 
+                if eset[0].upper() == cmpn.upper() or eset[0].upper()+"-1" ==  cmpn.upper(): 
+                    f = 1
+                    break 
+            if f ==1: 
+                for i, es in enumerate(eset): 
+                    if i == 0: 
+                        ename = es
+                    for j, el in enumerate(Element.Element): 
+                        if el[0] == es: 
+                            Element.Element[j][5] = ename
+                            Element.Element[j][11] = 1
     
     for el in Element.Element: 
         if el[11] ==0: 
-            print (el)
+            # print (el)
             Elset.Add(el[0], el[5])
         el = [el[0], el[1], el[2], el[3], el[4], el[5],el[6],el[7],el[8], el[9], el[10]]
     # print ("STEP **")
@@ -4314,53 +4434,7 @@ def LayoutToProfile(element, node, output='edge', color='darkgray', lw=0.5, coun
         return polygons, mr 
 
 
-def Color(elsetname):                ## Define Color set 
-    c = ''
-    if elsetname == 'CTR' or elsetname == 'CTB':
-        c = 'darkgray'
-    elif elsetname == 'UTR' or elsetname == 'SUT':
-        c = 'lightpink'
-    elif elsetname == 'CC1' or elsetname == 'C01' or elsetname == 'C02':
-        c = 'lightsalmon'
-    elif elsetname == 'CCT':
-        c = 'purple'
-    elif elsetname == 'BTT':
-        c = 'steelblue'
-    elif elsetname == 'FIL' or elsetname == 'LBF':
-        c = 'green'
-    elif elsetname == 'UBF':
-        c = 'lightpink'
-    elif elsetname == 'IL1' or elsetname == 'L11':
-        c = 'y'
-    elif elsetname == 'BSW':
-        c = 'yellowgreen'
-    elif elsetname == 'HUS':
-        c = 'steelblue'
-    elif elsetname == 'RIC':
-        c = 'darkgray'
-    elif elsetname == 'SHW':
-        c = 'darkcyan'
-    elif elsetname == 'BD1':
-        c = 'dimgray'
-    elif elsetname == 'BDC':
-        c = 'black'
-    elif elsetname == 'MEMB':
-        c = 'black'
-    elif elsetname == 'DOT':
-        c = 'red'
-    elif elsetname == 'PRESS':
-        c = 'blue'
-    elif elsetname == 'RIM':
-        c = 'red'
-    elif elsetname == 'TDBASE':
-        c = 'aqua'
-    elif elsetname == 'TDROAD':
-        c = 'coral'
-    elif elsetname == 'BDTOP':
-        c = 'gray'
-    else:
-        c = 'silver'
-    return c
+
 
 def parsingIDs(text): 
     text = text.split(",")
@@ -4790,11 +4864,11 @@ class Ui_MainWindow(object):
         self.push_comparing.setObjectName("push_comparing")
         self.verticalLayout.addWidget(self.groupBox_LoadMesh)
         self.groupBox_Mesh3D = QtWidgets.QGroupBox(self.centralwidget)
-        self.groupBox_Mesh3D.setMinimumSize(QtCore.QSize(330, 50))
-        self.groupBox_Mesh3D.setMaximumSize(QtCore.QSize(330, 50))
+        self.groupBox_Mesh3D.setMinimumSize(QtCore.QSize(330, 45))
+        self.groupBox_Mesh3D.setMaximumSize(QtCore.QSize(330, 45))
         self.groupBox_Mesh3D.setObjectName("groupBox_Mesh3D")
         self.comboBox = QtWidgets.QComboBox(self.groupBox_Mesh3D)
-        self.comboBox.setGeometry(QtCore.QRect(10, 20, 81, 25))
+        self.comboBox.setGeometry(QtCore.QRect(81, 15, 81, 25))
         self.comboBox.setMinimumSize(QtCore.QSize(80, 25))
         self.comboBox.setMaximumSize(QtCore.QSize(100, 25))
         self.comboBox.setObjectName("comboBox")
@@ -4810,13 +4884,17 @@ class Ui_MainWindow(object):
         self.comboBox.addItem("")
         self.comboBox.addItem("")
         self.checkBox_colorChanging = QtWidgets.QCheckBox(self.groupBox_Mesh3D)
-        self.checkBox_colorChanging.setGeometry(QtCore.QRect(100, 25, 83, 15))
+        self.checkBox_colorChanging.setGeometry(QtCore.QRect(0, 20, 81, 15))
         self.checkBox_colorChanging.setMaximumSize(QtCore.QSize(100, 15))
         self.checkBox_colorChanging.setObjectName("checkBox_colorChanging")
         self.pushButton_replaceCells = QtWidgets.QPushButton(self.groupBox_Mesh3D)
-        self.pushButton_replaceCells.setGeometry(QtCore.QRect(190, 20, 100, 25))
+        self.pushButton_replaceCells.setGeometry(QtCore.QRect(166, 15, 100, 25))
         self.pushButton_replaceCells.setMaximumSize(QtCore.QSize(100, 25))
         self.pushButton_replaceCells.setObjectName("pushButton_replaceCells")
+        self.pushButton_showAllCells = QtWidgets.QPushButton(self.groupBox_Mesh3D)
+        self.pushButton_showAllCells.setGeometry(QtCore.QRect(266, 15, 61, 25))
+        self.pushButton_showAllCells.setMaximumSize(QtCore.QSize(100, 25))
+        self.pushButton_showAllCells.setObjectName("pushButton_showAllCells")
         self.verticalLayout.addWidget(self.groupBox_Mesh3D)
         self.groupBox_CUTELayout = QtWidgets.QGroupBox(self.centralwidget)
         self.groupBox_CUTELayout.setMinimumSize(QtCore.QSize(330, 310))
@@ -5055,8 +5133,9 @@ class Ui_MainWindow(object):
         self.comboBox.setItemText(8, _translate("MainWindow", "lightblue"))
         self.comboBox.setItemText(9, _translate("MainWindow", "steelblue"))
         self.comboBox.setItemText(10, _translate("MainWindow", "wheat"))
-        self.checkBox_colorChanging.setText(_translate("MainWindow", "Next Color"))
-        self.pushButton_replaceCells.setText(_translate("MainWindow", "Select Show"))
+        self.checkBox_colorChanging.setText(_translate("MainWindow", "Auto Next"))
+        self.pushButton_replaceCells.setText(_translate("MainWindow", "Show Selected"))
+        self.pushButton_showAllCells.setText(_translate("MainWindow", "Show All"))
         self.groupBox_CUTELayout.setTitle(_translate("MainWindow", "CUTE Layout Mesh"))
         self.pushButton_elsetSeq.setText(_translate("MainWindow", "Feature Edges"))
         self.pushButton_redraw.setText(_translate("MainWindow", "All"))
@@ -5095,7 +5174,6 @@ class Ui_MainWindow(object):
         self.actionOPEN.setShortcut(_translate("MainWindow", "Ctrl+O"))
         self.actionCLOSE.setText(_translate("MainWindow", "CLOSE"))
         self.actionCLOSE.setShortcut(_translate("MainWindow", "Ctrl+Q"))
-
 
 
     def dragEnterEvent(self, e):
@@ -5295,6 +5373,9 @@ class Ui_MainWindow(object):
         self.SED_contour=[]
         self.contourDotNum=10
 
+        self.selectedPlot=False 
+        self.picked = None 
+
 
         self.dfile = "pdir.dir"
         cwd =getcwd()
@@ -5308,6 +5389,10 @@ class Ui_MainWindow(object):
             self.cwd =line[0]
 
         
+        if not isfile(componentsfile): 
+            generateComponentfile(componentsfile)
+        self.TireComponents=readTireComponents(componentsfile)
+        
         self.usingLog()
 
         self.view3D = False 
@@ -5320,8 +5405,8 @@ class Ui_MainWindow(object):
         self.push_LocalMesh_3D.clicked.connect(self.openFile)
         self.push_LocalMesh_SMART.clicked.connect(self.openSMARTFile)
         
-        self.horizontalSlider_opacity.valueChanged.connect(self.get_OpecityValue)
-        self.lineEdit_opecity.returnPressed.connect(self.change_OpecityValue)
+        self.horizontalSlider_opacity.valueChanged.connect(self.change_OpecitySlide)
+        self.lineEdit_opecity.returnPressed.connect(self.get_OpecityValue)
         
         self.checkBox_showEdges.clicked.connect(self.showEdges)
         self.checkBox_jacobian.clicked.connect(self.showQualityCheck)
@@ -5364,7 +5449,9 @@ class Ui_MainWindow(object):
         self.pushButton_SaveSfricSurface.clicked.connect(self.saveSurface_sfric)
         self.pushButton_background.clicked.connect(self.toggling_color_background)
         self.pushButton_SaveSfricSTL.clicked.connect(self.saveSFRICasSTL)
-        self.checkBox_pyvistaLighting.clicked.connect(self.showMesh)
+        self.checkBox_pyvistaLighting.clicked.connect(self.changeLighting)
+        self.pushButton_showAllCells.clicked.connect(self.plotAll)
+
 
         self.initialize() 
     def changeToView3D(self): 
@@ -5389,8 +5476,12 @@ class Ui_MainWindow(object):
             self.groupBox_3dMeshControl.setMinimumSize(QtCore.QSize(900, 15))
             self.groupBox_3dMeshControl.setMaximumSize(QtCore.QSize(16777215, 15))
         
-    
-
+    def changeLighting(self): 
+        if not self.selectedPlot: 
+            self.showMesh()
+    def plotAll(self): 
+        self.selectedPlot = False 
+        self.showMesh()
     def initialize(self): 
         icon = QtGui.QIcon()
         try: 
@@ -5818,7 +5909,7 @@ class Ui_MainWindow(object):
             self.layoutcounting = 1
             
             # print ("READ MESH %s"%(self.meshfile) )
-            self.node, self.element, self.elset, self.surface, self.tie, self.xy, self.rims = Mesh2DInformation(self.meshfile)
+            self.node, self.element, self.elset, self.surface, self.tie, self.xy, self.rims = Mesh2DInformation(self.meshfile, self.TireComponents)
             self.npn = np.array(self.node.Node)
             
             # if len(self.npn[0]) > 4 : self.checkBox_Temperaure.setEnabled(True)
@@ -6021,10 +6112,10 @@ class Ui_MainWindow(object):
             # Regen = PTN.MESH2D(self.meshfile, self.savefile)
 
             if isfile(self.savefile) :
-                self.node, self.element, self.elset, self.surface, self.tie, self.xy, self.rims = Mesh2DInformation(self.savefile)
+                self.node, self.element, self.elset, self.surface, self.tie, self.xy, self.rims = Mesh2DInformation(self.savefile, self.TireComponents)
                 print ("")
             else: 
-                self.node, self.element, self.elset, self.surface, self.tie, self.xy, self.rims = Mesh2DInformation(self.meshfile)
+                self.node, self.element, self.elset, self.surface, self.tie, self.xy, self.rims = Mesh2DInformation(self.meshfile, self.TireComponents)
                 
                 print ("\n## Original Mesh reloaded.")
 
@@ -6117,7 +6208,7 @@ class Ui_MainWindow(object):
         # self.figure.nodechars=[]
         # self.figure.elchars=[]
 
-        self.node, self.element, self.elset, self.surface, self.tie, self.xy, self.rims = Mesh2DInformation(self.meshfile)
+        self.node, self.element, self.elset, self.surface, self.tie, self.xy, self.rims = Mesh2DInformation(self.meshfile, self.TireComponents)
         if len(self.node.Node[0]) > 4 or len(self.temprature_contour): 
             self.checkBox_Temperaure.setEnabled(True)
         else: 
@@ -6535,7 +6626,7 @@ class Ui_MainWindow(object):
 
             print ("\n## Layout to compare is added ")
             print ("   '%s'\n"%(nameadded))
-            self.com_node, self.com_element, self.com_elset, self.com_surface, self.com_tie, self.com_xy, self.rims = Mesh2DInformation(comparingmesh)
+            self.com_node, self.com_element, self.com_elset, self.com_surface, self.com_tie, self.com_xy, self.rims = Mesh2DInformation(comparingmesh, self.TireComponents)
             print ("")
             if len(self.com_element.Element) ==0 and len(self.com_node.Node):
                 self.figure.AddNodes(self.com_node, size=2)
@@ -6660,7 +6751,7 @@ class Ui_MainWindow(object):
                 nameadded = self.comparingmesh.split("/")[-1]
                 print ("\n## Layout to compare is added ")
                 print ("   '%s'\n"%(nameadded))
-                self.com_node, self.com_element, self.com_elset, self.com_surface, self.com_tie, self.com_xy, self.rims = Mesh2DInformation(self.comparingmesh)
+                self.com_node, self.com_element, self.com_elset, self.com_surface, self.com_tie, self.com_xy, self.rims = Mesh2DInformation(self.comparingmesh, self.TireComponents)
                 print ("")
                 if len(self.com_element.Element) ==0: 
                     with open(self.comparingmesh) as CM: 
@@ -6958,23 +7049,35 @@ class Ui_MainWindow(object):
                 # self.plotter.camera.up=(-1, 0, 0)
         else: 
             self.plotter.camera_position  = (vx, vy, vz)
-        self.showMesh()
+        if not self.selectedPlot :
+            self.showMesh()
+        else: 
+            # self.replaceCells()
+            pass 
     
     def toggling_color_background(self): 
         if not self.view3D: return 
+        
         if self.defaultColor_Background: 
             self.defaultColor_Background=False 
         else: 
             self.defaultColor_Background = True 
         self.get_camera_position()
-        self.showMesh()
+
+        if not self.selectedPlot :
+            self.showMesh()
+        else: 
+            # self.replaceCells()
+            pass 
 
     def choose_solid_surface(self): 
         if not self.view3D: return 
-        if self.checkBox_Solid.isChecked(): self.solidClip = True 
-        else: self.solidClip = False 
-        self.get_camera_position()
-        self.showMesh()
+        if not self.selectedPlot :
+            if self.checkBox_Solid.isChecked(): self.solidClip = True 
+            else: self.solidClip = False 
+            self.get_camera_position()
+            self.showMesh()
+            
     def clipping_X(self): 
         if not self.view3D: return 
         self.xClippingShift = (self.horizontalSlider_x_clipping.value() - 50) * self.xclippingScale #float(self.lineEdit_x_clip_offset.text())
@@ -7014,51 +7117,78 @@ class Ui_MainWindow(object):
             self.camera_position = None 
     def show_MeshLine(self): 
         if not self.view3D: return 
-        if self.checkBox_meshLine.isChecked(): 
-            self.show_meshLine = True 
-            if self.color_meshLine == 'black': self.color_meshLine = 'gray'
-            elif self.color_meshLine == 'gray': self.color_meshLine = 'blue'
-            elif self.color_meshLine == 'blue': self.color_meshLine = 'red'
-            elif self.color_meshLine == 'red': self.color_meshLine = 'black'
+        if not self.selectedPlot :
+            if self.checkBox_meshLine.isChecked(): 
+                self.show_meshLine = True 
+                if self.color_meshLine == 'black': self.color_meshLine = 'gray'
+                elif self.color_meshLine == 'gray': self.color_meshLine = 'blue'
+                elif self.color_meshLine == 'blue': self.color_meshLine = 'red'
+                elif self.color_meshLine == 'red': self.color_meshLine = 'black'
 
-        else: self.show_meshLine = False
+            else: self.show_meshLine = False
 
-        self.get_camera_position()
-        
-        self.showMesh()
+            self.get_camera_position()
+            
+            self.showMesh()
 
     def showQualityCheck(self): 
         if not self.view3D: return 
-        if self.checkBox_jacobian.isChecked(): 
-            self.show_qualityCheck = True 
-        else: self.show_qualityCheck = False
+        if not self.selectedPlot :
+            if self.checkBox_jacobian.isChecked(): 
+                self.show_qualityCheck = True 
+            else: self.show_qualityCheck = False
 
-        self.get_camera_position()
-        self.showMesh()
-        
+            self.get_camera_position()
+            self.showMesh()
+            
     def showEdges(self): 
-        if not self.view3D: return 
-        if self.checkBox_showEdges.isChecked(): 
-            self.show_edges = True 
-            self.click_show_edge += 1 
-        else: self.show_edges = False
-        self.get_camera_position()
-        self.showMesh()
+        if not self.view3D : return 
+        if not self.selectedPlot :
 
-    def get_OpecityValue(self): 
+            if self.checkBox_showEdges.isChecked(): 
+                self.show_edges = True 
+                self.click_show_edge += 1 
+            else: self.show_edges = False
+            self.get_camera_position()
+            self.showMesh()
+
+    def change_OpecitySlide(self): 
+
         self.opecity = self.horizontalSlider_opacity.value() / 100.0
-        # self.label_opecity.setText("Opecity : %d"%(self.opecity*100))
         self.lineEdit_opecity.setText(str(int(self.opecity*100)))
         if not self.view3D: return 
+        if self.opecity !=1.0 : 
+            self.checkBox_pyvistaLighting.setChecked(False)
         self.get_camera_position() 
         self.showMesh()
 
-    def change_OpecityValue(self): 
-        opecity = int(self.lineEdit_opecity.text()) 
-        self.horizontalSlider_opacity.setSliderPosition(opecity)
-        if not self.view3D: return
-        self.get_OpecityValue()
+    def get_OpecityValue(self):  ## text input 
+        if not self.view3D: return 
+        self.opecity = float(self.lineEdit_opecity.text()) / 100 
+        if self.opecity > 1.0: 
+            self.opecity =1.0 
+            self.lineEdit_opecity.setText('100')
+        self.horizontalSlider_opacity.setSliderPosition(int(self.opecity*100))
+        
 
+    def slicing(self):
+        if not self.view3D: return
+        if self.selectedPlot : return 
+        if self.checkBox_Slicing.isChecked():  
+            self.lineEdit_opecity.setText("5")
+            if not '.ptn' in self.meshfile: 
+                angle = float(self.lineEdit_slicingAngle.text().strip())
+                radian_angle = math.radians(angle)
+                self.lineEdit_view_upPosition.setText("%.3f, 0, %.3f"%(math.cos(radian_angle), math.sin(radian_angle)))
+
+        else: 
+            if not '.ptn' in self.meshfile: 
+                angle = float(self.lineEdit_slicingAngle.text().strip())
+                radian_angle = math.radians(angle)
+                self.lineEdit_view_upPosition.setText("%.3f, 0, %.3f"%(math.cos(radian_angle), math.sin(radian_angle)))
+            self.lineEdit_opecity.setText("100")
+        self.checkBox_pyvistaLighting.setChecked(False)
+        self.get_OpecityValue()
 
 
     def clearFrame(self):
@@ -7195,30 +7325,49 @@ class Ui_MainWindow(object):
         
         meshfiles, _ = QtWidgets.QFileDialog.getOpenFileNames(None, "Select File", self.cwd, filetypes)
         if meshfiles: 
-            for meshfile in meshfiles: 
-                self.meshfile = meshfile 
+            tempmeshfile= ""
+            self.selectedPlot = False 
+            if len(meshfiles) > 1: 
+                flines=[]
+                for meshfile in meshfiles: 
+                    with open(meshfile) as MF: 
+                        lines = MF.readlines()
+                    flines += lines 
+                    fname = meshfile.split("/")[-1]
+                    fname = fname.split(".")[0]
+                    tempmeshfile += fname +"-"
 
+                fp = open(tempmeshfile+".inp", 'w')
+                for line in flines: 
+                    fp.writelines(line)
+                fp.close()
+                self.meshfile = tempmeshfile+".inp"
+                self.cwd = writeworkingdirectory(meshfile, dfile=self.dfile)
+            else: 
+                self.meshfile = meshfiles[0]
                 self.cwd = writeworkingdirectory(self.meshfile, dfile=self.dfile)
-                try:
-                    t= time.time()
-                    if '.stl' in self.meshfile:
-                        mesh = Mesh.reading_stl(self.meshfile)
-                        self.meshes.append(mesh)
-                        self.checkBox_meshLine.setChecked(False)
-                        self.show_meshLine = False
-                    else: 
-                        self.get_pyVistaMesh()
-                    t1 = time.time()
-                    print("Time to read : %.3f"%(t1-t))
-                except Exception as ex: 
-                    etext = str(ex) + "\n\n" + "Error to open file \n " + "%s"%(self.meshfile)
-                    writingError(etext)
-                    print(etext)
-                
-                self.colors.append(self.comboBox.currentText())
-                self.showMesh() 
-                if len(meshfiles) > 1: self.checkBox_colorChanging.setChecked(True)
-                self.changingCurrentColor()
+            try:
+                t= time.time()
+                if '.stl' in self.meshfile:
+                    mesh = Mesh.reading_stl(self.meshfile)
+                    self.meshes.append(mesh)
+                    self.checkBox_meshLine.setChecked(False)
+                    self.show_meshLine = False
+                else: 
+                    self.get_pyVistaMesh()
+                t1 = time.time()
+                print("Time to read : %.3f"%(t1-t))
+            except Exception as ex: 
+                etext = str(ex) + "\n\n" + "Error to open file \n " + "%s"%(self.meshfile)
+                writingError(etext)
+                print(etext)
+            
+            self.colors.append(self.comboBox.currentText())
+            self.showMesh() 
+            if len(meshfiles) > 1: self.checkBox_colorChanging.setChecked(True)
+            self.changingCurrentColor()
+
+            if isfile(tempmeshfile+".inp"): remove(tempmeshfile+".inp")
 
     def saveSFRICasSTL(self): 
         if '.sfric' in self.meshfile: 
@@ -7251,40 +7400,20 @@ class Ui_MainWindow(object):
         self.plotter.clear()
 
     def showMesh(self):
-        if not self.view3D: return
-        self.clearPlotter()
+        if not self.view3D or self.selectedPlot: return
+        
         try: 
+            
+            self.clearPlotter()
             self.plotting()
         except Exception as ex: 
             etext = str(ex) + "\n\n" + "Error to plotting \n"
             writingError(etext)
             print(etext)
 
-    def slicing(self):
-        if not self.view3D: return
-        
-        if self.checkBox_Slicing.isChecked():  
-            self.lineEdit_opecity.setText("1")
-            if not '.ptn' in self.meshfile: 
-                opecity = int(self.lineEdit_opecity.text()) 
-                self.horizontalSlider_opacity.setSliderPosition(opecity)
-                self.opecity = self.horizontalSlider_opacity.value() / 100.0
-                self.lineEdit_opecity.setText(str(int(self.opecity*100)))
-
-                angle = float(self.lineEdit_slicingAngle.text().strip())
-                radian_angle = math.radians(angle)
-                self.lineEdit_view_upPosition.setText("%.3f, 0, %.3f"%(math.cos(radian_angle), math.sin(radian_angle)))
-
-        else: 
-            if not '.ptn' in self.meshfile: 
-                angle = float(self.lineEdit_slicingAngle.text().strip())
-                radian_angle = math.radians(angle)
-                self.lineEdit_view_upPosition.setText("%.3f, 0, %.3f"%(math.cos(radian_angle), math.sin(radian_angle)))
-            self.lineEdit_opecity.setText("100")
-        self.change_OpecityValue()
-
+    
     def changeRatio(self): 
-        if not self.view3D: return
+        if not self.view3D or self.selectedPlot : return
         if '.sdb' in self.meshfile or '.sfric' in self.meshfile or '.dat' in self.meshfile:
             if self.vgap != 0  : 
                 low = float(self.lineEdit_colorRange_value.text().strip())
@@ -7296,8 +7425,11 @@ class Ui_MainWindow(object):
                 self.lineEdit_colorRange1.setText("%.6f"%(hpst))
 
     def plotting(self, nodeplotRecursive=False): 
-        if not self.view3D: return
-        if not self.meshfile: return 
+        if not self.view3D or not self.meshfile: return
+        # print(" #######################")
+        # print(" PLOTTING", self.opecity)
+        # print(sys._getframe(1).f_code.co_name + "()", sys._getframe(2).f_code.co_name + "()", sys._getframe(3).f_code.co_name + "()")
+        # print(" #######################")
         self.valueStart = 0.0; self.valueEnd = 0.0; self.vgap = 0 
 
         ilow  =  self.lineEdit_colorRange.text().strip()
@@ -7711,14 +7843,32 @@ class Ui_MainWindow(object):
         return colormap, scalars 
 
     def replaceCells(self) :
-        if not self.view3D: return
+        if not self.view3D: 
+            print(" Not 3D view")
+            return
         try: 
-            picked = self.plotter.picked_cells
+            # print(self.plotter.picked_cells )
+            if not isinstance(self.picked, type(None)): 
+                self.privious_picked = self.picked 
+            try: 
+                self.picked = self.plotter.picked_cells
+            except: 
+                if not isinstance(self.picked, type(None)):
+                    self.picked = self.privious_picked 
+            
             self.clearPlotter()
-            self.plotter.add_mesh(picked, show_edges=self.show_meshLine, color='gray', metallic=0.3, pbr=False, diffuse=1, opacity=self.opecity, smooth_shading=False, edge_color='gray') 
-            lights = Mesh.lighting()
-            for light in lights: 
-                self.plotter.add_light(light)    
+            self.plotter.add_mesh(self.picked, show_edges=self.show_meshLine, color='gray', metallic=0.3, pbr=False, diffuse=1, opacity=self.opecity, smooth_shading=False, edge_color='gray') 
+            # except: 
+            #     self.picked = privious_picked
+            #     self.clearPlotter()
+            #     self.plotter.add_mesh(self.picked, show_edges=self.show_meshLine, color='gray', metallic=0.3, pbr=False, diffuse=1, opacity=self.opecity, smooth_shading=False, edge_color='gray') 
+            #     pass 
+            self.plotter.enable_cell_picking(mesh=self.picked)
+
+            if self.checkBox_pyvistaLighting.isChecked(): 
+                light = Mesh.addlight('headlight')
+                self.plotter.add_light(light)
+                self.plotter.enable_shadows()
 
             if self.defaultColor_Background: 
                 self.plotter.set_background('gray', top='white')
@@ -7727,8 +7877,12 @@ class Ui_MainWindow(object):
             self.plotter.enable_parallel_projection()
             self.plotter.add_axes()
 
+            self.selectedPlot = True 
+            
+
             self.plotter.show()
-        except: 
+        except Exception as EX: 
+            print(EX)
             self.plotting()
 
     def showSearchedNodes(self): 
@@ -9478,6 +9632,7 @@ if __name__ == "__main__":
     ui.setupUi(MainWindow)
     ui.redirect()
     ui.actions(MainWindow)
+    readingTireComponentFile()
     MainWindow.show()
     sys.exit(app.exec_())
 

@@ -139,33 +139,29 @@ def parsingInp(lines, offset=0, first=True):
                             int(wds[1].strip()) + partOffset, int(wds[2].strip()) + partOffset, int(wds[3].strip()) + partOffset, int(wds[4].strip()) + partOffset, 
                             int(wds[5].strip()) + partOffset, int(wds[6].strip()) + partOffset, int(wds[7].strip()) + partOffset, int(wds[8].strip()) + partOffset
                             ])
-                index_elements.append([int(wds[0].strip()) + partOffset, len(s8)]) 
+                index_elements.append([int(wds[0].strip()) + partOffset, len(s8)-1]) 
             if cmd == 'n6':
                 s8.append([8, 
                             int(wds[1].strip()) + partOffset, int(wds[2].strip()) + partOffset, int(wds[3].strip()) + partOffset, int(wds[3].strip()) + partOffset, 
                             int(wds[4].strip()) + partOffset, int(wds[5].strip()) + partOffset, int(wds[6].strip()) + partOffset, int(wds[6].strip()) + partOffset
                             ]) 
-                index_elements.append([int(wds[0].strip()) + partOffset, len(s8)]) 
+                index_elements.append([int(wds[0].strip()) + partOffset, len(s8)-1]) 
             
             if cmd == 'n3':
                 s8.append([4, 
                             int(wds[1].strip()) + partOffset, int(wds[2].strip()) + partOffset, int(wds[3].strip()) + partOffset, int(wds[3].strip()) + partOffset
                           ]) 
-                index_elements.append([int(wds[0].strip()) + partOffset, len(s8)]) 
+                index_elements.append([int(wds[0].strip()) + partOffset, len(s8)-1]) 
             if cmd == 'n4':
                 s8.append([4, 
                             int(wds[1].strip()) + partOffset, int(wds[2].strip()) + partOffset, int(wds[3].strip()) + partOffset, int(wds[4].strip()) + partOffset
                           ]) 
-                index_elements.append([int(wds[0].strip()) + partOffset, len(s8)]) 
+                index_elements.append([int(wds[0].strip()) + partOffset, len(s8)-1]) 
             if cmd == 'eset': 
                 for wd in wds: 
-                    try: 
-                        if wd.strip() !='': elsets[-1].append(int(wd.strip()) + partOffset)
-                    except: 
-                        # print(elsets[-1])
-                        del(elsets[-1])
-                        cmd = False
-                        continue 
+                    if wd.strip() !='': 
+                        elsets[-1].append(int(wd.strip()) + partOffset)
+                # print(elsets[-1])
             # if cmd == 'esetgen': 
             #     st = int(wds[0].strip())
             #     ed = int(wds[1].strip())

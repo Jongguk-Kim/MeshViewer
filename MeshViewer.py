@@ -7934,6 +7934,7 @@ class Ui_MainWindow(object):
         for eset in self.elsets3D: 
             if eset[0] == item: 
                 self.searchedElements = eset[1:] 
+                # print(self.searchedElements)
                 self.showMesh_addingSearchedElements()
                 break 
     def showMesh_addingSearchedNodes(self): 

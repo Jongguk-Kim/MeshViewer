@@ -17,9 +17,9 @@ def reading_stl(fname):
     return mesh 
 
 class MESH(): 
-    def __init__(self, meshfile, centering=False) : 
+    def __init__(self, meshfile, centering=False, inplines=False) : 
         self.meshfile = meshfile 
-        
+        self.elsets=[]
         if '.sfric' in meshfile: 
             self.grid, self.edges, self.pt_cloud, self.surfaces, self.nodes, self.idx_element, self.cells,\
                  self.npress, self.surfpress, self.class_sfric  = \
@@ -42,8 +42,8 @@ class MESH():
             print(" Interpolating Contact Pressure")
             self.press = self.surfaces.interpolate(self.npress, radius=0.002)
         else: 
-            self.grid, self.edges, self.pt_cloud, self.surfaces, self.nodes, self.idx_element, self.cells  = \
-                load_pyVista_mesh(meshfile, centering=centering)
+            self.grid, self.edges, self.pt_cloud, self.surfaces, self.nodes, self.idx_element, self.cells, self.elsets  = \
+                    load_pyVista_mesh(meshfile, centering=centering, inplines=inplines)
 
 def read_SMART_postFootshape(fname): 
     with open(fname) as F: 
@@ -72,28 +72,24 @@ def read_SMART_postFootshape(fname):
 
     return nodes, el, index_elements, mtype
 
-def readInp(fname): 
 
-    with open(fname) as F: 
-        lines = F.readlines()
+def parsingInp(lines, offset=0, first=True): 
+    cmd = False 
+    no_changeXZ = True 
     nodes =[]
     s8=[]
-    cmd = False 
-    offset = 0 
     index_elements=[]
-    no_changeXZ = True 
-    mtype = 9
+    mtype = 9 
+    countingPart = 0 
+    partOffset = 0 
+    partOffsetNode = 0 
+    isPart = False 
+    elsets=[]
     for line in lines: 
         if "**" in line: 
             if "END OF MATERIAL INFO" in line: 
                 no_changeXZ = False 
             continue 
-        # if "TREADPTN_NIDSTART_NIDOFFSET_EIDSTART_EIDOFFSET" in line.upper(): 
-        #     wds = line.split(",")
-        #     offset = int(wds[-1].strip())
-        # if "OFFSET" in line.upper() and not "TREADPTN" in line.upper(): 
-        #     wds = line.split("=")
-        #     offset = int(wds[1].strip())
         if "*" in line: 
             if "*NODE" in line.upper(): 
                 cmd = 'n'
@@ -108,51 +104,109 @@ def readInp(fname):
             elif "*ELEMENT" in line.upper() and "CGAX4" in line.upper():
                 mtype =  5 
                 cmd = 'n4'
+            elif '*ELSET' in line.upper(): 
+                if 'GENERATE' in line.upper():   cmd='esetgen'
+                else:                            cmd='eset'
+                wds = line.upper().split(",")
+                for wd in wds: 
+                    if 'ELSET' in wd and '=' in wd: 
+                        w = wd.split("=")[1].strip()
+                        elsets.append([w])
+                        break 
             else: 
                 cmd = False 
+            if first : 
+                if '*PART' in line.upper(): 
+                    isPart = True 
+            else: 
+                if '*END PART' in line.upper() : 
+                    countingPart += 1
+                    partOffsetNode = offset * countingPart
+                    partOffset = int(offset * countingPart)
+            
         else: 
             wds = line.split(",")
             
             if cmd == 'n': 
                 if len(wds) > 3:  
                     if no_changeXZ: 
-                        nodes.append([ float(wds[0].strip()), float(wds[1].strip()), float(wds[2].strip()), float(wds[3].strip())  ])
+                        nodes.append([ float(wds[0].strip()) + partOffsetNode , float(wds[1].strip()), float(wds[2].strip()), float(wds[3].strip())  ])
                         
                     else: 
-                        nodes.append([ float(wds[0].strip()), float(wds[3].strip()), float(wds[2].strip()), float(wds[1].strip())  ])
+                        nodes.append([ float(wds[0].strip()) + partOffsetNode, float(wds[3].strip()), float(wds[2].strip()), float(wds[1].strip())  ])
             if cmd == 'n8':
                 s8.append([8, 
-                            int(wds[1].strip()), int(wds[2].strip()), int(wds[3].strip()), int(wds[4].strip()), 
-                            int(wds[5].strip()), int(wds[6].strip()), int(wds[7].strip()), int(wds[8].strip())
+                            int(wds[1].strip()) + partOffset, int(wds[2].strip()) + partOffset, int(wds[3].strip()) + partOffset, int(wds[4].strip()) + partOffset, 
+                            int(wds[5].strip()) + partOffset, int(wds[6].strip()) + partOffset, int(wds[7].strip()) + partOffset, int(wds[8].strip()) + partOffset
                             ])
-                index_elements.append([int(wds[0].strip()), len(s8)]) 
+                index_elements.append([int(wds[0].strip()) + partOffset, len(s8)]) 
             if cmd == 'n6':
                 s8.append([8, 
-                            int(wds[1].strip()), int(wds[2].strip()), int(wds[3].strip()), int(wds[3].strip()), 
-                            int(wds[4].strip()), int(wds[5].strip()), int(wds[6].strip()), int(wds[6].strip())
+                            int(wds[1].strip()) + partOffset, int(wds[2].strip()) + partOffset, int(wds[3].strip()) + partOffset, int(wds[3].strip()) + partOffset, 
+                            int(wds[4].strip()) + partOffset, int(wds[5].strip()) + partOffset, int(wds[6].strip()) + partOffset, int(wds[6].strip()) + partOffset
                             ]) 
-                index_elements.append([int(wds[0].strip()), len(s8)]) 
+                index_elements.append([int(wds[0].strip()) + partOffset, len(s8)]) 
             
-            # if cmd == 'n2':
-            #     s8.append([4, 
-            #                 int(wds[1].strip()), int(wds[1].strip()), int(wds[2].strip()), int(wds[2].strip())
-            #               ]) 
-            #     index_elements.append([int(wds[0].strip()), len(s8)]) 
             if cmd == 'n3':
                 s8.append([4, 
-                            int(wds[1].strip()), int(wds[2].strip()), int(wds[3].strip()), int(wds[3].strip())
+                            int(wds[1].strip()) + partOffset, int(wds[2].strip()) + partOffset, int(wds[3].strip()) + partOffset, int(wds[3].strip()) + partOffset
                           ]) 
-                index_elements.append([int(wds[0].strip()), len(s8)]) 
+                index_elements.append([int(wds[0].strip()) + partOffset, len(s8)]) 
             if cmd == 'n4':
                 s8.append([4, 
-                            int(wds[1].strip()), int(wds[2].strip()), int(wds[3].strip()), int(wds[4].strip())
+                            int(wds[1].strip()) + partOffset, int(wds[2].strip()) + partOffset, int(wds[3].strip()) + partOffset, int(wds[4].strip()) + partOffset
                           ]) 
-                index_elements.append([int(wds[0].strip()), len(s8)]) 
+                index_elements.append([int(wds[0].strip()) + partOffset, len(s8)]) 
+            if cmd == 'eset': 
+                for wd in wds: 
+                    try: 
+                        if wd.strip() !='': elsets[-1].append(int(wd.strip()) + partOffset)
+                    except: 
+                        # print(elsets[-1])
+                        del(elsets[-1])
+                        cmd = False
+                        continue 
+            # if cmd == 'esetgen': 
+            #     st = int(wds[0].strip())
+            #     ed = int(wds[1].strip())
+            #     sp = int(wds[2].strip())
+            #     for e in range(st, ed+sp, sp): 
+            #         elsets[-1].append(e + + partOffset) 
+    
+    return nodes, s8, index_elements, mtype, isPart, elsets
 
+def readInp(fname, inplines=False): 
+    if not inplines: 
+        with open(fname) as F: 
+            lines = F.readlines()
+    else: 
+        lines = inplines 
+    nodes, s8, index_elements, mtype, isPart, elsets = parsingInp(lines, first=True, offset=0)
+    if isPart : 
+        nd = np.array(nodes)
+        maxND = np.max(nd[:,0]) + 1
+        elix = np.array(index_elements)
+        maxEL = np.max(elix[:,0]) + 1
+        if maxND > maxEL: 
+            offset = maxND 
+        else: 
+            offset = maxEL 
+        print(" Part Offset : %d"%(offset))
+        nodes, s8, index_elements, mtype, _, elsets = parsingInp(lines, first=False, offset=offset)
+        # print("**********************")
+        print(" ELSETS : %d"%(len(elsets)))
 
-    return nodes, s8, index_elements, mtype
+        # for est in elsets: 
+        #     if len(est) > 1: 
+        #         print(len(est), ":", est[0], est[1], "...", est[-1])
+        # print("**********************")
 
-def readMesh_pyVista(fname,  files=None, centering=False, sdb=False): 
+    return nodes, s8, index_elements, mtype, elsets
+    
+    
+
+def readMesh_pyVista(fname,  files=None, centering=False, sdb=False, inplines=False): 
+    elsets = []
     if sdb: 
         import time 
         # t = time.time()
@@ -170,14 +224,17 @@ def readMesh_pyVista(fname,  files=None, centering=False, sdb=False):
         if '.dat' in fname: 
             nodes, s8, idx_element, meshtype = read_SMART_postFootshape(fname)
         else: 
-            nodes, s8, idx_element, meshtype = readInp(fname)
+            if not inplines: 
+                nodes, s8, idx_element, meshtype, elsets = readInp(fname)
+            else: 
+                nodes, s8, idx_element, meshtype, elsets = readInp(fname, inplines=inplines)
         nodes = np.array(nodes)
         s8 = np.array(s8)
         # print(" FILE READING", fname)
         if not isinstance(files, type(None)): 
             for file in files: 
                 # print("* FILE READING", file)
-                nds, sd, idx_element, meshtype = readInp(file) 
+                nds, sd, idx_element, meshtype, elsets = readInp(file) 
                 nodes = np.concatenate((nodes, np.array(nds)), axis=0)
                 s8 = np.concatenate((s8, np.array(sd)), axis=0)
     
@@ -213,11 +270,11 @@ def readMesh_pyVista(fname,  files=None, centering=False, sdb=False):
     elif '.dat' in fname: 
         return npn, np.array(s8).ravel(), idx_element, np.array(s8), meshtype, nodes
     else: 
-        return npn, np.array(s8).ravel(), idx_element, np.array(s8), meshtype
+        return npn, np.array(s8).ravel(), idx_element, np.array(s8), meshtype, elsets
 
 
 def makePyvisterCells(cells, nodes, meshtype): 
-
+    
     if meshtype != 5: 
         nCell = int(len(cells)/meshtype)
 
@@ -241,8 +298,8 @@ def makePyvisterCells(cells, nodes, meshtype):
         grid = pv.PolyData(xyz, cells)
     return grid, xyz  
 
-def load_pyVista_mesh(file_name, centering=False): 
-
+def load_pyVista_mesh(file_name, centering=False, inplines=False): 
+    elsets=[]
     if ".sfric" in file_name: 
         nodes, cells, idx_element, elements, meshtype, pnodes, pcells, class_sfric = readSfric_pyVista(file_name)
     elif '.sdb' in file_name: 
@@ -251,7 +308,7 @@ def load_pyVista_mesh(file_name, centering=False):
         nodes, cells, idx_element, elements, meshtype, n_pres = readMesh_pyVista(file_name, centering=False)
 
     else: 
-        nodes, cells, idx_element, elements, meshtype = readMesh_pyVista(file_name, centering=centering)
+        nodes, cells, idx_element, elements, meshtype, elsets = readMesh_pyVista(file_name, centering=centering, inplines=inplines)
     
     grid, xyz = makePyvisterCells(cells, nodes, meshtype)
 
@@ -296,7 +353,7 @@ def load_pyVista_mesh(file_name, centering=False):
         print (" temperature is added. ")
         return grid, edges, pt_cloud, surfaces, nodes, idx_element, elements, eld, sed, temperature
     else: 
-        return grid, edges, pt_cloud, surfaces, nodes, idx_element, elements
+        return grid, edges, pt_cloud, surfaces, nodes, idx_element, elements, elsets
 
 def lighting(): 
     # setup lighting
@@ -329,7 +386,7 @@ def generatePointCloud(ids, npns):
     
     return  poly_points
 
-def generateMesh_searched(ids, indexes, elements, nodes): 
+def generateMesh_searched(ids, indexes, elements, nodes, ctype=9): 
     
     cells =[]
     indexes = np.array(indexes)
@@ -339,10 +396,13 @@ def generateMesh_searched(ids, indexes, elements, nodes):
         ix = np.where(indexes[:,0] == id)[0]
         if len(ix) > 0: 
             for x in ix: 
-                cells.append(elements[indexes[x][1]])
-                cnt += 1 
+                try: 
+                    cells.append(elements[indexes[x][1]])
+                    cnt += 1 
+                except: 
+                    continue 
     if cnt > 0: 
-        grid, _ = makePyvisterCells(np.array(cells).ravel(), nodes, 9)
+        grid, _ = makePyvisterCells(np.array(cells).ravel(), nodes, ctype)
         return  grid 
     else: 
         return None 

@@ -5494,6 +5494,7 @@ class Ui_MainWindow(object):
         self.meshes=[]; self.points=[]; self.colors=[]; self.edges=[]; self.surfaces=[]; self.nodes=[]
         self.idx_element=[]; self.elements=[]; self.presses=[]; self.temperatures =[]
         self.valueStart = 0.0; self.valueEnd = 0.0; self.vgap = 0
+        self.elsets3D=[]
         self.opecity = 1.0
         self.show_edges = False
         self.camera_position=None 
@@ -5619,7 +5620,10 @@ class Ui_MainWindow(object):
         if self.radioButton_standingWave.isChecked(): self.lineEdit_4_Sim_Type.setText("D105")
         
     def selectionQt_list(self): 
-        if self.view3D: return 
+        if self.view3D: 
+            items = self.list_widget.selectedItems()
+            self.show_selectedElset3D(items[0].text())
+            return 
         self.figure.Clear_ElsetBoundary()
 
         items = self.list_widget.selectedItems()
@@ -5692,7 +5696,11 @@ class Ui_MainWindow(object):
         self.textBrowser.insertPlainText(msg)
         QtWidgets.QApplication.processEvents(QtCore.QEventLoop.ExcludeUserInputEvents)
     def clearElset(self): 
-        if self.view3D: return 
+        if self.view3D: 
+            self.list_widget.clearSelection()
+            self.searchedElements =[]
+            self.showMesh()
+            return 
         self.list_widget.clearSelection()
         self.figure.Clear_ElsetBoundary()
 
@@ -7174,16 +7182,18 @@ class Ui_MainWindow(object):
     def slicing(self):
         if not self.view3D: return
         if self.selectedPlot : return 
+        try: angle = float(self.lineEdit_slicingAngle.text().strip())
+        except: 
+            print(" Check slicing angle: %s"%(self.lineEdit_slicingAngle.text().strip()))
+            return
         if self.checkBox_Slicing.isChecked():  
             self.lineEdit_opecity.setText("5")
             if not '.ptn' in self.meshfile: 
-                angle = float(self.lineEdit_slicingAngle.text().strip())
                 radian_angle = math.radians(angle)
                 self.lineEdit_view_upPosition.setText("%.3f, 0, %.3f"%(math.cos(radian_angle), math.sin(radian_angle)))
 
         else: 
             if not '.ptn' in self.meshfile: 
-                angle = float(self.lineEdit_slicingAngle.text().strip())
                 radian_angle = math.radians(angle)
                 self.lineEdit_view_upPosition.setText("%.3f, 0, %.3f"%(math.cos(radian_angle), math.sin(radian_angle)))
             self.lineEdit_opecity.setText("100")
@@ -7202,15 +7212,21 @@ class Ui_MainWindow(object):
         self.verticalLayout_2.addWidget(self.plotter.interactor) 
         
     
-    def get_pyVistaMesh(self): 
+    def get_pyVistaMesh(self, inplines=False): 
         # print(self.meshfile)
         MainWindow.setWindowTitle(self.meshfile)
-        if ".ptn" in self.meshfile: 
-            pvMesh = Mesh.MESH(self.meshfile, centering=True)
-            # trd, edges, pt1, surface, npn, idx_element,_ = Mesh.load_pyVista_mesh(self.meshfile, centering=True) 
+        if not inplines: 
+            if ".ptn" in self.meshfile: 
+                pvMesh = Mesh.MESH(self.meshfile, centering=True)
+                # trd, edges, pt1, surface, npn, idx_element,_ = Mesh.load_pyVista_mesh(self.meshfile, centering=True) 
+            else: 
+                pvMesh = Mesh.MESH(self.meshfile, centering=False)
+                # trd, edges, pt1, surface, npn, idx_element, _ = Mesh.load_pyVista_mesh(self.meshfile) 
         else: 
-            pvMesh = Mesh.MESH(self.meshfile, centering=False)
-            # trd, edges, pt1, surface, npn, idx_element, _ = Mesh.load_pyVista_mesh(self.meshfile) 
+            if ".ptn" in self.meshfile: 
+                pvMesh = Mesh.MESH(self.meshfile, centering=True, inplines=inplines)
+            else: 
+                pvMesh = Mesh.MESH(self.meshfile, centering=False, inplines=inplines)
         # self.lineEdit_temp.setText(self.meshfile.split("/")[-1])
         MainWindow.setWindowTitle(self.meshfile)
 
@@ -7222,6 +7238,7 @@ class Ui_MainWindow(object):
         idx_element = pvMesh.idx_element
         cells = pvMesh.cells 
 
+
         if '.sfric' in self.meshfile: 
             self.class_sfric = pvMesh.class_sfric
 
@@ -7232,6 +7249,15 @@ class Ui_MainWindow(object):
         self.nodes.append(npn)
         self.idx_element.append(idx_element)
         self.elements.append(cells) 
+        self.elsets3D.append(pvMesh.elsets)
+        if len(pvMesh.elsets): 
+            pvMesh.elsets = sorted(pvMesh.elsets, key=lambda name:name[0])
+            for eset in pvMesh.elsets: 
+                if len(eset) > 1: 
+                    self.elsets3D.append(eset) 
+                    item = QListWidgetItem(eset[0]) 
+                    self.list_widget.addItem(item) 
+
 
         if '.sfric' in self.meshfile or '.dat' in self.meshfile: 
             if isinstance(pvMesh.press, type(None)): 
@@ -7309,7 +7335,9 @@ class Ui_MainWindow(object):
     def openFile(self): 
         
         self.meshes=[]; self.points=[]; self.colors=[]; self.edges=[]; self.surfaces=[]; self.nodes=[]
-        self.idx_element = []; self.elements=[]; self.presses=[]
+        self.idx_element = []; self.elements=[]; self.presses=[]; self.elsets3D=[]
+        self.list_widget.clear()
+        
 
         self.horizontalSlider_x_clipping.setSliderPosition(50)
         self.horizontalSlider_y_clipping.setSliderPosition(50)
@@ -7322,30 +7350,28 @@ class Ui_MainWindow(object):
 
 
     def gettingPyvistaMesh(self, filetypes='File Open(*.ptn)'): 
-        
+        self.searchedElements=[]
         meshfiles, _ = QtWidgets.QFileDialog.getOpenFileNames(None, "Select File", self.cwd, filetypes)
         if meshfiles: 
             tempmeshfile= ""
             self.selectedPlot = False 
+            flines = []
             if len(meshfiles) > 1: 
-                flines=[]
                 for meshfile in meshfiles: 
-                    with open(meshfile) as MF: 
-                        lines = MF.readlines()
+                    with open(meshfile) as F: 
+                        lines = F.readlines()
                     flines += lines 
                     fname = meshfile.split("/")[-1]
                     fname = fname.split(".")[0]
                     tempmeshfile += fname +"-"
 
-                fp = open(tempmeshfile+".inp", 'w')
-                for line in flines: 
-                    fp.writelines(line)
-                fp.close()
                 self.meshfile = tempmeshfile+".inp"
                 self.cwd = writeworkingdirectory(meshfile, dfile=self.dfile)
             else: 
                 self.meshfile = meshfiles[0]
                 self.cwd = writeworkingdirectory(self.meshfile, dfile=self.dfile)
+            # self.get_pyVistaMesh()
+            # print (" reading model done ")
             try:
                 t= time.time()
                 if '.stl' in self.meshfile:
@@ -7353,8 +7379,11 @@ class Ui_MainWindow(object):
                     self.meshes.append(mesh)
                     self.checkBox_meshLine.setChecked(False)
                     self.show_meshLine = False
-                else: 
-                    self.get_pyVistaMesh()
+                else:
+                    if len(meshfiles) > 1: 
+                        self.get_pyVistaMesh(inplines=flines)
+                    else:  
+                        self.get_pyVistaMesh()
                 t1 = time.time()
                 print("Time to read : %.3f"%(t1-t))
             except Exception as ex: 
@@ -7799,7 +7828,7 @@ class Ui_MainWindow(object):
         else: 
             self.get_camera_position()
 
-        self.showMesh_addingSearchedElements(changeOpecity=False)
+        if len(self.searchedElements): self.showMesh_addingSearchedElements(changeOpecity=False)
         if nodeplotRecursive: self.showMesh_addingSearchedNodes()
         self.plotter.show()
 
@@ -7899,7 +7928,14 @@ class Ui_MainWindow(object):
         self.searchedElements = parsingIDs(text)
         self.showMesh_addingSearchedElements()
 
-
+    def show_selectedElset3D(self, item): 
+        self.searchedElements=[]
+        self.lineEdit_showElements.setText("")
+        for eset in self.elsets3D: 
+            if eset[0] == item: 
+                self.searchedElements = eset[1:] 
+                self.showMesh_addingSearchedElements()
+                break 
     def showMesh_addingSearchedNodes(self): 
         if not self.view3D: return
         for pts in self.searched_points: 
@@ -7914,20 +7950,27 @@ class Ui_MainWindow(object):
             self.get_OpecityValue()
 
     def showMesh_addingSearchedElements(self, changeOpecity=True): 
-        if not self.view3D: return
+        if not self.view3D : return 
+        if not  len(self.searchedElements): 
+            self.showMesh()
+            return
         for sCells in self.searchedCells: 
             self.plotter.remove_actor(sCells)
-
-        self.searchedCells =[]
-        for idx, elements, nodes in zip(self.idx_element, self.elements, self.nodes): 
-            searched_cells = Mesh.generateMesh_searched(self.searchedElements,idx, elements, nodes)
-            if not isinstance(searched_cells, type(None)): 
-                self.searchedCells.append(self.plotter.add_mesh(searched_cells, color='red', line_width=2) )
+        # print(self.searchedElements)
         if changeOpecity: 
             self.horizontalSlider_opacity.setSliderPosition(30)
             self.opecity = self.horizontalSlider_opacity.value() / 100.0
             self.lineEdit_opecity.setText(str(int(self.opecity*100)))
-                
+       
+        self.searchedCells =[]
+        for idx, elements, nodes in zip(self.idx_element, self.elements, self.nodes): 
+            if elements[0][0] == 4: 
+                searched_cells = Mesh.generateMesh_searched(self.searchedElements,idx, elements, nodes, ctype=5)
+            else: 
+                searched_cells = Mesh.generateMesh_searched(self.searchedElements,idx, elements, nodes)
+            if not isinstance(searched_cells, type(None)): 
+                self.searchedCells.append(self.plotter.add_mesh(searched_cells, color='red', line_width=2, opacity=0.5) )
+
        
 class myCanvas(FigureCanvas):
     def __init__(self, parent=None, *args, **kwargs):

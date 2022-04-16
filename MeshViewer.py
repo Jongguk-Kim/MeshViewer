@@ -38,7 +38,10 @@ import numpy as np
 from islmPostFunctions import *
 from files import makingFullFilePath_linux, simulationCodes
 
-import paramiko as FTP 
+try: 
+    import paramiko as FTP 
+except Exception as EX: 
+    print(EX)
 import socket
 
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -143,7 +146,12 @@ preComponentColor = {  "CTR":"darkgray",       "CTB":"darkgray",
 }
 
 def generateComponentfile(fname=componentsfile): 
-    fp = open(fname, 'w')
+    fname = "tirecomponents.dat"
+    try: 
+        fp = open(fname, 'w')
+    except: 
+        fname = "tirecomponents.dat"
+        fp = open(fname, 'w')
     fp.write("*Version=%d\n"%(viewerVersion))
     fp.write("*TIRE COMPONENTS\n")
     for tc in TireComponents: 
@@ -164,8 +172,14 @@ def readTireComponents(fname, color=False):
        
     Components=[]
     colors={}
-    with open(fname) as TC: 
-        lines = TC.readlines()
+    try: 
+        with open(fname) as TC: 
+            lines = TC.readlines()
+    except: 
+        fname = "tirecomponents.dat"
+        with open(fname) as TC: 
+            lines = TC.readlines()
+
     cmd = False 
     for line in lines: 
         if '**' in line: continue
@@ -4487,7 +4501,7 @@ class Ui_MainWindow(object):
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1371, 914)
+        MainWindow.resize(1326, 915)
         MainWindow.setMinimumSize(QtCore.QSize(0, 25))
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -4497,13 +4511,13 @@ class Ui_MainWindow(object):
         self.verticalLayout_viewArea.setContentsMargins(-1, -1, 10, -1)
         self.verticalLayout_viewArea.setObjectName("verticalLayout_viewArea")
         self.groupBox_3dMeshControl = QtWidgets.QGroupBox(self.centralwidget)
-        self.groupBox_3dMeshControl.setMinimumSize(QtCore.QSize(900, 102))
+        self.groupBox_3dMeshControl.setMinimumSize(QtCore.QSize(955, 110))
         self.groupBox_3dMeshControl.setMaximumSize(QtCore.QSize(16777215, 102))
         self.groupBox_3dMeshControl.setCheckable(True)
         self.groupBox_3dMeshControl.setChecked(False)
         self.groupBox_3dMeshControl.setObjectName("groupBox_3dMeshControl")
         self.layoutWidget = QtWidgets.QWidget(self.groupBox_3dMeshControl)
-        self.layoutWidget.setGeometry(QtCore.QRect(0, 16, 886, 91))
+        self.layoutWidget.setGeometry(QtCore.QRect(0, 16, 949, 98))
         self.layoutWidget.setObjectName("layoutWidget")
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.layoutWidget)
         self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
@@ -4684,21 +4698,6 @@ class Ui_MainWindow(object):
         self.lineEdit_view_upPosition.setAlignment(QtCore.Qt.AlignCenter)
         self.lineEdit_view_upPosition.setObjectName("lineEdit_view_upPosition")
         self.verticalLayout_zClipping_2.addWidget(self.lineEdit_view_upPosition)
-        self.label_view_upPosition_2 = QtWidgets.QLabel(self.layoutWidget)
-        self.label_view_upPosition_2.setMinimumSize(QtCore.QSize(80, 0))
-        self.label_view_upPosition_2.setMaximumSize(QtCore.QSize(80, 15))
-        self.label_view_upPosition_2.setAlignment(QtCore.Qt.AlignCenter)
-        self.label_view_upPosition_2.setObjectName("label_view_upPosition_2")
-        self.verticalLayout_zClipping_2.addWidget(self.label_view_upPosition_2)
-        self.lineEdit_slicingAngle = QtWidgets.QLineEdit(self.layoutWidget)
-        self.lineEdit_slicingAngle.setMinimumSize(QtCore.QSize(120, 0))
-        self.lineEdit_slicingAngle.setMaximumSize(QtCore.QSize(120, 20))
-        self.lineEdit_slicingAngle.setAlignment(QtCore.Qt.AlignCenter)
-        self.lineEdit_slicingAngle.setObjectName("lineEdit_slicingAngle")
-        self.verticalLayout_zClipping_2.addWidget(self.lineEdit_slicingAngle)
-        self.horizontalLayout_2.addLayout(self.verticalLayout_zClipping_2)
-        self.verticalLayout_zClipping_3 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_zClipping_3.setObjectName("verticalLayout_zClipping_3")
         self.horizontalLayout_preset_View = QtWidgets.QHBoxLayout()
         self.horizontalLayout_preset_View.setObjectName("horizontalLayout_preset_View")
         self.pushButton_View_yz = QtWidgets.QPushButton(self.layoutWidget)
@@ -4713,7 +4712,26 @@ class Ui_MainWindow(object):
         self.pushButton_View_yx.setMaximumSize(QtCore.QSize(20, 20))
         self.pushButton_View_yx.setObjectName("pushButton_View_yx")
         self.horizontalLayout_preset_View.addWidget(self.pushButton_View_yx)
-        self.verticalLayout_zClipping_3.addLayout(self.horizontalLayout_preset_View)
+        self.verticalLayout_zClipping_2.addLayout(self.horizontalLayout_preset_View)
+        self.horizontalLayout_slicing = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_slicing.setContentsMargins(0, -1, -1, -1)
+        self.horizontalLayout_slicing.setSpacing(0)
+        self.horizontalLayout_slicing.setObjectName("horizontalLayout_slicing")
+        self.label_slicingAngle = QtWidgets.QLabel(self.layoutWidget)
+        self.label_slicingAngle.setMinimumSize(QtCore.QSize(80, 0))
+        self.label_slicingAngle.setMaximumSize(QtCore.QSize(80, 15))
+        self.label_slicingAngle.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_slicingAngle.setObjectName("label_slicingAngle")
+        self.horizontalLayout_slicing.addWidget(self.label_slicingAngle)
+        self.lineEdit_slicingAngle = QtWidgets.QLineEdit(self.layoutWidget)
+        self.lineEdit_slicingAngle.setMaximumSize(QtCore.QSize(30, 20))
+        self.lineEdit_slicingAngle.setAlignment(QtCore.Qt.AlignCenter)
+        self.lineEdit_slicingAngle.setObjectName("lineEdit_slicingAngle")
+        self.horizontalLayout_slicing.addWidget(self.lineEdit_slicingAngle)
+        self.verticalLayout_zClipping_2.addLayout(self.horizontalLayout_slicing)
+        self.horizontalLayout_2.addLayout(self.verticalLayout_zClipping_2)
+        self.verticalLayout_zClipping_3 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_zClipping_3.setObjectName("verticalLayout_zClipping_3")
         self.lineEdit_showNodes = QtWidgets.QLineEdit(self.layoutWidget)
         self.lineEdit_showNodes.setMaximumSize(QtCore.QSize(125, 20))
         self.lineEdit_showNodes.setObjectName("lineEdit_showNodes")
@@ -4740,14 +4758,18 @@ class Ui_MainWindow(object):
         self.verticalLayout_colorRange.addLayout(self.horizontalLayout_cRange)
         self.horizontalLayout_colorRange_value = QtWidgets.QHBoxLayout()
         self.horizontalLayout_colorRange_value.setObjectName("horizontalLayout_colorRange_value")
+        self.checkBox_Fixing_colorRange = QtWidgets.QCheckBox(self.layoutWidget)
+        self.checkBox_Fixing_colorRange.setMaximumSize(QtCore.QSize(60, 15))
+        self.checkBox_Fixing_colorRange.setObjectName("checkBox_Fixing_colorRange")
+        self.horizontalLayout_colorRange_value.addWidget(self.checkBox_Fixing_colorRange)
         self.lineEdit_colorRange_value = QtWidgets.QLineEdit(self.layoutWidget)
-        self.lineEdit_colorRange_value.setMinimumSize(QtCore.QSize(80, 0))
-        self.lineEdit_colorRange_value.setMaximumSize(QtCore.QSize(80, 20))
+        self.lineEdit_colorRange_value.setMinimumSize(QtCore.QSize(60, 0))
+        self.lineEdit_colorRange_value.setMaximumSize(QtCore.QSize(60, 20))
         self.lineEdit_colorRange_value.setObjectName("lineEdit_colorRange_value")
         self.horizontalLayout_colorRange_value.addWidget(self.lineEdit_colorRange_value)
         self.lineEdit_colorRange_value1 = QtWidgets.QLineEdit(self.layoutWidget)
-        self.lineEdit_colorRange_value1.setMinimumSize(QtCore.QSize(80, 0))
-        self.lineEdit_colorRange_value1.setMaximumSize(QtCore.QSize(80, 20))
+        self.lineEdit_colorRange_value1.setMinimumSize(QtCore.QSize(60, 0))
+        self.lineEdit_colorRange_value1.setMaximumSize(QtCore.QSize(60, 20))
         self.lineEdit_colorRange_value1.setObjectName("lineEdit_colorRange_value1")
         self.horizontalLayout_colorRange_value.addWidget(self.lineEdit_colorRange_value1)
         self.verticalLayout_colorRange.addLayout(self.horizontalLayout_colorRange_value)
@@ -4807,9 +4829,9 @@ class Ui_MainWindow(object):
         self.lineEdit_5_Sim_Num.setObjectName("lineEdit_5_Sim_Num")
         self.horizontalLayout_simulationCode.addWidget(self.lineEdit_5_Sim_Num)
         self.push_ISLM_Inflated = QtWidgets.QPushButton(self.groupBox_ISLM)
-        self.push_ISLM_Inflated.setGeometry(QtCore.QRect(5, 14, 180, 25))
-        self.push_ISLM_Inflated.setMinimumSize(QtCore.QSize(180, 0))
-        self.push_ISLM_Inflated.setMaximumSize(QtCore.QSize(180, 30))
+        self.push_ISLM_Inflated.setGeometry(QtCore.QRect(5, 14, 130, 25))
+        self.push_ISLM_Inflated.setMinimumSize(QtCore.QSize(130, 0))
+        self.push_ISLM_Inflated.setMaximumSize(QtCore.QSize(130, 30))
         self.push_ISLM_Inflated.setObjectName("push_ISLM_Inflated")
         self.horizontalLayoutWidget = QtWidgets.QWidget(self.groupBox_ISLM)
         self.horizontalLayoutWidget.setGeometry(QtCore.QRect(6, 42, 338, 21))
@@ -4831,13 +4853,23 @@ class Ui_MainWindow(object):
         self.radioButton_standingWave.setObjectName("radioButton_standingWave")
         self.horizontalLayout_simulationType.addWidget(self.radioButton_standingWave)
         self.checkBox_Initial_inflated = QtWidgets.QCheckBox(self.groupBox_ISLM)
-        self.checkBox_Initial_inflated.setGeometry(QtCore.QRect(210, 16, 35, 20))
-        self.checkBox_Initial_inflated.setMaximumSize(QtCore.QSize(35, 25))
+        self.checkBox_Initial_inflated.setGeometry(QtCore.QRect(229, 18, 60, 20))
+        self.checkBox_Initial_inflated.setMaximumSize(QtCore.QSize(60, 25))
         self.checkBox_Initial_inflated.setObjectName("checkBox_Initial_inflated")
         self.checkBox_inflated_loaded = QtWidgets.QCheckBox(self.groupBox_ISLM)
-        self.checkBox_inflated_loaded.setGeometry(QtCore.QRect(270, 16, 35, 20))
-        self.checkBox_inflated_loaded.setMaximumSize(QtCore.QSize(35, 25))
+        self.checkBox_inflated_loaded.setGeometry(QtCore.QRect(286, 18, 41, 20))
+        self.checkBox_inflated_loaded.setMaximumSize(QtCore.QSize(60, 25))
         self.checkBox_inflated_loaded.setObjectName("checkBox_inflated_loaded")
+        self.checkBox_Initial_profile = QtWidgets.QCheckBox(self.groupBox_ISLM)
+        self.checkBox_Initial_profile.setGeometry(QtCore.QRect(178, 18, 51, 20))
+        self.checkBox_Initial_profile.setMaximumSize(QtCore.QSize(60, 25))
+        self.checkBox_Initial_profile.setChecked(True)
+        self.checkBox_Initial_profile.setObjectName("checkBox_Initial_profile")
+        self.checkBox_MoldProfile = QtWidgets.QCheckBox(self.groupBox_ISLM)
+        self.checkBox_MoldProfile.setGeometry(QtCore.QRect(137, 18, 41, 20))
+        self.checkBox_MoldProfile.setMaximumSize(QtCore.QSize(60, 25))
+        self.checkBox_MoldProfile.setChecked(True)
+        self.checkBox_MoldProfile.setObjectName("checkBox_MoldProfile")
         self.verticalLayout.addWidget(self.groupBox_ISLM)
         self.groupBox_LoadMesh = QtWidgets.QGroupBox(self.centralwidget)
         self.groupBox_LoadMesh.setMinimumSize(QtCore.QSize(330, 70))
@@ -4864,13 +4896,13 @@ class Ui_MainWindow(object):
         self.push_comparing.setObjectName("push_comparing")
         self.verticalLayout.addWidget(self.groupBox_LoadMesh)
         self.groupBox_Mesh3D = QtWidgets.QGroupBox(self.centralwidget)
-        self.groupBox_Mesh3D.setMinimumSize(QtCore.QSize(330, 45))
-        self.groupBox_Mesh3D.setMaximumSize(QtCore.QSize(330, 45))
+        self.groupBox_Mesh3D.setMinimumSize(QtCore.QSize(330, 50))
+        self.groupBox_Mesh3D.setMaximumSize(QtCore.QSize(330, 50))
         self.groupBox_Mesh3D.setObjectName("groupBox_Mesh3D")
         self.comboBox = QtWidgets.QComboBox(self.groupBox_Mesh3D)
-        self.comboBox.setGeometry(QtCore.QRect(81, 15, 81, 25))
-        self.comboBox.setMinimumSize(QtCore.QSize(80, 25))
-        self.comboBox.setMaximumSize(QtCore.QSize(100, 25))
+        self.comboBox.setGeometry(QtCore.QRect(91, 14, 80, 28))
+        self.comboBox.setMinimumSize(QtCore.QSize(80, 28))
+        self.comboBox.setMaximumSize(QtCore.QSize(80, 28))
         self.comboBox.setObjectName("comboBox")
         self.comboBox.addItem("")
         self.comboBox.addItem("")
@@ -4884,17 +4916,29 @@ class Ui_MainWindow(object):
         self.comboBox.addItem("")
         self.comboBox.addItem("")
         self.checkBox_colorChanging = QtWidgets.QCheckBox(self.groupBox_Mesh3D)
-        self.checkBox_colorChanging.setGeometry(QtCore.QRect(0, 20, 81, 15))
+        self.checkBox_colorChanging.setGeometry(QtCore.QRect(1, 13, 91, 15))
         self.checkBox_colorChanging.setMaximumSize(QtCore.QSize(100, 15))
         self.checkBox_colorChanging.setObjectName("checkBox_colorChanging")
         self.pushButton_replaceCells = QtWidgets.QPushButton(self.groupBox_Mesh3D)
-        self.pushButton_replaceCells.setGeometry(QtCore.QRect(166, 15, 100, 25))
-        self.pushButton_replaceCells.setMaximumSize(QtCore.QSize(100, 25))
+        self.pushButton_replaceCells.setGeometry(QtCore.QRect(171, 13, 95, 30))
+        self.pushButton_replaceCells.setMinimumSize(QtCore.QSize(0, 30))
+        self.pushButton_replaceCells.setMaximumSize(QtCore.QSize(95, 30))
         self.pushButton_replaceCells.setObjectName("pushButton_replaceCells")
         self.pushButton_showAllCells = QtWidgets.QPushButton(self.groupBox_Mesh3D)
-        self.pushButton_showAllCells.setGeometry(QtCore.QRect(266, 15, 61, 25))
-        self.pushButton_showAllCells.setMaximumSize(QtCore.QSize(100, 25))
+        self.pushButton_showAllCells.setGeometry(QtCore.QRect(266, 13, 61, 30))
+        self.pushButton_showAllCells.setMinimumSize(QtCore.QSize(0, 30))
+        self.pushButton_showAllCells.setMaximumSize(QtCore.QSize(100, 30))
         self.pushButton_showAllCells.setObjectName("pushButton_showAllCells")
+        self.radioButton_1stMeshColorchange = QtWidgets.QRadioButton(self.groupBox_Mesh3D)
+        self.radioButton_1stMeshColorchange.setGeometry(QtCore.QRect(30, 30, 31, 16))
+        self.radioButton_1stMeshColorchange.setObjectName("radioButton_1stMeshColorchange")
+        self.radioButton_2ndMeshColorchange = QtWidgets.QRadioButton(self.groupBox_Mesh3D)
+        self.radioButton_2ndMeshColorchange.setGeometry(QtCore.QRect(60, 30, 31, 16))
+        self.radioButton_2ndMeshColorchange.setObjectName("radioButton_2ndMeshColorchange")
+        self.radioButton_NoColorChange = QtWidgets.QRadioButton(self.groupBox_Mesh3D)
+        self.radioButton_NoColorChange.setGeometry(QtCore.QRect(0, 30, 31, 16))
+        self.radioButton_NoColorChange.setChecked(True)
+        self.radioButton_NoColorChange.setObjectName("radioButton_NoColorChange")
         self.verticalLayout.addWidget(self.groupBox_Mesh3D)
         self.groupBox_CUTELayout = QtWidgets.QGroupBox(self.centralwidget)
         self.groupBox_CUTELayout.setMinimumSize(QtCore.QSize(330, 310))
@@ -5050,7 +5094,7 @@ class Ui_MainWindow(object):
         self.gridLayout.addLayout(self.horizontalLayout, 0, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1371, 21))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1326, 21))
         self.menubar.setObjectName("menubar")
         self.menuFILE = QtWidgets.QMenu(self.menubar)
         self.menuFILE.setObjectName("menuFILE")
@@ -5096,11 +5140,12 @@ class Ui_MainWindow(object):
         self.checkBox_clipping_Z_reverse.setText(_translate("MainWindow", "Invert"))
         self.label_view_upPosition.setText(_translate("MainWindow", "ViewPoint"))
         self.lineEdit_view_upPosition.setText(_translate("MainWindow", "1, 0, 0"))
-        self.label_view_upPosition_2.setText(_translate("MainWindow", "Slicing Angle"))
-        self.lineEdit_slicingAngle.setText(_translate("MainWindow", "0"))
         self.pushButton_View_yz.setText(_translate("MainWindow", "yz"))
         self.pushButton_View_xz.setText(_translate("MainWindow", "xz"))
         self.pushButton_View_yx.setText(_translate("MainWindow", "yx"))
+        self.label_slicingAngle.setText(_translate("MainWindow", "Slicing Angle"))
+        self.lineEdit_slicingAngle.setText(_translate("MainWindow", "100"))
+        self.checkBox_Fixing_colorRange.setText(_translate("MainWindow", "F"))
         self.pushButton_background.setText(_translate("MainWindow", "Gray/White Background"))
         self.groupBox_ISLM.setTitle(_translate("MainWindow", "ISLM Profile Compare"))
         self.lineEdit_0_Location.setText(_translate("MainWindow", "RND"))
@@ -5109,13 +5154,15 @@ class Ui_MainWindow(object):
         self.lineEdit_2_VT_Revision.setText(_translate("MainWindow", "0"))
         self.lineEdit_4_Sim_Type.setText(_translate("MainWindow", "D103"))
         self.lineEdit_5_Sim_Num.setText(_translate("MainWindow", "1"))
-        self.push_ISLM_Inflated.setText(_translate("MainWindow", "ISLM Inflated/Loaded"))
+        self.push_ISLM_Inflated.setText(_translate("MainWindow", "Load Profiles"))
         self.radioButton_dim.setText(_translate("MainWindow", "Dim"))
         self.radioButton_staticFootprint.setText(_translate("MainWindow", "Static Foot"))
         self.radioButton_dynamicFootprint.setText(_translate("MainWindow", "Rolling Foot"))
         self.radioButton_standingWave.setText(_translate("MainWindow", "StandingWave"))
-        self.checkBox_Initial_inflated.setText(_translate("MainWindow", "C1"))
-        self.checkBox_inflated_loaded.setText(_translate("MainWindow", "C2"))
+        self.checkBox_Initial_inflated.setText(_translate("MainWindow", "."))
+        self.checkBox_inflated_loaded.setText(_translate("MainWindow", "."))
+        self.checkBox_Initial_profile.setText(_translate("MainWindow", "Inf."))
+        self.checkBox_MoldProfile.setText(_translate("MainWindow", "MD"))
         self.groupBox_LoadMesh.setTitle(_translate("MainWindow", "Local Mesh"))
         self.push_LocalMesh.setText(_translate("MainWindow", "CUTE Layout Mesh"))
         self.push_LocalMesh_3D.setText(_translate("MainWindow", "Mesh 3D"))
@@ -5133,9 +5180,12 @@ class Ui_MainWindow(object):
         self.comboBox.setItemText(8, _translate("MainWindow", "lightblue"))
         self.comboBox.setItemText(9, _translate("MainWindow", "steelblue"))
         self.comboBox.setItemText(10, _translate("MainWindow", "wheat"))
-        self.checkBox_colorChanging.setText(_translate("MainWindow", "Auto Next"))
+        self.checkBox_colorChanging.setText(_translate("MainWindow", "Auto Color"))
         self.pushButton_replaceCells.setText(_translate("MainWindow", "Show Selected"))
         self.pushButton_showAllCells.setText(_translate("MainWindow", "Show All"))
+        self.radioButton_1stMeshColorchange.setText(_translate("MainWindow", "1"))
+        self.radioButton_2ndMeshColorchange.setText(_translate("MainWindow", "2"))
+        self.radioButton_NoColorChange.setText(_translate("MainWindow", "0"))
         self.groupBox_CUTELayout.setTitle(_translate("MainWindow", "CUTE Layout Mesh"))
         self.pushButton_elsetSeq.setText(_translate("MainWindow", "Feature Edges"))
         self.pushButton_redraw.setText(_translate("MainWindow", "All"))
@@ -5223,10 +5273,13 @@ class Ui_MainWindow(object):
         self.lineEdit.returnPressed.connect(self.drawDots)
         self.pushButton_redraw.clicked.connect(self.Redraw)
         self.push_comparing.clicked.connect(self.AddComparingLayouts)
-
         self.push_regen_mesh.clicked.connect(self.RegenMesh)
         # self.push_origin.clicked.connect(self.ReloadMesh)
-
+        
+        self.checkBox_MoldProfile.clicked.connect(self.changeComparingLayouts)
+        self.checkBox_Initial_profile.clicked.connect(self.changeComparingLayouts)
+        self.checkBox_Initial_inflated.clicked.connect(self.changeComparingLayouts)
+        self.checkBox_inflated_loaded.clicked.connect(self.changeComparingLayouts)
         
         self.list_widget.setGeometry(0,0, 300, 200)
 
@@ -5393,7 +5446,10 @@ class Ui_MainWindow(object):
             generateComponentfile(componentsfile)
         self.TireComponents=readTireComponents(componentsfile)
         
-        self.usingLog()
+        try: 
+            self.usingLog()
+        except Exception as EX: 
+            print(EX)
 
         self.view3D = False 
 
@@ -5440,8 +5496,11 @@ class Ui_MainWindow(object):
         self.lineEdit_showNodes.returnPressed.connect(self.showSearchedNodes)
         self.lineEdit_showElements.returnPressed.connect(self.showSearchedElements)
 
-        self.lineEdit_colorRange_value.editingFinished.connect(self.changeRatio)
-        self.lineEdit_colorRange_value1.editingFinished.connect(self.changeRatio)
+        self.lineEdit_colorRange.returnPressed.connect(self.change_colorValue)
+        self.lineEdit_colorRange1.returnPressed.connect(self.change_colorValue)
+
+        self.lineEdit_colorRange_value.returnPressed.connect(self.changeRatio)
+        self.lineEdit_colorRange_value1.returnPressed.connect(self.changeRatio)
         
 
         self.pushButton_replaceCells.clicked.connect(self.replaceCells)
@@ -5459,8 +5518,9 @@ class Ui_MainWindow(object):
             del(self.figure)
             self.groupBox_3dMeshControl.setChecked(True)
             self.view3D=True 
-            self.groupBox_3dMeshControl.setMinimumSize(QtCore.QSize(900, 102))
-            self.groupBox_3dMeshControl.setMaximumSize(QtCore.QSize(16777215, 102))
+            self.comparingISLMLayoutMode=False
+            self.groupBox_3dMeshControl.setMinimumSize(QtCore.QSize(900, 110))
+            self.groupBox_3dMeshControl.setMaximumSize(QtCore.QSize(16777215, 110))
         
     
     def changeToView2D(self):
@@ -5473,6 +5533,7 @@ class Ui_MainWindow(object):
             self.verticalLayout_2.addWidget(self.canvas)
             self.groupBox_3dMeshControl.setChecked(False)
             self.view3D=False 
+            self.comparingISLMLayoutMode=False
             self.groupBox_3dMeshControl.setMinimumSize(QtCore.QSize(900, 15))
             self.groupBox_3dMeshControl.setMaximumSize(QtCore.QSize(16777215, 15))
         
@@ -5480,6 +5541,10 @@ class Ui_MainWindow(object):
         if not self.selectedPlot: 
             self.showMesh()
     def plotAll(self): 
+        if self.radioButton_1stMeshColorchange.isChecked(): 
+            if len(self.colors) > 0: self.colors[0] = self.comboBox.currentText()
+        if self.radioButton_2ndMeshColorchange.isChecked(): 
+            if len(self.colors) > 1: self.colors[1] = self.comboBox.currentText()
         self.selectedPlot = False 
         self.showMesh()
     def initialize(self): 
@@ -5489,6 +5554,18 @@ class Ui_MainWindow(object):
             MainWindow.setWindowIcon(icon)
         except: 
             pass 
+        self.comboBox.addItem("orange")
+        self.comboBox.addItem("aquamarine")
+        self.comboBox.addItem("lightcyan")
+        self.comboBox.addItem("lightgray")
+        self.comboBox.addItem("peachpuff")
+        self.comboBox.addItem("yellow")
+        self.comboBox.addItem("gold")
+        self.comboBox.addItem("springgreen")
+        self.comboBox.addItem("plum")
+        self.comboBox.addItem("lightpink")
+
+        self.comparingISLMLayoutMode=False
 
         self.meshfile = False 
         self.meshes=[]; self.points=[]; self.colors=[]; self.edges=[]; self.surfaces=[]; self.nodes=[]
@@ -5613,12 +5690,6 @@ class Ui_MainWindow(object):
             remove(locallog)
         self.ftp.close()
 
-    def changeSimType(self): 
-        if self.radioButton_dim.isChecked(): self.lineEdit_4_Sim_Type.setText("D103")
-        if self.radioButton_staticFootprint.isChecked(): self.lineEdit_4_Sim_Type.setText("D101")
-        if self.radioButton_dynamicFootprint.isChecked(): self.lineEdit_4_Sim_Type.setText("D104")
-        if self.radioButton_standingWave.isChecked(): self.lineEdit_4_Sim_Type.setText("D105")
-        
     def selectionQt_list(self): 
         if self.view3D: 
             items = self.list_widget.selectedItems()
@@ -5785,97 +5856,271 @@ class Ui_MainWindow(object):
             line = PD.readline()
         cwd = line.strip()
 
-        if simType == 'D101' or simType == 'D104': 
-            initFile = vtCode+".inp"
-            InfName = jobDir +"/" + simCode + "-Inflated.inp"
-            TopName = jobDir +"/" + simCode + "-Deformed_TOP.inp"
-            BtmName = jobDir +"/" + simCode + "-Deformed_BTM.inp"
-
-            fname = simCode + "-Deformed_BTM.inp"
-            initFile = simCode + "-Deformed_TOP.inp"
-            jobFile = jobDir +"/" + fname
-
-        if simType == 'D105': 
-            initFile = simCode + "-Maxwave.inp"
-            fname = simCode + "-Minwave.inp"
-            jobFile = jobDir +"/" +fname
+        self.ISLMComparingLayouts=[]
+        initFile = jobDir +"/" + vtCode+".inp"
+        infFile = False; TopFile=False; BtmFile=False 
+        localInit = vtCode+".inp"
+        localInf=False; localTop=False; localBtm=False 
 
         if simType == 'D103': 
-            fname = simCode + "-deformed.inp"
-            jobFile = jobDir +"/" + fname 
-            initFile = vtCode+".inp"
+            localInf = simCode + "-deformed.inp"
+            infFile = jobDir +"/" + simCode + "-deformed.inp" 
 
+        if simType == 'D101' or simType == 'D104': 
+            infFile = jobDir +"/" + simCode + "-Inflated.inp"
+            TopFile = jobDir +"/" + simCode + "-Deformed_TOP.inp"
+            BtmFile = jobDir +"/" + simCode + "-Deformed_BTM.inp"
 
-        fInit = False
-        if self.checkBox_Initial_inflated.isChecked(): 
-            for lst in dirList:
-                if initFile == lst: 
-                    self.sftp.get(jobDir+"/" + initFile, cwd+ initFile)
-                    fInit = True 
-                    break 
-            else: 
-                print ("Cannot get the layout!!") 
-        
-        fDfmd = False 
+            localInf = simCode + "-Inflated.inp"
+            localTop = simCode + "-Deformed_TOP.inp"
+            localBtm = simCode + "-Deformed_BTM.inp"
+
+        if simType == 'D105': 
+
+            infFile = jobDir +"/" + simCode + "-Minwave.inp"
+            TopFile = jobDir +"/" + simCode + "-Maxwave.inp"
+            BtmFile = jobDir +"/" + simCode + "-MaxDeformed.inp"
+
+            localInf = simCode + "-Minwave.inp"
+            localTop = simCode + "-Maxwave.inp"
+            localBtm = simCode + "-MaxDeformed.inp"
+
+        gotMold=False
         for lst in dirList:
-            if fname == lst: 
-                self.sftp.get(jobFile, cwd+ fname)
-                fDfmd = True 
+            if localInit == lst: 
+                self.sftp.get(initFile, cwd+ localInit)
+                gotMold=True
+                self.ISLMComparingLayouts.append(cwd+ localInit)
                 break 
         else: 
-            print ("Cannot get the deformed layout!!") 
-        
-        
-        if not fDfmd and not fInit : return 
+            self.checkBox_MoldProfile.setChecked(False)
+            self.checkBox_MoldProfile.setDisabled(True)
+            self.ISLMComparingLayouts.append(False)
+            print ("No Mold profile!!") 
 
-        if fDfmd and not fInit: 
-            print("* MESH FILE: %s"%(fname))
-            self.call2Dmesh(manualfile=cwd+ fname)
-            
-        if not fDfmd and fInit:
-            print("%s"%(initFile))
-            self.call2Dmesh(manualfile=cwd+ initFile)
-            
-        if fDfmd and fInit: 
-            print("* MESH FILE: %s"%(initFile))
-            self.call2Dmesh(manualfile=cwd+ initFile) 
-            print("* MESH FILE: %s"%(fname))
-            self.AddComparingLayouts(cwd+fname)
+        gotInf=False
+        if localInf: 
+            for lst in dirList:
+                if localInf == lst: 
+                    self.sftp.get(infFile, cwd+ localInf)
+                    gotInf=True
+                    self.ISLMComparingLayouts.append(cwd+ localInf)
+                    break 
+            else: 
+                self.checkBox_Initial_profile.setChecked(False)
+                self.checkBox_Initial_profile.setDisabled(True)
+                self.ISLMComparingLayouts.append(False)
+                print ("No Inf/MinWave profile!!")
 
-        if self.checkBox_inflated_loaded.isChecked(): 
-            fDfmd = False; maxDname=False
-            if simType == 'D105' :  
-                maxDname = simCode + "-MaxDeformed.inp"
-                jobFile = jobDir +"/" + maxDname 
+        gotTop = False
+        if localTop: 
+            for lst in dirList:
+                if localTop == lst: 
+                    self.sftp.get(TopFile, cwd+ localTop)
+                    gotTop = True 
+                    self.ISLMComparingLayouts.append(cwd+ localTop)
+                    break 
+            else: 
+                self.checkBox_Initial_inflated.setChecked(False)
+                self.checkBox_Initial_inflated.setDisabled(True)
+                self.ISLMComparingLayouts.append(False)
+                print ("No Top/MaxWave profile!!")
+        gotBtm = False 
+        if localBtm: 
+            for lst in dirList:
+                if localBtm == lst: 
+                    self.sftp.get(BtmFile, cwd+ localBtm)
+                    gotBtm = True 
+                    self.ISLMComparingLayouts.append(cwd+ localBtm)
+                    break 
+            else: 
+                self.checkBox_inflated_loaded.setChecked(False)
+                self.checkBox_inflated_loaded.setDisabled(True)
+                self.ISLMComparingLayouts.append(False)
+                print ("No Bottom profile!!")
 
-            if simType == 'D101' or simType == 'D104': 
-                maxDname = simCode + "-Inflated.inp"
-                jobFile = jobDir +"/" + maxDname
+        if not gotMold: 
+            self.checkBox_MoldProfile.setChecked(False)
+            self.checkBox_MoldProfile.setDisabled(True)
+        if not gotInf: 
+            self.checkBox_Initial_profile.setChecked(False)
+            self.checkBox_Initial_profile.setDisabled(True)
+        if not gotTop: 
+            self.checkBox_Initial_inflated.setChecked(False)
+            self.checkBox_Initial_inflated.setDisabled(True)
+        if not gotBtm: 
+            self.checkBox_inflated_loaded.setChecked(False)
+            self.checkBox_inflated_loaded.setDisabled(True)
 
-            if maxDname: 
-                for lst in dirList:
-                    if maxDname == lst: 
-                        self.sftp.get(jobFile, cwd+ maxDname)
-                        fDfmd = True 
-                        break 
-                else: 
-                    print ("Cannot get the deformed layout!!") 
-
-            if fDfmd: 
-                print("* MESH FILE: %s"%(maxDname))
-                self.AddComparingLayouts(cwd+maxDname)
-            try: 
-                if isfile(cwd+ maxDname): remove(cwd+ maxDname)
-            except:
-                pass 
-
-        try: 
-            if isfile(cwd+ fname): remove(cwd+ fname)
-            if isfile(cwd+ initFile): remove(cwd+ initFile)
-        except:   pass
-
+        self.comparingISLMLayoutMode = True 
+        self.node = False 
+        self.changeComparingLayouts()
         self.ftp.close()
+        
+        if isfile(cwd+ localInit): remove(cwd+ localInit)
+        if gotInf: 
+            if isfile(cwd+ localInf): remove(cwd+ localInf)
+        if gotTop: 
+            if isfile(cwd+ localTop): remove(cwd+ localTop)
+        if gotBtm: 
+            if isfile(cwd+ localBtm): remove(cwd+ localBtm)
 
+    def changeComparingLayouts(self): 
+        basic_line_width = 0.5
+        CN = len(lst_colors)
+        
+        if self.comparingISLMLayoutMode: 
+            try: self.figure.clearplot()
+            except: pass 
+            if not self.node: 
+                self.nodes=[]; 
+                for fname in self.ISLMComparingLayouts: 
+                    if fname: 
+                        self.node, self.element, self.elset, self.surface, self.tie, self.xy, self.rims = Mesh2DInformation(fname, self.TireComponents)
+                        self.nodes.append(self.node)
+                    else: 
+                        self.nodes.append(False)
+                self.node =  self.nodes[0]
+                self.meshfile = self.ISLMComparingLayouts[0]
+                self.loading2DLayout()  ## input elset/surface to list box. 
+                bdset=False
+                if len(self.nodes) > 1: 
+                    for els in self.elset.Elset: 
+                        if els[0].upper() == 'BD1'  or els[0].upper() == 'BEAD_L' or els[0].upper() == 'BEAD_R': 
+                            bdset = els[1:]
+                            break 
+
+                if bdset : 
+                    nds =[]
+                    for e in bdset: 
+                        for el in self.element.Element: 
+                            if el[0] == e : 
+                                nds.append(el[1]); nds.append(el[2]); nds.append(el[3])
+                                if el[4] > 0: nds.append(el[4])
+                                break 
+                    nds = np.array(nds)
+                    nds = np.unique(nds)
+
+                    iNd = np.array(self.nodes[0].Node)
+                    minBD=10000.0
+                    for n in nds: 
+                        ix = np.where(iNd[:,0] == n)[0][0]
+                        if minBD > iNd[ix][3]: 
+                            minBD = iNd[ix][3]
+
+                    for i in range(1, len(self.nodes)): 
+                        npn = np.array(self.nodes[i].Node )
+                        mBD = 10000.0
+                        for n in nds: 
+                            ix = np.where(npn[:,0] == n)[0][0]
+                            if mBD > npn[ix][3]: 
+                                mBD = npn[ix][3]
+                        npn[:,3] += minBD - mBD 
+                        self.nodes[i].Node = npn 
+
+                self.layoutcounting =0 
+                self.choosedComparingISLMLayouts=[]
+
+                outer0 = self.element.OuterEdge(self.nodes[0])
+                npn = np.array(self.nodes[0].Node)
+
+                for el in self.element.Element: 
+                    if el[6] ==2: 
+                        outer0.Add([el[1], el[2], el[5], 0, el[0], 0])
+                BDR = self.element.Elset('BEAD_R')
+                BDL = self.element.Elset('BEAD_L')
+
+                # r=[]
+                # mr = 0 
+                if len(BDR.Element) > 0:  
+                    # r=[]
+                    eBDR = BDR.FreeEdge()
+                    for ed in eBDR.Edge: 
+                        outer0.Add(ed)
+                        # ix = np.where(npn[:,0]==ed[0])[0][0]; r.append(npn[ix][3])
+                        # ix = np.where(npn[:,0]==ed[1])[0][0]; r.append(npn[ix][3])
+                if len(BDL.Element) > 0:  
+                    eBDL = BDL.FreeEdge()
+                    for ed in eBDL.Edge: 
+                        outer0.Add(ed)
+                        # ix = np.where(npn[:,0]==ed[0])[0][0]; r.append(npn[ix][3])
+                        # ix = np.where(npn[:,0]==ed[1])[0][0]; r.append(npn[ix][3])
+
+                for node in self.nodes: 
+                    if node: 
+                        color = lst_colors[self.layoutcounting % CN]
+                        polygon = self.comparingISLMLayout_2_profile(outer0, np.array(node.Node), color)
+                        self.choosedComparingISLMLayouts.append(polygon)
+                        self.layoutcounting += 1
+                    else: 
+                        self.choosedComparingISLMLayouts.append(False)
+                    
+            if len(self.choosedComparingISLMLayouts): 
+                self.Profiles=[]
+                if self.checkBox_MoldProfile.isChecked() and self.choosedComparingISLMLayouts[0]:           
+                    self.Profiles.append(self.choosedComparingISLMLayouts[0])#; print(" 0")
+                if self.checkBox_Initial_profile.isChecked() and self.choosedComparingISLMLayouts[1]:      
+                    self.Profiles.append(self.choosedComparingISLMLayouts[1])#; print(" 1")
+                if self.checkBox_Initial_inflated.isChecked() and self.choosedComparingISLMLayouts[2]:      
+                    self.Profiles.append(self.choosedComparingISLMLayouts[2])#; print(" 2")
+                if self.checkBox_inflated_loaded.isChecked() and self.choosedComparingISLMLayouts[3]:      
+                    self.Profiles.append(self.choosedComparingISLMLayouts[3])#; print(" 3")
+
+                if len(self.Profiles):
+                    self.figure.Draw_profiles(self.Profiles)
+                else: 
+                    self.figure.clearplot()
+
+    def comparingISLMLayout_2_profile(self, outer0, npn, color, lw=0.5): 
+        
+
+        x = 2; y=3 
+        polygons = []
+        for ed in outer0.Edge: 
+            ix = np.where(npn[:,0]==ed[0])[0][0]; n1=npn[ix]
+            ix = np.where(npn[:,0]==ed[1])[0][0]; n2=npn[ix]
+            polygons.append([[[n1[x], n1[y]], [n2[x], n2[y]]], color, lw])
+
+        return polygons
+
+    def changeSimType(self): 
+        self.checkBox_Initial_profile.setChecked(True)
+        self.checkBox_Initial_inflated.setChecked(True)
+        self.checkBox_inflated_loaded.setChecked(True)
+        if self.radioButton_dim.isChecked(): 
+            self.lineEdit_4_Sim_Type.setText("D103")
+            self.checkBox_Initial_profile.setText("Inf")
+            self.checkBox_Initial_inflated.setText("")
+            self.checkBox_inflated_loaded.setText("")
+            self.checkBox_Initial_inflated.setChecked(False)
+            self.checkBox_inflated_loaded.setChecked(False)
+            self.checkBox_Initial_inflated.setEnabled(False)
+            self.checkBox_inflated_loaded.setEnabled(False)
+
+        if self.radioButton_staticFootprint.isChecked() or self.radioButton_dynamicFootprint.isChecked()  or self.radioButton_dynamicFootprint.isChecked(): 
+            if self.radioButton_staticFootprint.isChecked(): 
+                self.lineEdit_4_Sim_Type.setText("D101")
+            else: 
+                self.lineEdit_4_Sim_Type.setText("D104")
+
+            self.checkBox_Initial_profile.setText("Inf.")
+            self.checkBox_Initial_inflated.setText("Top")
+            self.checkBox_inflated_loaded.setText("Btm")
+            self.checkBox_Initial_inflated.setChecked(True)
+            self.checkBox_inflated_loaded.setChecked(True)
+            self.checkBox_Initial_inflated.setEnabled(True)
+            self.checkBox_inflated_loaded.setEnabled(True)
+
+        if self.radioButton_standingWave.isChecked():    
+            self.lineEdit_4_Sim_Type.setText("D105")
+            self.checkBox_Initial_profile.setText("Wmin")
+            self.checkBox_Initial_inflated.setText("Wmax")
+            self.checkBox_inflated_loaded.setText("Btm")
+            self.checkBox_Initial_inflated.setChecked(True)
+            self.checkBox_inflated_loaded.setChecked(True)
+            self.checkBox_Initial_inflated.setEnabled(True)
+            self.checkBox_inflated_loaded.setEnabled(True)
+            
     def isDOE(self, loc, VT, vNum, Rev): 
 
         m_code = VT.strip()
@@ -5909,7 +6154,105 @@ class Ui_MainWindow(object):
             self.Cdepth_solid_val.setText("0.5")
             self.call2Dmesh(manualfile=self.meshfile)
 
-      
+    def loading2DLayout(self): 
+
+        self.list_widget.clear()
+        if len(self.element.Element) == 0 and len(self.node.Node): 
+            self.figure.gplot(self.node, self.element)
+            return 
+
+        if len(self.element.Element) == 0 and len(self.node.Node): 
+                self.figure.gplot(self.node, self.element)
+                return 
+
+        if len(self.element.Element) ==0: 
+            with open(self.meshfile) as MF: 
+                lines = MF.readlines()
+
+            print ("********************")
+            print (" Command line in file")
+            print ("********************")
+            for line in lines: 
+                if "*" in line and not "**" in line: 
+                    print (line, end="")
+                    
+            print ("\n# Error! to read mesh file.")
+            return
+
+        # print ("DRAW NORMAL")
+    
+        self.ElsetNames=[]
+        # self.allelsets = Allelsets(self.meshfile)
+
+        self.allelsets  = self.elset.Elset
+        npel = []
+        for el in self.element.Element:
+            el[0] = int(el[0])
+            el[1] = int(el[1])
+            el[2] = int(el[2])
+            if el[3] =="": el[3] = 0 
+            if el[4] =="": el[4] = 0 
+            el[3] = int(el[3])
+            el[4] = int(el[4])
+            npel.append([el[0], el[1], el[2], el[3], el[4]])
+        self.npel = np.array(npel)
+
+        self.allelsets = sorted(self.allelsets, key=lambda name:name[0])
+        for en in self.allelsets:
+            if len(en) > 1: 
+                self.ElsetNames.append(en[0])
+                item = QListWidgetItem(en[0])
+                self.list_widget.addItem(item)
+
+        self.surface = sorted(self.surface, key=lambda name:name[0] )
+        for sf in self.surface: 
+            self.ElsetNames.append("Surface__"+sf[0])
+            item = QListWidgetItem("Surface__"+sf[0])
+            self.list_widget.addItem(item)
+        
+        # self.draw2Dmesh(self.meshfile)
+        # self.Label_fName.setText(self.meshfile)
+        MainWindow.setWindowTitle(self.meshfile)
+
+        self.checkBox_NdNo.setChecked(False)
+        self.checkBox_ElNo.setChecked(False)
+
+        ## reordering ... 
+        temp = []
+        for i, sf in enumerate(self.surface):
+            temp.append(sf)
+            if i == 0:
+                continue
+            else:
+                I = len(temp)
+                for j, tmp in enumerate(temp):
+                    if len(tmp) < len(sf):
+                        del(temp[I-1])
+                        temp.insert(j, sf)
+                        I = j 
+                        break
+        for i, sf in enumerate(temp):
+            self.surface[i] = sf
+        del(temp)
+
+        temp = []
+        for i, sf in enumerate(self.elset.Elset):
+            temp.append(sf)
+            if i == 0:
+                continue
+            else:
+                I = len(temp)
+                for j, tmp in enumerate(temp):
+                    if len(tmp) < len(sf):
+                        del(temp[I-1])
+                        temp.insert(j, sf)
+                        I = j 
+                        break
+        for i, sf in enumerate(temp):
+            self.elset.Elset[i] = sf
+        del(temp)
+
+            
     def call2Dmesh(self, manualfile='', pattern=False): 
         if self.view3D: self.changeToView2D()
         self.meshfile = manualfile 
@@ -5920,109 +6263,8 @@ class Ui_MainWindow(object):
             self.node, self.element, self.elset, self.surface, self.tie, self.xy, self.rims = Mesh2DInformation(self.meshfile, self.TireComponents)
             self.npn = np.array(self.node.Node)
             
-            # if len(self.npn[0]) > 4 : self.checkBox_Temperaure.setEnabled(True)
-            # else: self.checkBox_Temperaure.setEnabled(False)
-            # self.checkBox_EnergyLoss.setEnabled(False)
-            # self.checkBox_SED.setEnabled(False)
-            
             print ("**** Done reading mesh file")
-            # sys.exit()
-            self.list_widget.clear()
-
-
-            if len(self.element.Element) == 0 and len(self.node.Node): 
-                self.figure.gplot(self.node, self.element)
-                return 
-
-            if len(self.element.Element) ==0: 
-                with open(self.meshfile) as MF: 
-                    lines = MF.readlines()
-
-                print ("********************")
-                print (" Command line in file")
-                print ("********************")
-                for line in lines: 
-                    if "*" in line and not "**" in line: 
-                        print (line, end="")
-                        
-                print ("\n# Error! to read mesh file.")
-                return
-
-            # print ("DRAW NORMAL")
-        
-            self.ElsetNames=[]
-            # self.allelsets = Allelsets(self.meshfile)
-
-            self.allelsets  = self.elset.Elset
-            npel = []
-            for el in self.element.Element:
-                el[0] = int(el[0])
-                el[1] = int(el[1])
-                el[2] = int(el[2])
-                if el[3] =="": el[3] = 0 
-                if el[4] =="": el[4] = 0 
-                el[3] = int(el[3])
-                el[4] = int(el[4])
-                npel.append([el[0], el[1], el[2], el[3], el[4]])
-            self.npel = np.array(npel)
-
-            self.allelsets = sorted(self.allelsets, key=lambda name:name[0])
-            for en in self.allelsets:
-                if len(en) > 1: 
-                    self.ElsetNames.append(en[0])
-                    item = QListWidgetItem(en[0])
-                    self.list_widget.addItem(item)
-
-            self.surface = sorted(self.surface, key=lambda name:name[0] )
-            for sf in self.surface: 
-                self.ElsetNames.append("Surface__"+sf[0])
-                item = QListWidgetItem("Surface__"+sf[0])
-                self.list_widget.addItem(item)
-            
-            # self.draw2Dmesh(self.meshfile)
-            # self.Label_fName.setText(self.meshfile)
-            MainWindow.setWindowTitle(self.meshfile)
-
-            self.checkBox_NdNo.setChecked(False)
-            self.checkBox_ElNo.setChecked(False)
-
-
-            self.cwd=writeworkingdirectory(self.meshfile, dfile=self.dfile)
-
-            ## reordering ... 
-            temp = []
-            for i, sf in enumerate(self.surface):
-                temp.append(sf)
-                if i == 0:
-                    continue
-                else:
-                    I = len(temp)
-                    for j, tmp in enumerate(temp):
-                        if len(tmp) < len(sf):
-                            del(temp[I-1])
-                            temp.insert(j, sf)
-                            I = j 
-                            break
-            for i, sf in enumerate(temp):
-                self.surface[i] = sf
-            del(temp)
-
-            temp = []
-            for i, sf in enumerate(self.elset.Elset):
-                temp.append(sf)
-                if i == 0:
-                    continue
-                else:
-                    I = len(temp)
-                    for j, tmp in enumerate(temp):
-                        if len(tmp) < len(sf):
-                            del(temp[I-1])
-                            temp.insert(j, sf)
-                            I = j 
-                            break
-            for i, sf in enumerate(temp):
-                self.elset.Elset[i] = sf
-            del(temp)
+            self.loading2DLayout()
             
             self.figure.getplotinformation(self.node, self.element, self.elset, self.surface, self.tie,  xy=self.xy)
             self.draw2Dmesh(self.meshfile)
@@ -6597,7 +6839,6 @@ class Ui_MainWindow(object):
             print ("## Inappropriate values are input.")
         
     def AddComparingLayouts(self, comparingMesh=False): 
-        ## def LayoutToProfile(element, node, output='edge', color='darkgray', lw=0.5): 
 
         if not self.view3D: 
         
@@ -6651,6 +6892,7 @@ class Ui_MainWindow(object):
                 self.figure.Draw_profiles(self.Profiles, self.Bead_Min_R)
                 return 
             self.layoutcounting += 1
+            
             profile, mr= LayoutToProfile(self.com_element, self.com_node, output='line', color=color, lw=basic_line_width, counting=self.layoutcounting)
             if mr > 0: 
                 self.Bead_Min_R.append(mr)
@@ -7267,8 +7509,6 @@ class Ui_MainWindow(object):
         if '.sdb' in self.meshfile: 
             self.temperatures.append(pvMesh.temperature)
 
-        self.lineEdit_colorRange.setText("0.0")
-        self.lineEdit_colorRange1.setText("0.1")
         if '.sdb' in self.meshfile: 
             self.radioButton_SDB_sed.setEnabled(True)
             self.radioButton_SDB_eld.setEnabled(True)
@@ -7280,8 +7520,6 @@ class Ui_MainWindow(object):
             self.radioButton_SDB_eld.setEnabled(False)
             self.radioButton_Temperature.setEnabled(False)
             self.radioButton_cPres.setEnabled(True)
-            self.lineEdit_colorRange_value.setText("50000")
-            self.lineEdit_colorRange_value1.setText("500000")
         else: 
             self.radioButton_SDB_sed.setEnabled(False)
             self.radioButton_SDB_eld.setEnabled(False)
@@ -7312,6 +7550,10 @@ class Ui_MainWindow(object):
 
         print (" Scaling x=%.3E, y=%.3E, z=%.3E"%(self.xclippingScale, self.yclippingScale, self.zclippingScale))
         print (" min y=%.6f, max y=%.6f"%(ymn*self.yclippingScale, ymx*self.yclippingScale))
+        
+        if not self.checkBox_Fixing_colorRange.isChecked(): 
+            self.lineEdit_colorRange_value.setText("")
+            self.lineEdit_colorRange_value1.setText("")
 
     def changingCurrentColor(self): 
         
@@ -7358,6 +7600,7 @@ class Ui_MainWindow(object):
             flines = []
             if len(meshfiles) > 1: 
                 for meshfile in meshfiles: 
+                    print("Reading: %s"%(meshfile.split("/")[-1]))
                     with open(meshfile) as F: 
                         lines = F.readlines()
                     flines += lines 
@@ -7396,7 +7639,7 @@ class Ui_MainWindow(object):
             if len(meshfiles) > 1: self.checkBox_colorChanging.setChecked(True)
             self.changingCurrentColor()
 
-            if isfile(tempmeshfile+".inp"): remove(tempmeshfile+".inp")
+            # if isfile(tempmeshfile+".inp"): remove(tempmeshfile+".inp")
 
     def saveSFRICasSTL(self): 
         if '.sfric' in self.meshfile: 
@@ -7431,27 +7674,65 @@ class Ui_MainWindow(object):
     def showMesh(self):
         if not self.view3D or self.selectedPlot: return
         
-        try: 
-            
+        # try: 
+        if True : 
             self.clearPlotter()
             self.plotting()
-        except Exception as ex: 
-            etext = str(ex) + "\n\n" + "Error to plotting \n"
-            writingError(etext)
-            print(etext)
+        # except Exception as ex: 
+        #     etext = str(ex) + "\n\n" + "Error to plotting \n"
+        #     writingError(etext)
+        #     print(etext)
 
-    
+    def change_colorValue(self): 
+        if not self.view3D or self.selectedPlot : return
+        if self.vgap != 0  and ('.sdb' in self.meshfile or '.sfric' in self.meshfile or '-postfoot.dat' in self.meshfile): 
+            lpst = self.vmin + self.vgap * float(self.lineEdit_colorRange.text().strip())
+            hpst = self.vmin + self.vgap *  float(self.lineEdit_colorRange1.text().strip())
+            if lpst > hpst : 
+                print (" Check value ")
+                return 
+            self.lineEdit_colorRange_value.setText("%.1f"%(lpst))
+            self.lineEdit_colorRange_value1.setText("%.1f"%(hpst))
+
     def changeRatio(self): 
         if not self.view3D or self.selectedPlot : return
-        if '.sdb' in self.meshfile or '.sfric' in self.meshfile or '.dat' in self.meshfile:
-            if self.vgap != 0  : 
-                low = float(self.lineEdit_colorRange_value.text().strip())
-                lpst = (low-self.vmin) / self.vgap
-                self.lineEdit_colorRange.setText("%.6f"%(lpst))
+        # try: 
+        if self.vgap != 0  and ('.sdb' in self.meshfile or '.sfric' in self.meshfile or '-postfoot.dat' in self.meshfile): 
+            low = float(self.lineEdit_colorRange_value.text().strip())
+            lpst = (low-self.vmin) / self.vgap
+            high = float(self.lineEdit_colorRange_value1.text().strip())
+            hpst = (high-self.vmin) / self.vgap
 
-                high = float(self.lineEdit_colorRange_value1.text().strip())
-                hpst = (high-self.vmin) / self.vgap
-                self.lineEdit_colorRange1.setText("%.6f"%(hpst))
+            if lpst > hpst : 
+                print (" Check value ")
+                return 
+            self.lineEdit_colorRange.setText("%.6f"%(lpst))
+            self.lineEdit_colorRange1.setText("%.6f"%(hpst))
+        # except: 
+        #     pass 
+    def checkColorRange(self, item, file=False): 
+        if item: 
+            minV = self.lineEdit_colorRange_value.text()
+            maxV = self.lineEdit_colorRange_value1.text()
+            if file=='sfric': 
+                if minV =="": 
+                    self.lineEdit_colorRange_value.setText("50000")
+                if maxV =="": 
+                    self.lineEdit_colorRange_value1.setText("500000")
+                self.vmax = self.presses[-1][item].max(); self.vmin = self.presses[-1][item].min()
+
+            elif file == 'sdb': 
+                if minV =="": 
+                    self.lineEdit_colorRange_value.setText("0")
+                if maxV =="" and item == 'eld': 
+                    self.lineEdit_colorRange_value1.setText("10_000_000")
+                if maxV =="" and item == 'sed': 
+                    self.lineEdit_colorRange_value1.setText("10000")
+                
+                self.vmax = self.meshes[-1][item].max(); self.vmin = self.meshes[-1][item].min()
+            self.vgap = self.vmax - self.vmin 
+            self.changeRatio()
+
 
     def plotting(self, nodeplotRecursive=False): 
         if not self.view3D or not self.meshfile: return
@@ -7459,11 +7740,7 @@ class Ui_MainWindow(object):
         # print(" PLOTTING", self.opecity)
         # print(sys._getframe(1).f_code.co_name + "()", sys._getframe(2).f_code.co_name + "()", sys._getframe(3).f_code.co_name + "()")
         # print(" #######################")
-        self.valueStart = 0.0; self.valueEnd = 0.0; self.vgap = 0 
-
-        ilow  =  self.lineEdit_colorRange.text().strip()
-        ihigh =  self.lineEdit_colorRange1.text().strip()
-        psize = 5  
+         
 
         if self.defaultColor_Background: 
             self.plotter.set_background('gray', top='white')
@@ -7473,17 +7750,25 @@ class Ui_MainWindow(object):
         self.plotter.enable_parallel_projection()
         self.plotter.add_axes()
         
+        item = False 
 
         if '.sdb' in self.meshfile: 
             if self.radioButton_SDB_sed.isChecked(): item = 'sed'
             elif self.radioButton_SDB_eld.isChecked(): item = 'eld'
             elif self.radioButton_Temperature.isChecked(): item = 'temperature'
             else: item = False
+            self.checkColorRange(item, file='sdb')
 
         elif '.sfric' in self.meshfile or '.dat' in self.meshfile: 
             item = 'press'
+            self.checkColorRange(item, file='sfric')
         else: 
             item = False 
+
+
+        self.valueStart = 0.0; self.valueEnd = 0.0; self.vgap = 0 
+        ilow = self.lineEdit_colorRange.text(); ihigh = self.lineEdit_colorRange1.text()
+        psize = 5 
         
         if '.stl' in self.meshfile:
             mesh = self.meshes[-1]
@@ -7514,8 +7799,12 @@ class Ui_MainWindow(object):
                         vgap = vmax - vmin  
                         low = float(ilow); high = float(ihigh)
                         start = vmin + vgap * low; end = vmin + vgap * high
-                        self.lineEdit_colorRange_value.setText("%.1f"%(start))
-                        self.lineEdit_colorRange_value1.setText("%.1f"%(end))
+                        # if not self.checkBox_Fixing_colorRange.isChecked(): 
+                        #     self.lineEdit_colorRange_value.setText("%.1f"%(start))
+                        #     self.lineEdit_colorRange_value1.setText("%.1f"%(end))
+                        # else: 
+                        #     self.lineEdit_colorRange.setText("%.6f"%(low))
+                        #     self.lineEdit_colorRange1.setText("%.6f"%(high))
                         self.valueStart = start; self.valueEnd = end 
                         self.vmin = vmin; self.vmax = vmax; self.vgap= vgap 
                         # print ('Value Min %.3E, Max %.3E'%(self.vmin, self.vmax) )  ## this line 'print' made plotting slow 
@@ -7529,7 +7818,7 @@ class Ui_MainWindow(object):
                         self.plotter_slicing = self.plotter.add_mesh(sliced,color='red', opacity=1.0)
                     
                     if self.radioButton_cPres.isChecked():
-                        dargs = dict(scalars=item, cmap='rainbow', show_edges=self.show_meshLine, n_colors=150, clim=[start, end], below_color='white', edge_color=self.color_meshLine)
+                        dargs = dict(scalars=item, cmap='rainbow', show_edges=self.show_meshLine, n_colors=150, clim=[self.valueStart, self.valueEnd], below_color='white', edge_color=self.color_meshLine)
                         self.plotter_press = self.plotter.add_mesh(press, interpolate_before_map=True, opacity=1, 
                              scalar_bar_args={'title': ' %s  - interpolated'%(item)}, smooth_shading=True, **dargs)
                     self.plotter.enable_cell_picking(mesh=surface)
@@ -7541,8 +7830,12 @@ class Ui_MainWindow(object):
                         vgap = vmax - vmin  
                         low = float(ilow); high = float(ihigh)
                         start = vmin + vgap * low; end = vmin + vgap * high
-                        self.lineEdit_colorRange_value.setText("%.1f"%(start))
-                        self.lineEdit_colorRange_value1.setText("%.1f"%(end))
+                        # if not self.checkBox_Fixing_colorRange.isChecked(): 
+                        #     self.lineEdit_colorRange_value.setText("%.1f"%(start))
+                        #     self.lineEdit_colorRange_value1.setText("%.1f"%(end))
+                        # else: 
+                        #     self.lineEdit_colorRange.setText("%.6f"%(low))
+                        #     self.lineEdit_colorRange1.setText("%.6f"%(high))
                         self.valueStart = start; self.valueEnd = end 
                         self.vmin = vmin; self.vmax = vmax; self.vgap= vgap 
 
@@ -7558,7 +7851,7 @@ class Ui_MainWindow(object):
                         self.plotter_slicing = self.plotter.add_mesh(sliced,color='red', opacity=1.0)
 
                     if self.radioButton_cPres.isChecked():
-                        dargs = dict(scalars=item, cmap='rainbow', show_edges=self.show_meshLine, n_colors=150, clim=[start, end], below_color='white')
+                        dargs = dict(scalars=item, cmap='rainbow', show_edges=self.show_meshLine, n_colors=150, clim=[self.valueStart, self.valueEnd], below_color='white')
                         self.plotter_pres = self.plotter.add_mesh(clippedPress, interpolate_before_map=True, opacity=self.opecity, edge_color=self.color_meshLine, 
                             scalar_bar_args={'title': ' %s  - interpolated'%(item)}, **dargs)
                         self.lineEdit_view_upPosition.setText("0,0,1")
@@ -7575,15 +7868,19 @@ class Ui_MainWindow(object):
                         vgap = vmax - vmin 
                         low = float(ilow); high = float(ihigh) 
                         start = vmin + vgap * low; end = vmin + vgap * high
-                        self.lineEdit_colorRange_value.setText("%.1f"%(start))
-                        self.lineEdit_colorRange_value1.setText("%.1f"%(end))
+                        # if not self.checkBox_Fixing_colorRange.isChecked(): 
+                        #     self.lineEdit_colorRange_value.setText("%.1f"%(start))
+                        #     self.lineEdit_colorRange_value1.setText("%.1f"%(end))
+                        # else: 
+                        #     self.lineEdit_colorRange.setText("%.6f"%(low))
+                        #     self.lineEdit_colorRange1.setText("%.6f"%(high))
                         self.valueStart = start; self.valueEnd = end 
                         self.vmin = vmin; self.vmax = vmax; self.vgap= vgap 
                     
                     if self.show_edges: 
                         self.plotter_edges = self.plotter.add_mesh(edge, color=self.color_edge_line[self.click_show_edge%self.nColor_edge_line][0], line_width=self.color_edge_line[self.click_show_edge%self.nColor_edge_line][1])
                     if self.radioButton_SDB_sed.isChecked() or self.radioButton_SDB_eld.isChecked(): 
-                        dargs = dict(scalars=item, cmap='rainbow', show_edges=self.show_meshLine, n_colors=150, clim=[start, end], below_color='white', edge_color=self.color_meshLine)
+                        dargs = dict(scalars=item, cmap='rainbow', show_edges=self.show_meshLine, n_colors=150, clim=[self.valueStart, self.valueEnd], below_color='white', edge_color=self.color_meshLine)
                         self.plotter_qulity = self.plotter.add_mesh(mesh, interpolate_before_map=True, opacity=self.opecity, 
                              scalar_bar_args={'title': ' %s  - interpolated'%(item)}, **dargs)
                         if self.checkBox_Slicing.isChecked(): 
@@ -7595,7 +7892,7 @@ class Ui_MainWindow(object):
 
                         self.plotter.enable_cell_picking(mesh=mesh)
                     elif self.radioButton_Temperature.isChecked(): 
-                        dargs = dict(scalars=item, cmap='rainbow', show_edges=self.show_meshLine, n_colors=150, clim=[start, end], below_color='white', edge_color=self.color_meshLine)
+                        dargs = dict(scalars=item, cmap='rainbow', show_edges=self.show_meshLine, n_colors=150, clim=[self.valueStart, self.valueEnd], below_color='white', edge_color=self.color_meshLine)
                         self.plotter_qulity = self.plotter.add_mesh(mesh, interpolate_before_map=True, opacity=self.opecity, 
                              scalar_bar_args={'title': ' %s  - interpolated'%(item)}, **dargs)
 
@@ -7646,8 +7943,12 @@ class Ui_MainWindow(object):
                             vgap = vmax - vmin 
                             low = float(ilow); high = float(ihigh) 
                             start = vmin + vgap * low; end = vmin + vgap * high
-                            self.lineEdit_colorRange_value.setText("%.1f"%(start))
-                            self.lineEdit_colorRange_value1.setText("%.1f"%(end))
+                            # if not self.checkBox_Fixing_colorRange.isChecked(): 
+                            #     self.lineEdit_colorRange_value.setText("%.1f"%(start))
+                            #     self.lineEdit_colorRange_value1.setText("%.1f"%(end))
+                            # else: 
+                            #     self.lineEdit_colorRange.setText("%.6f"%(low))
+                            #     self.lineEdit_colorRange1.setText("%.6f"%(high))
                             self.valueStart = start; self.valueEnd = end 
                             self.vmin = vmin; self.vmax = vmax; self.vgap= vgap 
 
@@ -7657,7 +7958,7 @@ class Ui_MainWindow(object):
                         
                         if self.radioButton_SDB_sed.isChecked() or self.radioButton_SDB_eld.isChecked():  
                             clippedMesh = self.clipping(mesh)
-                            dargs = dict(scalars=item, cmap='rainbow', show_edges=self.show_meshLine, n_colors=150, clim=[start, end], below_color='white', edge_color=self.color_meshLine)
+                            dargs = dict(scalars=item, cmap='rainbow', show_edges=self.show_meshLine, n_colors=150, clim=[self.valueStart, self.valueEnd], below_color='white', edge_color=self.color_meshLine)
                             self.plotter_qulity = self.plotter.add_mesh(clippedMesh, interpolate_before_map=True, opacity=self.opecity, 
                                 scalar_bar_args={'title': ' %s  - interpolated'%(item)}, **dargs)
                             if self.checkBox_Slicing.isChecked(): 
@@ -7671,7 +7972,7 @@ class Ui_MainWindow(object):
                             self.plotter.enable_cell_picking(mesh=clippedMesh)
                         elif self.radioButton_Temperature.isChecked(): 
                             clippedMesh = self.clipping(mesh)
-                            dargs = dict(scalars=item, cmap='rainbow', show_edges=self.show_meshLine, n_colors=150, clim=[start, end], below_color='white', edge_color=self.color_meshLine)
+                            dargs = dict(scalars=item, cmap='rainbow', show_edges=self.show_meshLine, n_colors=150, clim=[self.valueStart, self.valueEnd], below_color='white', edge_color=self.color_meshLine)
                             self.plotter_qulity = self.plotter.add_mesh(clippedMesh, interpolate_before_map=True, opacity=self.opecity, 
                                 scalar_bar_args={'title': ' %s  - interpolated'%(item)}, **dargs)
                             if self.checkBox_Slicing.isChecked(): 
@@ -8483,7 +8784,7 @@ class myCanvas(FigureCanvas):
         self.figure.tight_layout()
         self.figure.canvas.draw()
         
-    def Draw_profiles(self, profiles, bdr): 
+    def Draw_profiles(self, profiles, bdr=[]): 
         
         for nch in self.nodechars: 
             nch.set_visible(False)

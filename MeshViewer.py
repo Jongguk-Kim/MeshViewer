@@ -2992,7 +2992,7 @@ class NODE:
     def NodeIDByCoordinate(self, PO, v, closest=0, **args):
     
         N = len(self.Node)
-        
+        ClosestNode=[]
         if closest != 0:
             min = 1000000000.0
             
@@ -4447,11 +4447,14 @@ def LayoutToProfile(element, node, output='edge', color='darkgray', lw=0.5, coun
 
         return polygons, mr 
 
-
-
-
 def parsingIDs(text): 
-    text = text.split(",")
+    comma = text.split(",")
+    text = []
+    for cm in comma: 
+        c = cm.split(" ") 
+        for i in c: 
+            if i != "": 
+                text.append(i) 
     
     ids =[]
     for txt in text:
@@ -4996,10 +4999,12 @@ class Ui_MainWindow(object):
         self.search_element.setObjectName("search_element")
         self.serach_node_id = QtWidgets.QLineEdit(self.groupBox_CUTELayout)
         self.serach_node_id.setGeometry(QtCore.QRect(130, 135, 195, 20))
+        self.serach_node_id.setText("")
         self.serach_node_id.setAlignment(QtCore.Qt.AlignCenter)
         self.serach_node_id.setObjectName("serach_node_id")
         self.search_el_id = QtWidgets.QLineEdit(self.groupBox_CUTELayout)
         self.search_el_id.setGeometry(QtCore.QRect(130, 160, 195, 20))
+        self.search_el_id.setText("")
         self.search_el_id.setAlignment(QtCore.Qt.AlignCenter)
         self.search_el_id.setObjectName("search_el_id")
         self.pushButton_search = QtWidgets.QPushButton(self.groupBox_CUTELayout)
@@ -5017,10 +5022,6 @@ class Ui_MainWindow(object):
         self.push_addingPoint = QtWidgets.QPushButton(self.groupBox_CUTELayout)
         self.push_addingPoint.setGeometry(QtCore.QRect(10, 190, 315, 23))
         self.push_addingPoint.setObjectName("push_addingPoint")
-        self.txt_coordinate_point = QtWidgets.QLineEdit(self.groupBox_CUTELayout)
-        self.txt_coordinate_point.setGeometry(QtCore.QRect(10, 215, 315, 20))
-        self.txt_coordinate_point.setAlignment(QtCore.Qt.AlignCenter)
-        self.txt_coordinate_point.setObjectName("txt_coordinate_point")
         self.cdepth_solid = QtWidgets.QLabel(self.groupBox_CUTELayout)
         self.cdepth_solid.setGeometry(QtCore.QRect(10, 275, 71, 20))
         self.cdepth_solid.setAlignment(QtCore.Qt.AlignCenter)
@@ -5040,6 +5041,10 @@ class Ui_MainWindow(object):
         self.cdepth_memb.setGeometry(QtCore.QRect(170, 275, 81, 16))
         self.cdepth_memb.setAlignment(QtCore.Qt.AlignCenter)
         self.cdepth_memb.setObjectName("cdepth_memb")
+        self.txt_coordinate_point = QtWidgets.QLineEdit(self.groupBox_CUTELayout)
+        self.txt_coordinate_point.setGeometry(QtCore.QRect(10, 220, 315, 20))
+        self.txt_coordinate_point.setAlignment(QtCore.Qt.AlignCenter)
+        self.txt_coordinate_point.setObjectName("txt_coordinate_point")
         self.verticalLayout.addWidget(self.groupBox_CUTELayout)
         self.horizontalLayout_elsetControl = QtWidgets.QHBoxLayout()
         self.horizontalLayout_elsetControl.setObjectName("horizontalLayout_elsetControl")
@@ -5199,18 +5204,16 @@ class Ui_MainWindow(object):
         self.checkBox_Road.setText(_translate("MainWindow", "Surface Road Contact"))
         self.search_node.setText(_translate("MainWindow", "Nodes"))
         self.search_element.setText(_translate("MainWindow", "Elements"))
-        self.serach_node_id.setText(_translate("MainWindow", "0"))
-        self.search_el_id.setText(_translate("MainWindow", "0"))
         self.pushButton_search.setText(_translate("MainWindow", "Show"))
         self.pushButton_dotsize.setText(_translate("MainWindow", "Dot Size"))
         self.lineEdit.setText(_translate("MainWindow", "0"))
         self.push_addingPoint.setText(_translate("MainWindow", "Add Point"))
-        self.txt_coordinate_point.setText(_translate("MainWindow", "[x, y]"))
         self.cdepth_solid.setText(_translate("MainWindow", "Solid"))
         self.pushButton_colordepth.setText(_translate("MainWindow", "Set Transparency (0~1)"))
         self.Cdepth_memb_val.setText(_translate("MainWindow", "0.8"))
         self.Cdepth_solid_val.setText(_translate("MainWindow", "0.5"))
         self.cdepth_memb.setText(_translate("MainWindow", "            Membrane            "))
+        self.txt_coordinate_point.setText(_translate("MainWindow", "[x, y]"))
         self.checkBox_ElsetNode.setText(_translate("MainWindow", "Node No"))
         self.checkBox_ElsetElement.setText(_translate("MainWindow", "ELement No"))
         self.pushButton_SurfaceSeq.setText(_translate("MainWindow", "Clear sets"))
@@ -5321,6 +5324,15 @@ class Ui_MainWindow(object):
 
         self.txt_coordinate_point.returnPressed.connect(self.addPoint)
         self.push_addingPoint.clicked.connect(self.addPoint)
+
+        self.serach_node_id.setPlaceholderText("1, 2 3, 4~6")
+        self.serach_node_id.setFocus()
+        self.search_el_id.setPlaceholderText("1, 2 3, 4~6")
+        self.search_el_id.setFocus()
+        self.lineEdit_colorRange.setPlaceholderText("C-Range: 0.0,1.0")
+        self.lineEdit_colorRange.setFocus()
+        self.lineEdit_colorRange.setText("0.01")
+        self.lineEdit_colorRange1.setText("0.1")
 
         ## sim code previous
         if isfile('simcode.dat'): 
@@ -5482,7 +5494,7 @@ class Ui_MainWindow(object):
         self.radioButton_SDB_sed.clicked.connect(self.showMesh)
         self.radioButton_SDB_eld.clicked.connect(self.showMesh)
         self.radioButton_Temperature.clicked.connect(self.showMesh)
-        self.radioButton_cPres.clicked.connect(self.showMesh)
+        self.radioButton_cPres.clicked.connect(self.showCPress)
         self.radioButton_sdbNone.clicked.connect(self.showMesh)
         self.lineEdit_slicingAngle.returnPressed.connect(self.slicing)
         self.checkBox_Slicing.clicked.connect(self.slicing)
@@ -5493,8 +5505,8 @@ class Ui_MainWindow(object):
         self.pushButton_View_yz.clicked.connect(self.viewyz)
         self.pushButton_View_yx.clicked.connect(self.viewyx)
 
-        self.lineEdit_showNodes.returnPressed.connect(self.showSearchedNodes)
-        self.lineEdit_showElements.returnPressed.connect(self.showSearchedElements)
+        # self.lineEdit_showNodes.returnPressed.connect(self.showSearchedNodes)
+        # self.lineEdit_showElements.returnPressed.connect(self.showSearchedElements)
 
         self.lineEdit_colorRange.returnPressed.connect(self.change_colorValue)
         self.lineEdit_colorRange1.returnPressed.connect(self.change_colorValue)
@@ -5511,6 +5523,7 @@ class Ui_MainWindow(object):
         self.checkBox_pyvistaLighting.clicked.connect(self.changeLighting)
         self.pushButton_showAllCells.clicked.connect(self.plotAll)
 
+        
 
         self.initialize() 
     def changeToView3D(self): 
@@ -5609,20 +5622,15 @@ class Ui_MainWindow(object):
         self.click_show_edge = 0 
         self.nColor_edge_line = len(self.color_edge_line)
 
-        self.lineEdit_showNodes.setPlaceholderText("node id")
-        self.lineEdit_showNodes.setFocus()
-        self.lineEdit_showElements.setPlaceholderText("element id")
-        self.lineEdit_showElements.setFocus()
-        self.lineEdit_colorRange.setPlaceholderText("C-Range: 0.0,1.0")
-        self.lineEdit_colorRange.setFocus()
-        self.lineEdit_colorRange.setText("0.01")
-        self.lineEdit_colorRange1.setText("0.1")
+        
         self.searched_points=[]; self.searchedNodes=[]; self.searchedElements=[]; self.searchedCells=[]
         self.radioButton_sdbNone.setChecked(True)
         self.radioButton_Temperature.setEnabled(False)
 
         self.groupBox_3dMeshControl.setMinimumSize(QtCore.QSize(900, 15))
         self.groupBox_3dMeshControl.setMaximumSize(QtCore.QSize(16777215, 15))
+
+        self.push_LocalMesh.setFocus()
 
     def redirect(self): 
         self._stdout = StdoutRedirect()
@@ -6153,6 +6161,7 @@ class Ui_MainWindow(object):
             self.Cdepth_memb_val.setText('0.8')
             self.Cdepth_solid_val.setText("0.5")
             self.call2Dmesh(manualfile=self.meshfile)
+            self.cwd = writeworkingdirectory(self.meshfile, dfile=self.dfile)
 
     def loading2DLayout(self): 
 
@@ -6265,6 +6274,7 @@ class Ui_MainWindow(object):
             
             print ("**** Done reading mesh file")
             self.loading2DLayout()
+            
             
             self.figure.getplotinformation(self.node, self.element, self.elset, self.surface, self.tie,  xy=self.xy)
             self.draw2Dmesh(self.meshfile)
@@ -6860,6 +6870,7 @@ class Ui_MainWindow(object):
 
             if self.comparingmesh: 
                 self.putAnotherLayout(self.comparingmesh)
+                self.cwd = writeworkingdirectory(self.comparingmesh, dfile=self.dfile)
             else: 
                 self.figure.Draw_profiles(self.Profiles, self.Bead_Min_R)
         else: 
@@ -7075,7 +7086,9 @@ class Ui_MainWindow(object):
         self.ConvertToProfile(saving=True)
 
     def addSearchObjects(self):
-        if self.view3D: return 
+        if self.view3D: 
+            self.showSearched3D()
+            return 
         self.searchnode = []
         self.searchelement = []
         maxnid = 0
@@ -7087,86 +7100,11 @@ class Ui_MainWindow(object):
             if maxeid < n[0]: 
                 maxeid = n[0]
         text = self.serach_node_id.text()
-        if "~" in text or "," in text:
-            numbers = text.split(",")
-            for nm in numbers:
-                nn = nm.split("~")
-                if len(nn) == 2:
-                    nstart = 0; nend = 0
-                    try:               nstart = int(nn[0].strip())
-                    except:            nstart = 0
-                    try:               nend = int(nn[1].strip())
-                    except:            nend = 0
-                    
-                    if nstart > 0 and nend > 0 : 
-                        for k in range(nstart, nend+1) : 
-                            self.searchnode.append(k)
-                    elif nstart > 0: 
-                        for k in range(nstart, maxnid+1) : 
-                            self.searchnode.append(k)
-                    elif nend > 0: 
-                        for k in range(1, nend+1) : 
-                            self.searchnode.append(k)
-                elif len(nn) == 1:
-                    nstart = 0
-                    try:         nstart = int(nn[0].strip())
-                    except:      nstart = 0
-                    if nstart > 0 : self.searchnode.append(nstart)
-                elif len(nn) == 1:
-                    nstart = 0
-                    try:        nstart = int(nn[0].strip())
-                    except:     nstart = 0
-                    if nstart > 0 : self.searchnode.append(nstart)
-        else:
-            numbers = text.split(" ")
-            if len(numbers): 
-                for num in numbers: 
-                    try: 
-                        self.searchnode.append(int(num))
-                    except: 
-                        continue 
+        self.searchnode = parsingIDs(text)
 
         text = self.search_el_id.text()
-        if "~" in text or "," in text:
-            numbers = text.split(",")
-            for nm in numbers:
-                nn = nm.split("~")
-                if len(nn) == 2:
-                    nstart = 0; nend = 0
-                    try:        nstart = int(nn[0].strip())
-                    except:     nstart = 0
-                    try:        nend = int(nn[1].strip())
-                    except:     nend = 0
-                    
-                    if nstart > 0 and nend > 0 : 
-                        for k in range(nstart, nend+1) : 
-                            self.searchelement.append(k)
-                    elif nstart > 0: 
-                        for k in range(nstart, maxeid+1) : 
-                            self.searchelement.append(k)
-                    elif nend > 0: 
-                        for k in range(1, nend+1) : 
-                            self.searchelement.append(k)
-                elif len(nn) == 1:
-                    nstart = 0
-                    try:       nstart = int(nn[0].strip())
-                    except:    nstart = 0
-                    if nstart > 0 : self.searchelement.append(nstart)
-        else:
-            numbers = text.split(" ")
-            if len(numbers): 
-                for num in numbers: 
-                    try: 
-                        self.searchelement.append(int(num))
-                    except: 
-                        continue 
+        self.searchelement = parsingIDs(text) 
 
-        # self.searchnode = int(self.serach_node_id.text())
-        # self.searchelement = int(self.search_el_id.text())
-        # print (self.searchnode)
-        # print ("#####################")
-        # print (self.searchelement)
-        # self.draw2Dmesh(self.meshfile)
         self.figure.SearchShow(sel=self.searchelement, snode=self.searchnode, node=self.node, element=self.element )
 
     
@@ -7411,6 +7349,10 @@ class Ui_MainWindow(object):
             self.checkBox_pyvistaLighting.setChecked(False)
         self.get_camera_position() 
         self.showMesh()
+
+        if len(self.searchedNodes) or len(self.searchedElements): 
+            self.showSearched3D(changeOpecity=False, skipShow=True)
+              # showSearched3D(self, changeOpecity=True, skipShow=False)
 
     def get_OpecityValue(self):  ## text input 
         if not self.view3D: return 
@@ -7665,6 +7607,11 @@ class Ui_MainWindow(object):
 
                 fp.close()
 
+    def showCPress(self): 
+        self.plotter.set_viewup([-1, 0, 0])
+        self.plotter.camera_position = 'yx'
+        self.showMesh()
+        
     def clearPlotter(self):
 
         self.clearFrame()
@@ -7740,7 +7687,6 @@ class Ui_MainWindow(object):
         # print(" PLOTTING", self.opecity)
         # print(sys._getframe(1).f_code.co_name + "()", sys._getframe(2).f_code.co_name + "()", sys._getframe(3).f_code.co_name + "()")
         # print(" #######################")
-         
 
         if self.defaultColor_Background: 
             self.plotter.set_background('gray', top='white')
@@ -8129,8 +8075,6 @@ class Ui_MainWindow(object):
         else: 
             self.get_camera_position()
 
-        if len(self.searchedElements): self.showMesh_addingSearchedElements(changeOpecity=False)
-        if nodeplotRecursive: self.showMesh_addingSearchedNodes()
         self.plotter.show()
 
     def clipping(self, clipped): 
@@ -8215,19 +8159,51 @@ class Ui_MainWindow(object):
             print(EX)
             self.plotting()
 
+    def showSearched3D(self, changeOpecity=True, skipShow=False): 
+        if len(self.searchedNodes) or len(self.searchedElements): 
+            changeOpecity = False 
+        text = self.serach_node_id.text()
+        self.searchedNodes = parsingIDs(text)
+
+        text = self.search_el_id.text()
+        self.searchedElements = parsingIDs(text)
+
+        for pts in self.searched_points: 
+            self.plotter.remove_actor(pts)
+        for sCells in self.searchedCells: 
+            self.plotter.remove_actor(sCells)
+        self.searched_points=[]
+        self.searchedCells =[]
+
+        if not skipShow: self.showMesh()
+
+        if changeOpecity: 
+            self.horizontalSlider_opacity.setSliderPosition(30)
+            self.opecity = self.horizontalSlider_opacity.value() / 100.0
+            self.lineEdit_opecity.setText(str(int(self.opecity*100)))
+
+        if len(self.searchedNodes): 
+            self.searched_pointcloud = Mesh.generatePointCloud(self.searchedNodes, self.nodes)
+            if self.searched_pointcloud.n_cells > 0: 
+                self.searched_points.append(self.plotter.add_point_labels(self.searched_pointcloud, 'label', point_size=10, font_size=10,  shape_color='gray', point_color='maroon') )  # , color='maroon', render_points_as_spheres=True)
+        
+        if len(self.searchedElements): 
+            for idx, elements, nodes in zip(self.idx_element, self.elements, self.nodes): 
+                if elements[0][0] == 4: 
+                    searched_cells, edges = Mesh.generateMesh_searched(self.searchedElements,idx, elements, nodes, ctype=5)
+                else: 
+                    searched_cells, edges = Mesh.generateMesh_searched(self.searchedElements,idx, elements, nodes)
+                if not isinstance(searched_cells, type(None)): 
+                    self.searchedCells.append(self.plotter.add_mesh(searched_cells, color='coral', line_width=2, opacity=0.5, edge_color='black', show_edges=True) )
+                    # self.searchedCells.append(self.plotter.add_mesh(edges, color=block,\
+                    #         line_width=1))
+
+
     def showSearchedNodes(self): 
-        if not self.view3D: return
-        self.searchedNodes=[]
-        text = self.lineEdit_showNodes.text()
-        self.searchedNodes = parsingIDs(text) 
-        self.showMesh_addingSearchedNodes()
+        self.addSearchObjects()
 
     def showSearchedElements(self): 
-        if not self.view3D: return
-        self.searchedElements=[]
-        text = self.lineEdit_showElements.text()
-        self.searchedElements = parsingIDs(text)
-        self.showMesh_addingSearchedElements()
+        self.addSearchObjects()
 
     def show_selectedElset3D(self, item): 
         self.searchedElements=[]
@@ -8236,22 +8212,22 @@ class Ui_MainWindow(object):
             if eset[0] == item: 
                 self.searchedElements = eset[1:] 
                 # print(self.searchedElements)
-                self.showMesh_addingSearchedElements()
+                self.showMesh_selectedElements()
                 break 
-    def showMesh_addingSearchedNodes(self): 
-        if not self.view3D: return
-        for pts in self.searched_points: 
-            self.plotter.remove_actor(pts)
+    # def showMesh_addingSearchedNodes(self): 
+    #     if not self.view3D: return
+    #     for pts in self.searched_points: 
+    #         self.plotter.remove_actor(pts)
 
-        self.searched_points=[]
-        self.searched_pointcloud = Mesh.generatePointCloud(self.searchedNodes, self.nodes)
-        # print(self.searched_pointcloud.n_cells)
-        if self.searched_pointcloud.n_cells > 0: 
-            self.searched_points.append(self.plotter.add_point_labels(self.searched_pointcloud, 'label', point_size=10, font_size=10,  shape_color='gray', point_color='maroon') )  # , color='maroon', render_points_as_spheres=True)
-        else: 
-            self.get_OpecityValue()
+    #     self.searched_points=[]
+    #     self.searched_pointcloud = Mesh.generatePointCloud(self.searchedNodes, self.nodes)
+    #     # print(self.searched_pointcloud.n_cells)
+    #     if self.searched_pointcloud.n_cells > 0: 
+    #         self.searched_points.append(self.plotter.add_point_labels(self.searched_pointcloud, 'label', point_size=10, font_size=10,  shape_color='gray', point_color='maroon') )  # , color='maroon', render_points_as_spheres=True)
+    #     else: 
+    #         self.get_OpecityValue()
 
-    def showMesh_addingSearchedElements(self, changeOpecity=True): 
+    def showMesh_selectedElements(self, changeOpecity=True): 
         if not self.view3D : return 
         if not  len(self.searchedElements): 
             self.showMesh()
@@ -9982,9 +9958,5 @@ if __name__ == "__main__":
     sys.exit(app.exec_())
 
 
-
- ########################################
- ## Basic Functions 
- ########################################
 
 

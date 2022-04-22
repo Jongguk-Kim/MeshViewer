@@ -70,6 +70,12 @@ def read_SMART_postFootshape(fname):
                 el.append([4, int(wds[1].strip()), int(wds[2].strip()), int(wds[3].strip()), int(wds[4].strip())])
                 index_elements.append([int(wds[0].strip()), len(el)]) 
 
+    nodes = np.array(nodes) 
+    pmax = np.max(nodes[:,4])
+    height = 0.03
+    nmin = np.min(nodes[:,3]) 
+    nodes[:,3] = nmin - height / pmax * nodes[:,4]
+
     return nodes, el, index_elements, mtype
 
 
@@ -224,7 +230,8 @@ def readMesh_pyVista(fname,  files=None, centering=False, sdb=False, inplines=Fa
                 nodes, s8, idx_element, meshtype, elsets = readInp(fname)
             else: 
                 nodes, s8, idx_element, meshtype, elsets = readInp(fname, inplines=inplines)
-        nodes = np.array(nodes)
+                
+            nodes = np.array(nodes)
         s8 = np.array(s8)
         # print(" FILE READING", fname)
         if not isinstance(files, type(None)): 
@@ -297,7 +304,7 @@ def makePyvisterCells(cells, nodes, meshtype):
 def load_pyVista_mesh(file_name, centering=False, inplines=False): 
     elsets=[]
     if ".sfric" in file_name: 
-        nodes, cells, idx_element, elements, meshtype, pnodes, pcells, class_sfric = readSfric_pyVista(file_name)
+        nodes, cells, idx_element, elements, meshtype, pnodes, pcells, class_sfric, pressNode = readSfric_pyVista(file_name)
     elif '.sdb' in file_name: 
         nodes, cells, idx_element, elements, meshtype, eld, sed, temperature = readMesh_pyVista(file_name, sdb=True)
     elif '.dat' in file_name: 
@@ -307,18 +314,17 @@ def load_pyVista_mesh(file_name, centering=False, inplines=False):
         nodes, cells, idx_element, elements, meshtype, elsets = readMesh_pyVista(file_name, centering=centering, inplines=inplines)
     
     grid, xyz = makePyvisterCells(cells, nodes, meshtype)
-
     pt_cloud = pv.PolyData(xyz)
     if meshtype ==9 : 
+        print(" Edges, surfaces are creating")
         edges = grid.extract_feature_edges(feature_angle=45, boundary_edges=False)
         surfaces = grid.extract_surface()
-        print(" edges, surfaces are created")
         # print(" Mesh Volume", grid.volume)
     elif meshtype ==5: 
         edges = grid.extract_all_edges()
         surfaces = grid.extract_surface()
         if ".sfric" in file_name: 
-            pgrid, pxyz = makePyvisterCells(pcells, nodes, meshtype)
+            pgrid, pxyz = makePyvisterCells(pcells, pressNode, meshtype)
             pn_cloud = pv.PolyData(pnodes[:, 1:4])
             pn_cloud["press"] = pnodes[:, 4]
             psurf = pgrid.extract_surface()
@@ -399,7 +405,8 @@ def generateMesh_searched(ids, indexes, elements, nodes, ctype=9):
                     continue 
     if cnt > 0: 
         grid, _ = makePyvisterCells(np.array(cells).ravel(), nodes, ctype)
-        return  grid 
+        edges = grid.extract_all_edges()
+        return  grid, edges 
     else: 
         return None 
 
@@ -445,8 +452,16 @@ def readSfric_pyVista(file_name):
     #     p_npn[int(n[0])][2]=n[2]
     #     p_npn[int(n[0])][3]=n[3]
 
+    pnodes = np.array(npn) 
+    height = 0.03
+    nmin = np.min(pnodes[:,3])
+    pmax = np.max(smart.pNode.Node[:,4]) 
+    for i, p in enumerate(smart.pNode.Node): 
+        pnodes[int(p[0])][3] = nmin - height / pmax * p[4]
+        smart.pNode.Node[i][3] = pnodes[int(p[0])][3]
 
-    return npn, np.array(cells).ravel(), index_elements, cells, meshtype, smart.pNode.Node, p_cells, smart
+
+    return npn, np.array(cells).ravel(), index_elements, cells, meshtype, smart.pNode.Node, p_cells, smart, pnodes
 
 
 

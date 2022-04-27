@@ -405,10 +405,11 @@ def generateMesh_searched(ids, indexes, elements, nodes, ctype=9):
                     continue 
     if cnt > 0: 
         grid, _ = makePyvisterCells(np.array(cells).ravel(), nodes, ctype)
-        edges = grid.extract_all_edges()
-        return  grid, edges 
+        edges = grid.extract_feature_edges(feature_angle=45, boundary_edges=False)
+        surfaces = grid.extract_surface()
+        return  grid, edges, surfaces
     else: 
-        return None 
+        return None, None, None
 
 def readSfric_pyVista(file_name): 
 

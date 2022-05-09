@@ -16,6 +16,225 @@ def reading_stl(fname):
     mesh = reader.read()
     return mesh 
 
+class pyTire_Mesh: 
+    def __init__(self): 
+        pass 
+
+    def centering(self): 
+        mid1 = np.average(self.nodes[:,1]) 
+        mid3 = np.average(self.nodes[:,3])
+        if mid1 > mid3: 
+            self.nodes[:,1] -= mid1 
+        else: 
+            self.nodes[:,3] -= mid3
+
+    def makePyVistaGrid(self): 
+        self.nodes = self.convertIndexNodes(self.nodes)
+        self.cells = self.elements.ravel()
+        self.grid, self.xyz = makePyvisterCells(self.cells, self.nodes, self.meshtype)
+        self.pt_cloud = pv.PolyData(self.xyz)
+
+    def makePyVistaSurface(self): 
+        self.surfaces = self.grid.extract_surface()
+
+    def makePyVistaEdge(self,angle=45): 
+        self.edges = self.grid.extract_feature_edges(feature_angle=angle, boundary_edges=False)
+
+    def convertIndexNodes(self, nodes, value=False): 
+        idmax = int(np.max(nodes[:,0]))
+        if value: 
+            npn = np.zeros(shape=(idmax+1, 5))
+            for n in nodes: 
+                npn[int(n[0])][0]=n[0]
+                npn[int(n[0])][1]=n[1]
+                npn[int(n[0])][2]=n[2]
+                npn[int(n[0])][3]=n[3]
+                npn[int(n[0])][4]=n[value]
+        else: 
+            npn = np.zeros(shape=(idmax+1, 4))
+            for n in nodes: 
+                npn[int(n[0])][0]=n[0]
+                npn[int(n[0])][1]=n[1]
+                npn[int(n[0])][2]=n[2]
+                npn[int(n[0])][3]=n[3]
+        return npn 
+
+
+    def readMesh(self, meshfile): 
+        
+        if isinstance(meshfile, str): 
+            self.meshfile = meshfile 
+            nodes, elements, index, self.meshtype, self.elsets = readInp(meshfile)
+
+        elif isinstance(meshfile, list):
+            nodes=[]; elements=[]; index=[]; self.meshtype=0; self.elsets=[]
+            for fname in meshfile: 
+                node, element, ind, self.meshtype, elsets = readInp(fname)
+                nodes += node 
+                elements += element 
+                index += ind 
+                self.elsets += elsets 
+        else: 
+            return 
+
+        self.nodes = np.array(nodes)
+        self.elements = np.array(elements)
+        self.index = np.array(index)
+        
+    def pyVistaMeshIndexing(self, meshtype=0): 
+        idx = range(len(self.elements))
+        self.index = list(zip(self.elements[:,0], idx))
+        self.elements[:,0] = meshtype - 1
+
+
+class pyMesh_sfric(pyTire_Mesh): 
+    def __init__(self):
+        super().__init__() 
+    
+    def readsfric(self, fname) :
+        self.meshfile = fname
+        self.sfric = Smart.SFRIC()
+        Smart.ResultSfric(fname[:-3], fname, self.sfric, deformed=1)
+        self.meshtype = 5 
+        self.nodes = np.array(self.sfric.Node.Node[:, :4]) 
+        self.elements = np.array(self.sfric.Surface.Surface) 
+        self.pyVistaMeshIndexing(meshtype = self.meshtype)
+        self.makePyVistaGrid()
+        self.makePressureCells()
+        self.makePressureSurface()
+
+    def makePressureSurface(self): 
+        self.press = None 
+        self.press_grid, self.press_xyz = makePyvisterCells(self.press_cells, self.press3Dnodes, self.meshtype)
+        self.press_ptcloud = pv.PolyData(self.press_nodes[:, 1:4])
+        self.press_ptcloud["press"] = self.press_nodes[:, 4]
+        self.press_surface = self.press_grid.extract_surface()
+        self.press = self.press_surface.interpolate(self.press_ptcloud, radius=0.001)
+        print(" Interpolating Contact Pressure")
+    def makePressureCells(self): 
+        pnodes=[]
+        for sf in self.sfric.pSurface.Surface: 
+            pnodes.append(sf[5][0])
+            pnodes.append(sf[5][1])
+            pnodes.append(sf[5][2])
+            if sf[5][3][0] > 0:
+                pnodes.append(sf[5][3])
+        i =0 
+        while i < len(pnodes): 
+            j = i+1 
+            while j < len(pnodes): 
+                if pnodes[i][0] == pnodes[j][0]: 
+                    del(pnodes[j])
+                    continue 
+                j += 1 
+            i += 1 
+        pnodes = np.array(pnodes)
+        self.pHeight = 0.03 
+        nmin = np.min(pnodes[:,3])
+        pmax = np.max(pnodes[:,4])
+        for i, pn in enumerate(pnodes): 
+            pnodes[i][3] = nmin -  self.pHeight / pmax * pn[4]
+        
+        self.press_cells =[]
+        self.press_index=[]
+        for i, sf in enumerate(self.sfric.pSurface.Surface): 
+            self.press_cells.append([4, sf[1], sf[2], sf[3], sf[4]])
+            self.press_index.append([sf[0], i])
+
+        self.press_nodes = np.array(pnodes) # self.convertIndexNodes(pnodes, value=4)
+        self.press_cells = np.array(self.press_cells)
+        self.press_index = np.array(self.press_index) 
+        self.press3Dnodes = np.array(self.nodes)
+        for pn in pnodes: 
+            self.press3Dnodes[int(pn[0])][1]= pn[1]
+            self.press3Dnodes[int(pn[0])][2]= pn[2]
+            self.press3Dnodes[int(pn[0])][3]= pn[3]
+
+class pyMesh_sdb(pyTire_Mesh): 
+    def __init__(self):
+        super().__init__() 
+
+    def readsdb(self, fname) :
+        self.meshfile = fname
+        self.nodes, self.membrane, self.elements, self.eld, self.sed = Smart.getSDBModel(fname)
+        self.meshtype = 9 
+        self.pyVistaMeshIndexing(meshtype = self.meshtype)
+        self.genTemperature()
+        self.makePyVistaGrid()
+        self.addValues()
+        self.makePyVistaSurface()
+        self.makePyVistaEdge()
+
+    def genTemperature(self): 
+        idmax = int(np.max(self.nodes[:,0]))
+        npn = np.zeros(shape=(idmax+1, 4))
+        self.Temperature = np.zeros(shape=(idmax+1, 1))
+        for n in self.nodes: 
+            npn[int(n[0])][0]=n[0]
+            npn[int(n[0])][1]=n[1]
+            npn[int(n[0])][2]=n[2]
+            npn[int(n[0])][3]=n[3]
+            self.Temperature[int(n[0])][0] =n[4]
+        self.nodes = npn 
+
+    def addValues(self): 
+        self.grid["sed"] = self.sed[:,1]
+        self.grid["eld"] = self.eld[:,1]
+
+        ts =[]
+        for e in self.elements: 
+            if e[7] == e[8]: 
+                t = (self.Temperature[e[1]]+self.Temperature[e[2]]+self.Temperature[e[3]]+
+                     self.Temperature[e[5]]+self.Temperature[e[6]]+self.Temperature[e[7]]) / 6.0 
+            else: 
+                t = (self.Temperature[e[1]]+self.Temperature[e[2]]+self.Temperature[e[3]]+self.Temperature[e[4]]+
+                     self.Temperature[e[5]]+self.Temperature[e[6]]+self.Temperature[e[7]]+self.Temperature[e[8]]) / 8.0 
+            ts.append(t)
+        self.grid["temperature"] = np.array(ts)
+
+class pyMesh_stl(pyTire_Mesh): 
+    def __init__(self):
+        super().__init__()
+    
+    def readstl(self, fname): 
+        self.meshfile=fname 
+        self.grid = reading_stl(fname) 
+
+class pyMesh_layout(pyTire_Mesh): 
+    def __init__(self):
+        super().__init__() 
+
+    def readLayoutMesh(self, fname): 
+        self.meshfile = fname 
+        self.nodes, self.elements, self.index, self.meshtype, self.elsets = readInp(fname)
+
+        self.grid, self.xyz = makePyvisterCells(self.elements, self.nodes, self.meshtype)
+        self.pt_cloud = pv.PolyData(self.xyz)
+        self.edges = self.grid.extract_all_edges()
+        self.surfaces = None 
+
+class pyMesh_footprint(pyTire_Mesh): 
+    def __init__(self):
+        super().__init__() 
+    
+    def readpostFootprint(self, fname): 
+        self.meshfile = fname 
+        nodes, elements, self.index, self.meshtype = read_SMART_postFootshape(fname, height=0.03)
+        self.elements = np.array(elements)
+        self.nodes = self.convertIndexNodes(nodes)
+
+        self.press = None 
+        self.press_grid, self.press_xyz = makePyvisterCells(self.elements, self.nodes, self.meshtype)
+        self.press_ptcloud = pv.PolyData(self.nodes[:, 1:4])
+        self.press_ptcloud["press"] = self.nodes[:, 4]
+        self.press_surface = self.press_grid.extract_surface()
+        self.press = self.press_surface.interpolate(self.press_ptcloud, radius=0.001)
+
+        self.grid=self.press_grid
+        self.xyz=self.press_xyz 
+        self.pt_cloud = self.press_ptcloud
+
+
 class MESH(): 
     def __init__(self, meshfile, centering=False, inplines=False) : 
         self.meshfile = meshfile 
@@ -45,7 +264,7 @@ class MESH():
             self.grid, self.edges, self.pt_cloud, self.surfaces, self.nodes, self.idx_element, self.cells, self.elsets  = \
                     load_pyVista_mesh(meshfile, centering=centering, inplines=inplines)
 
-def read_SMART_postFootshape(fname): 
+def read_SMART_postFootshape(fname, height = 0.03): 
     with open(fname) as F: 
         lines = F.readlines()
     
@@ -72,7 +291,6 @@ def read_SMART_postFootshape(fname):
 
     nodes = np.array(nodes) 
     pmax = np.max(nodes[:,4])
-    height = 0.03
     nmin = np.min(nodes[:,3]) 
     nodes[:,3] = nmin - height / pmax * nodes[:,4]
 
@@ -168,12 +386,12 @@ def parsingInp(lines, offset=0, first=True):
                     if wd.strip() !='': 
                         elsets[-1].append(int(wd.strip()) + partOffset)
                 # print(elsets[-1])
-            # if cmd == 'esetgen': 
-            #     st = int(wds[0].strip())
-            #     ed = int(wds[1].strip())
-            #     sp = int(wds[2].strip())
-            #     for e in range(st, ed+sp, sp): 
-            #         elsets[-1].append(e + + partOffset) 
+            if cmd == 'esetgen': 
+                st = int(wds[0].strip())
+                ed = int(wds[1].strip())
+                sp = int(wds[2].strip())
+                for e in range(st, ed+sp, sp): 
+                    elsets[-1].append(e + partOffset) 
     
     return nodes, s8, index_elements, mtype, isPart, elsets
 
@@ -204,7 +422,6 @@ def readInp(fname, inplines=False):
         # print("**********************")
 
     return nodes, s8, index_elements, mtype, elsets
-    
     
 
 def readMesh_pyVista(fname,  files=None, centering=False, sdb=False, inplines=False): 
@@ -510,6 +727,33 @@ def main():
     self.frame =QtWidgets.QFrame() 
     
 
-
 if __name__ == "__main__": 
-    main()
+    # main()
+    fname = 'AH32.ptn' 
+    
+    sfric = False 
+    if sfric: 
+        fname = "D:\\01_ISLM_Scripts\\10_StandardMesh\\RND-3003473VT00036-0-D101-0001.sfric008"
+
+        sf = pyMesh_sfric()
+        sf.readsfric(fname) 
+        pl = pv.Plotter()
+        actor1 = pl.add_mesh(sf.grid,  color='tan', label='trd', opacity=1.0, show_edges=True, line_width=0.1) 
+        item = 'press'
+        vmax = sf.press[item].max()*0.8; vmin = sf.press[item].min()*0.2
+        vmax = 10**6; vmin=10**5
+        dargs = dict(scalars=item, cmap='rainbow', show_edges=True, n_colors=150, clim=[vmin, vmax], below_color='white', edge_color='gray')
+        plotter_press = pl.add_mesh(sf.press, interpolate_before_map=True, opacity=1, 
+                scalar_bar_args={'title': ' %s  - interpolated'%(item)}, smooth_shading=True, **dargs)
+
+        pl.show()
+
+    sdb = True 
+    if sdb: 
+        fname = "D:\\01_ISLM_Scripts\\temporary\\ZCA000_ZSA_L040_V020_1028068VT00029-0.sdb060"
+
+        sdb = pyMesh_sdb()
+        sdb.readsdb(fname) 
+        pl = pv.Plotter()
+        ac = pl.add_mesh(sdb.grid)
+        pl.show()

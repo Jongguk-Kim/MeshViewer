@@ -5630,6 +5630,7 @@ class Ui_MainWindow(object):
             if len(self.colors) > 1: self.colors[1] = self.comboBox.currentText()
         self.selectedPlot = False 
         self.sectorView= False 
+        self.define_clippingRange(self.nodes)
         self.showMesh()
     def initialize(self): 
         icon = QtGui.QIcon()
@@ -7573,8 +7574,16 @@ class Ui_MainWindow(object):
             self.radioButton_cPres.setEnabled(False)
         self.radioButton_sdbNone.setChecked(True)
 
+        self.define_clippingRange(self.nodes)
+
+         
+        if not self.checkBox_Fixing_colorRange.isChecked(): 
+            self.lineEdit_colorRange_value.setText("")
+            self.lineEdit_colorRange_value1.setText("")
+
+    def define_clippingRange(self, self_nodes): 
         xmn = 10**7; xmx=-10**7; ymn = 10**7; ymx=-10**7; zmn = 10**7; zmx=-10**7
-        for nodes in self.nodes: 
+        for nodes in self_nodes: 
             mn = np.min(nodes[:,1]); mx = np.max(nodes[:,1])
             if xmn > mn: xmn = mn 
             if xmx < mx: xmx = mx 
@@ -7593,13 +7602,9 @@ class Ui_MainWindow(object):
         self.xmx = xmx; self.xmn = xmn 
         self.ymx = ymx; self.ymn = ymn 
         self.zmx = zmx; self.zmn = zmn 
-
         print (" Scaling x=%.3E, y=%.3E, z=%.3E"%(self.xclippingScale, self.yclippingScale, self.zclippingScale))
         print (" min y=%.6f, max y=%.6f"%(ymn*self.yclippingScale, ymx*self.yclippingScale))
-        
-        if not self.checkBox_Fixing_colorRange.isChecked(): 
-            self.lineEdit_colorRange_value.setText("")
-            self.lineEdit_colorRange_value1.setText("")
+       
 
     def changingCurrentColor(self): 
         
@@ -7647,6 +7652,12 @@ class Ui_MainWindow(object):
             if len(meshfiles) > 1: 
                 for meshfile in meshfiles: 
                     print("Reading: %s"%(meshfile.split("/")[-1]))
+
+                    if meshfile[-4:].lower() == '.trd' or meshfile[-4:].lower() == '.axi': 
+                        tire3dmesh = True 
+                    else: 
+                        tire3dmesh = False 
+                        
                     with open(meshfile) as F: 
                         lines = F.readlines()
                     flines += lines 
@@ -7659,6 +7670,21 @@ class Ui_MainWindow(object):
             else: 
                 self.meshfile = meshfiles[0]
                 self.cwd = writeworkingdirectory(self.meshfile, dfile=self.dfile)
+
+                if self.meshfile[-4:].lower() == '.trd' or self.meshfile[-4:].lower() == '.axi': 
+                    tire3dmesh = True 
+                else: 
+                    tire3dmesh = False 
+
+            if tire3dmesh: 
+                self.pushButton_3DTireSector.setEnabled(True)
+                self.lineEdit_searchBodySector.setEnabled(True)
+                self.lineEdit_searchTreadSector.setEnabled(True)
+            else: 
+                self.pushButton_3DTireSector.setEnabled(False)
+                self.lineEdit_searchBodySector.setEnabled(False)
+                self.lineEdit_searchTreadSector.setEnabled(False)
+
             # self.get_pyVistaMesh()
             # print (" reading model done ")
             try:
@@ -8291,8 +8317,18 @@ class Ui_MainWindow(object):
             self.searched_points=[]
             self.searchedCells =[]
             self.searchedSectorCells=[]
-            
+            sectornodes=[]
             for idx, elements, nodes in zip(self.idx_element, self.elements, self.nodes): 
+                if nodes[0][0]<10**7: 
+                    ix1 = np.where(nodes[:,0]>(bdsector-1)*bdoffset)[0]
+                    ix2 = np.where(nodes[:,0]<(bdsector)*bdoffset)[0]
+                    ix = np.intersect1d(ix1, ix2)
+                else: 
+                    ix1 = np.where(nodes[:,0]>treadStart+(tdsector-1)*tdoffset)[0]
+                    ix2 = np.where(nodes[:,0]<treadStart+(tdsector)*tdoffset)[0]
+                    ix = np.intersect1d(ix1, ix2)
+                if len(ix): 
+                    sectornodes.append(nodes[ix])
                 if elements[0][0] == 4: 
                     searched_cells, edges, surf = Mesh.generateMesh_searched(self.searchedSector, idx, elements, nodes, ctype=5)
                 else: 
@@ -8301,23 +8337,32 @@ class Ui_MainWindow(object):
                     self.searchedSectorCells.append([searched_cells, edges, surf])
                     # self.searchedCells.append(self.plotter.add_mesh(searched_cells, color='coral', line_width=2, opacity=0.5, edge_color='black', show_edges=True) )
             self.clearPlotter()
-            self.showTire3D_sector()
+            self.showTire3D_sector(sectornodes)
 
 
-    def showTire3D_sector(self): 
+    def showTire3D_sector(self, sectornodes=[]): 
         if self.defaultColor_Background: 
             self.plotter.set_background('gray', top='white')
         else: 
             self.plotter.set_background('white')
+        if len(sectornodes): 
+            if self.checkBox_clipping_X.isChecked() or self.checkBox_clipping_Y.isChecked() or self.checkBox_clipping_Z.isChecked() :
+                self.define_clippingRange(sectornodes)
 
         for cell, edge, surf in self.searchedSectorCells: 
             if self.checkBox_Solid.isChecked(): 
+                if self.checkBox_clipping_X.isChecked() or self.checkBox_clipping_Y.isChecked() or self.checkBox_clipping_Z.isChecked() : 
+                    cell = self.clipping(cell)
                 self.plotter.add_mesh(cell, color=self.comboBox.currentText(), line_width=self.color_edge_line[self.click_show_edge%self.nColor_edge_line][1], opacity=self.opecity,\
                     edge_color='gray', show_edges=self.checkBox_meshLine.isChecked())
             else: 
+                if self.checkBox_clipping_X.isChecked() or self.checkBox_clipping_Y.isChecked() or self.checkBox_clipping_Z.isChecked() : 
+                    surf = self.clipping(surf)
                 self.plotter.add_mesh(surf, color=self.comboBox.currentText(), line_width=self.color_edge_line[self.click_show_edge%self.nColor_edge_line][1], opacity=self.opecity,\
                     edge_color='gray', show_edges=self.checkBox_meshLine.isChecked())
             if self.checkBox_showEdges.isChecked(): 
+                if self.checkBox_clipping_X.isChecked() or self.checkBox_clipping_Y.isChecked() or self.checkBox_clipping_Z.isChecked() : 
+                    edge = self.clipping(edge)
                 self.plotter.add_mesh(edge, color=self.color_edge_line[self.click_show_edge%self.nColor_edge_line][0],\
                             line_width=self.color_edge_line[self.click_show_edge%self.nColor_edge_line][1])
 
@@ -8339,6 +8384,7 @@ class Ui_MainWindow(object):
         if len(self.searchedNodes) or len(self.searchedElements): 
             changeOpecity = False 
         self.sectorView= False 
+        self.define_clippingRange(self.nodes)
         
         text = self.serach_node_id.text()
         self.searchedNodes = parsingIDs(text)

@@ -11,6 +11,17 @@ import numpy as np
 
 import smart_results as Smart 
 
+import time 
+def timer(func): 
+    def wrapper(*args, **kwargs): 
+        start = time.time()
+        rv = func(*args, **kwargs)
+        total = time.time() - start
+        print ("### Time : %.2f"%(total))
+        return rv 
+    return wrapper
+
+
 def reading_stl(fname): 
     reader = pv.get_reader(fname) 
     mesh = reader.read()
@@ -19,6 +30,18 @@ def reading_stl(fname):
 class pyTire_Mesh: 
     def __init__(self): 
         pass 
+
+    def generateMesh(self, meshfiles): 
+        if len(meshfiles) ==1: 
+            meshfile = meshfiles[0]
+        else: 
+            meshfile = meshfiles 
+        self.readMesh(meshfile)
+        if '.ptn' in meshfiles[0].lower(): self.centering()
+        # self.pyVistaMeshIndexing() 
+        self.makePyVistaGrid()
+        self.makePyVistaSurface()
+        self.makePyVistaEdge()
 
     def centering(self): 
         mid1 = np.average(self.nodes[:,1]) 
@@ -40,7 +63,7 @@ class pyTire_Mesh:
     def makePyVistaEdge(self,angle=45): 
         self.edges = self.grid.extract_feature_edges(feature_angle=angle, boundary_edges=False)
 
-    def convertIndexNodes(self, nodes, value=False): 
+    def convertIndexNodes(self, nodes=None, value=False): 
         idmax = int(np.max(nodes[:,0]))
         if value: 
             npn = np.zeros(shape=(idmax+1, 5))
@@ -59,7 +82,6 @@ class pyTire_Mesh:
                 npn[int(n[0])][3]=n[3]
         return npn 
 
-
     def readMesh(self, meshfile): 
         
         if isinstance(meshfile, str): 
@@ -68,19 +90,29 @@ class pyTire_Mesh:
 
         elif isinstance(meshfile, list):
             nodes=[]; elements=[]; index=[]; self.meshtype=0; self.elsets=[]
+            self.meshfile=""
             for fname in meshfile: 
                 node, element, ind, self.meshtype, elsets = readInp(fname)
                 nodes += node 
                 elements += element 
                 index += ind 
                 self.elsets += elsets 
+                self.meshfile += fname +" & "
         else: 
             return 
 
         self.nodes = np.array(nodes)
         self.elements = np.array(elements)
         self.index = np.array(index)
-        
+
+    def inputMesh(self, nodes, elements, index=False, meshtype=9): 
+        self.nodes=nodes 
+        self.elements = elements 
+        if index : 
+            self.index = index 
+        else: 
+            self.pyVistaMeshIndexing(meshtype=meshtype)
+
     def pyVistaMeshIndexing(self, meshtype=0): 
         idx = range(len(self.elements))
         self.index = list(zip(self.elements[:,0], idx))
@@ -195,6 +227,9 @@ class pyMesh_sdb(pyTire_Mesh):
 class pyMesh_stl(pyTire_Mesh): 
     def __init__(self):
         super().__init__()
+        self.edges = None 
+        self.surfaces = None 
+        self.nodes=[]
     
     def readstl(self, fname): 
         self.meshfile=fname 
@@ -203,15 +238,18 @@ class pyMesh_stl(pyTire_Mesh):
 class pyMesh_layout(pyTire_Mesh): 
     def __init__(self):
         super().__init__() 
+        self.surfaces = None 
 
     def readLayoutMesh(self, fname): 
         self.meshfile = fname 
-        self.nodes, self.elements, self.index, self.meshtype, self.elsets = readInp(fname)
-
-        self.grid, self.xyz = makePyvisterCells(self.elements, self.nodes, self.meshtype)
-        self.pt_cloud = pv.PolyData(self.xyz)
-        self.edges = self.grid.extract_all_edges()
-        self.surfaces = None 
+        nodes, elements, index, self.meshtype, self.elsets = readInp(fname)
+        self.nodes = np.array(nodes)
+        self.elements = np.array(elements)
+        self.index = np.array(index)
+        self.makePyVistaGrid()
+        self.makePyVistaSurface()
+        self.makePyVistaEdge()
+        
 
 class pyMesh_footprint(pyTire_Mesh): 
     def __init__(self):
@@ -382,16 +420,24 @@ def parsingInp(lines, offset=0, first=True):
                           ]) 
                 index_elements.append([int(wds[0].strip()) + partOffset, len(s8)-1]) 
             if cmd == 'eset': 
-                for wd in wds: 
-                    if wd.strip() !='': 
-                        elsets[-1].append(int(wd.strip()) + partOffset)
+                try: 
+                    for wd in wds: 
+                        if wd.strip() !='': 
+                            elsets[-1].append(int(wd.strip()) + partOffset)
+                except: 
+                    del(elsets[-1])
+                    cmd = False 
                 # print(elsets[-1])
             if cmd == 'esetgen': 
-                st = int(wds[0].strip())
-                ed = int(wds[1].strip())
-                sp = int(wds[2].strip())
-                for e in range(st, ed+sp, sp): 
-                    elsets[-1].append(e + partOffset) 
+                try: 
+                    st = int(wds[0].strip())
+                    ed = int(wds[1].strip())
+                    sp = int(wds[2].strip())
+                    for e in range(st, ed+sp, sp): 
+                        elsets[-1].append(e + partOffset) 
+                except: 
+                    del(elsets[-1])
+                    cmd = False 
     
     return nodes, s8, index_elements, mtype, isPart, elsets
 
@@ -423,7 +469,7 @@ def readInp(fname, inplines=False):
 
     return nodes, s8, index_elements, mtype, elsets
     
-
+@timer 
 def readMesh_pyVista(fname,  files=None, centering=False, sdb=False, inplines=False): 
     elsets = []
     if sdb: 
@@ -514,6 +560,7 @@ def makePyvisterCells(cells, nodes, meshtype):
         # grid = pv.UnstructuredGrid({vtk.VTK_HEXAHEDRON: cells.reshape([-1, meshtype])[:, 1:]}, xyz)
         grid = pv.UnstructuredGrid({vtk.VTK_HEXAHEDRON: np.delete(cells, np.arange(0, cells.size, meshtype))}, xyz)
     else: 
+        
         xyz = nodes[:, 1:4]
         grid = pv.PolyData(xyz, cells)
     return grid, xyz  
@@ -627,6 +674,15 @@ def generateMesh_searched(ids, indexes, elements, nodes, ctype=9):
         return  grid, edges, surfaces
     else: 
         return None, None, None
+
+def generateMesh_index(idx, elements, nodes, ctype=9): 
+    cells =[]
+    for ix in idx: 
+        cells.append(elements[ix])
+    grid, _ = makePyvisterCells(np.array(cells).ravel(), nodes, ctype)
+    edges = grid.extract_feature_edges(feature_angle=45, boundary_edges=False)
+    surfaces = grid.extract_surface()
+    return  grid, edges, surfaces
 
 def readSfric_pyVista(file_name): 
 

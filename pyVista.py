@@ -22,6 +22,8 @@ def timer(func):
     return wrapper
 
 
+
+
 def reading_stl(fname): 
     reader = pv.get_reader(fname) 
     mesh = reader.read()
@@ -746,7 +748,43 @@ def readSfric_pyVista(file_name):
 
     return npn, np.array(cells).ravel(), index_elements, cells, meshtype, smart.pNode.Node, p_cells, smart, pnodes
 
+def get_vtkDistanceWidget(plotter): 
+    widget = vtk.vtkDistanceWidget() 
+    widget.SetInteractor(plotter.iren.interactor)
+    return widget
+def get_vtkPointHandleRepresentation3D(widget): 
+    handle = vtk.vtkPointHandleRepresentation3D()
+    representation = vtk.vtkDistanceRepresentation2D()
+    representation.SetHandleRepresentation(handle)
+    widget.SetRepresentation(representation)
+    return widget, handle, representation
 
+def get_vtkPointPicker(plotter): 
+    point_picker = vtk.vtkPointPicker()
+    plotter.iren.set_picker(point_picker)
+    return plotter, point_picker
+def addObserver_widget(widget): 
+    widget.AddObserver(vtk.vtkCommand.EndInteractionEvent, place_point)
+    return widget 
+
+representation=None 
+point_picker=None 
+
+def place_point(widget, event):
+    p1 = [0, 0, 0]
+    p2 = [0, 0, 0]
+    representation.GetPoint1DisplayPosition(p1)
+    representation.GetPoint2DisplayPosition(p2)
+    if point_picker.Pick(p1, p.renderer):
+        pos1 = point_picker.GetPickPosition()
+        representation.GetPoint1Representation().SetWorldPosition(pos1)
+        representation.GetAxis().GetPoint1Coordinate().SetValue(pos1)
+    if point_picker.Pick(p2, p.renderer):
+        pos2 = point_picker.GetPickPosition()
+        representation.GetPoint2Representation().SetWorldPosition(pos2)
+        representation.GetAxis().GetPoint2Coordinate().SetValue(pos2)
+    representation.BuildRepresentation()
+    return
 
 def main(): 
     fname = 'AH32.trd'

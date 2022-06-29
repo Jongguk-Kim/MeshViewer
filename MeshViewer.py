@@ -5051,8 +5051,8 @@ class Ui_MainWindow(object):
         self.checkBox_meshCheck.setObjectName("checkBox_meshCheck")
         self.verticalLayout.addWidget(self.groupBox_LoadMesh)
         self.groupBox_Mesh3D = QtWidgets.QGroupBox(self.centralwidget)
-        self.groupBox_Mesh3D.setMinimumSize(QtCore.QSize(330, 50))
-        self.groupBox_Mesh3D.setMaximumSize(QtCore.QSize(330, 50))
+        self.groupBox_Mesh3D.setMinimumSize(QtCore.QSize(330, 100))
+        self.groupBox_Mesh3D.setMaximumSize(QtCore.QSize(330, 100))
         self.groupBox_Mesh3D.setObjectName("groupBox_Mesh3D")
         self.comboBox = QtWidgets.QComboBox(self.groupBox_Mesh3D)
         self.comboBox.setGeometry(QtCore.QRect(91, 14, 80, 28))
@@ -5094,10 +5094,49 @@ class Ui_MainWindow(object):
         self.radioButton_NoColorChange.setGeometry(QtCore.QRect(0, 30, 31, 16))
         self.radioButton_NoColorChange.setChecked(True)
         self.radioButton_NoColorChange.setObjectName("radioButton_NoColorChange")
+        self.lineEdit_searchTreadSector = QtWidgets.QLineEdit(self.groupBox_Mesh3D)
+        self.lineEdit_searchTreadSector.setGeometry(QtCore.QRect(280, 50, 41, 20))
+        self.lineEdit_searchTreadSector.setMaximumSize(QtCore.QSize(150, 25))
+        self.lineEdit_searchTreadSector.setAlignment(QtCore.Qt.AlignCenter)
+        self.lineEdit_searchTreadSector.setObjectName("lineEdit_searchTreadSector")
+        self.lineEdit_3DTireBodyOffset = QtWidgets.QLineEdit(self.groupBox_Mesh3D)
+        self.lineEdit_3DTireBodyOffset.setGeometry(QtCore.QRect(165, 73, 51, 20))
+        self.lineEdit_3DTireBodyOffset.setMaximumSize(QtCore.QSize(150, 25))
+        self.lineEdit_3DTireBodyOffset.setAlignment(QtCore.Qt.AlignCenter)
+        self.lineEdit_3DTireBodyOffset.setObjectName("lineEdit_3DTireBodyOffset")
+        self.label_searchSector_bodyOffset = QtWidgets.QLabel(self.groupBox_Mesh3D)
+        self.label_searchSector_bodyOffset.setGeometry(QtCore.QRect(111, 73, 51, 20))
+        self.label_searchSector_bodyOffset.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_searchSector_bodyOffset.setObjectName("label_searchSector_bodyOffset")
+        self.lineEdit_3DTireTreadOffset = QtWidgets.QLineEdit(self.groupBox_Mesh3D)
+        self.lineEdit_3DTireTreadOffset.setGeometry(QtCore.QRect(270, 73, 51, 20))
+        self.lineEdit_3DTireTreadOffset.setMaximumSize(QtCore.QSize(150, 25))
+        self.lineEdit_3DTireTreadOffset.setAlignment(QtCore.Qt.AlignCenter)
+        self.lineEdit_3DTireTreadOffset.setObjectName("lineEdit_3DTireTreadOffset")
+        self.pushButton_3DTireSector = QtWidgets.QPushButton(self.groupBox_Mesh3D)
+        self.pushButton_3DTireSector.setGeometry(QtCore.QRect(6, 53, 101, 40))
+        self.pushButton_3DTireSector.setObjectName("pushButton_3DTireSector")
+        self.lineEdit_searchBodySector = QtWidgets.QLineEdit(self.groupBox_Mesh3D)
+        self.lineEdit_searchBodySector.setGeometry(QtCore.QRect(175, 50, 41, 20))
+        self.lineEdit_searchBodySector.setMaximumSize(QtCore.QSize(150, 25))
+        self.lineEdit_searchBodySector.setAlignment(QtCore.Qt.AlignCenter)
+        self.lineEdit_searchBodySector.setObjectName("lineEdit_searchBodySector")
+        self.label_searchSector_treadOffset = QtWidgets.QLabel(self.groupBox_Mesh3D)
+        self.label_searchSector_treadOffset.setGeometry(QtCore.QRect(216, 73, 51, 20))
+        self.label_searchSector_treadOffset.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_searchSector_treadOffset.setObjectName("label_searchSector_treadOffset")
+        self.label_searchSector_tread = QtWidgets.QLabel(self.groupBox_Mesh3D)
+        self.label_searchSector_tread.setGeometry(QtCore.QRect(221, 53, 51, 20))
+        self.label_searchSector_tread.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_searchSector_tread.setObjectName("label_searchSector_tread")
+        self.label_searchSector_body = QtWidgets.QLabel(self.groupBox_Mesh3D)
+        self.label_searchSector_body.setGeometry(QtCore.QRect(109, 53, 51, 20))
+        self.label_searchSector_body.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_searchSector_body.setObjectName("label_searchSector_body")
         self.verticalLayout.addWidget(self.groupBox_Mesh3D)
         self.groupBox_CUTELayout = QtWidgets.QGroupBox(self.centralwidget)
-        self.groupBox_CUTELayout.setMinimumSize(QtCore.QSize(330, 285))
-        self.groupBox_CUTELayout.setMaximumSize(QtCore.QSize(330, 310))
+        self.groupBox_CUTELayout.setMinimumSize(QtCore.QSize(330, 235))
+        self.groupBox_CUTELayout.setMaximumSize(QtCore.QSize(330, 305))
         self.groupBox_CUTELayout.setObjectName("groupBox_CUTELayout")
         self.pushButton_elsetSeq = QtWidgets.QPushButton(self.groupBox_CUTELayout)
         self.pushButton_elsetSeq.setGeometry(QtCore.QRect(107, 15, 111, 25))
@@ -5172,73 +5211,49 @@ class Ui_MainWindow(object):
         self.lineEdit.setAlignment(QtCore.Qt.AlignCenter)
         self.lineEdit.setObjectName("lineEdit")
         self.push_addingPoint = QtWidgets.QPushButton(self.groupBox_CUTELayout)
-        self.push_addingPoint.setGeometry(QtCore.QRect(10, 204, 315, 23))
+        self.push_addingPoint.setGeometry(QtCore.QRect(8, 154, 91, 23))
         self.push_addingPoint.setObjectName("push_addingPoint")
         self.cdepth_solid = QtWidgets.QLabel(self.groupBox_CUTELayout)
-        self.cdepth_solid.setGeometry(QtCore.QRect(150, 256, 45, 20))
+        self.cdepth_solid.setGeometry(QtCore.QRect(120, 182, 45, 20))
         self.cdepth_solid.setAlignment(QtCore.Qt.AlignCenter)
         self.cdepth_solid.setObjectName("cdepth_solid")
         self.pushButton_colordepth = QtWidgets.QPushButton(self.groupBox_CUTELayout)
-        self.pushButton_colordepth.setGeometry(QtCore.QRect(0, 254, 151, 23))
+        self.pushButton_colordepth.setGeometry(QtCore.QRect(3, 180, 121, 23))
         self.pushButton_colordepth.setObjectName("pushButton_colordepth")
         self.Cdepth_memb_val = QtWidgets.QLineEdit(self.groupBox_CUTELayout)
-        self.Cdepth_memb_val.setGeometry(QtCore.QRect(290, 256, 30, 20))
+        self.Cdepth_memb_val.setGeometry(QtCore.QRect(233, 182, 30, 20))
         self.Cdepth_memb_val.setAlignment(QtCore.Qt.AlignCenter)
         self.Cdepth_memb_val.setObjectName("Cdepth_memb_val")
         self.Cdepth_solid_val = QtWidgets.QLineEdit(self.groupBox_CUTELayout)
-        self.Cdepth_solid_val.setGeometry(QtCore.QRect(190, 256, 30, 20))
+        self.Cdepth_solid_val.setGeometry(QtCore.QRect(160, 182, 30, 20))
         self.Cdepth_solid_val.setAlignment(QtCore.Qt.AlignCenter)
         self.Cdepth_solid_val.setObjectName("Cdepth_solid_val")
         self.cdepth_memb = QtWidgets.QLabel(self.groupBox_CUTELayout)
-        self.cdepth_memb.setGeometry(QtCore.QRect(220, 258, 70, 16))
+        self.cdepth_memb.setGeometry(QtCore.QRect(192, 184, 41, 16))
         self.cdepth_memb.setAlignment(QtCore.Qt.AlignCenter)
         self.cdepth_memb.setObjectName("cdepth_memb")
         self.txt_coordinate_point = QtWidgets.QLineEdit(self.groupBox_CUTELayout)
-        self.txt_coordinate_point.setGeometry(QtCore.QRect(10, 230, 315, 20))
+        self.txt_coordinate_point.setGeometry(QtCore.QRect(100, 154, 225, 23))
         self.txt_coordinate_point.setAlignment(QtCore.Qt.AlignCenter)
         self.txt_coordinate_point.setObjectName("txt_coordinate_point")
-        self.label_searchSector_body = QtWidgets.QLabel(self.groupBox_CUTELayout)
-        self.label_searchSector_body.setGeometry(QtCore.QRect(110, 158, 51, 20))
-        self.label_searchSector_body.setAlignment(QtCore.Qt.AlignCenter)
-        self.label_searchSector_body.setObjectName("label_searchSector_body")
-        self.lineEdit_searchBodySector = QtWidgets.QLineEdit(self.groupBox_CUTELayout)
-        self.lineEdit_searchBodySector.setGeometry(QtCore.QRect(176, 155, 41, 20))
-        self.lineEdit_searchBodySector.setMaximumSize(QtCore.QSize(150, 25))
-        self.lineEdit_searchBodySector.setAlignment(QtCore.Qt.AlignCenter)
-        self.lineEdit_searchBodySector.setObjectName("lineEdit_searchBodySector")
-        self.label_searchSector_tread = QtWidgets.QLabel(self.groupBox_CUTELayout)
-        self.label_searchSector_tread.setGeometry(QtCore.QRect(222, 158, 51, 20))
-        self.label_searchSector_tread.setAlignment(QtCore.Qt.AlignCenter)
-        self.label_searchSector_tread.setObjectName("label_searchSector_tread")
-        self.lineEdit_searchTreadSector = QtWidgets.QLineEdit(self.groupBox_CUTELayout)
-        self.lineEdit_searchTreadSector.setGeometry(QtCore.QRect(281, 155, 41, 20))
-        self.lineEdit_searchTreadSector.setMaximumSize(QtCore.QSize(150, 25))
-        self.lineEdit_searchTreadSector.setAlignment(QtCore.Qt.AlignCenter)
-        self.lineEdit_searchTreadSector.setObjectName("lineEdit_searchTreadSector")
-        self.label_searchSector_bodyOffset = QtWidgets.QLabel(self.groupBox_CUTELayout)
-        self.label_searchSector_bodyOffset.setGeometry(QtCore.QRect(112, 178, 51, 20))
-        self.label_searchSector_bodyOffset.setAlignment(QtCore.Qt.AlignCenter)
-        self.label_searchSector_bodyOffset.setObjectName("label_searchSector_bodyOffset")
-        self.lineEdit_3DTireBodyOffset = QtWidgets.QLineEdit(self.groupBox_CUTELayout)
-        self.lineEdit_3DTireBodyOffset.setGeometry(QtCore.QRect(166, 178, 51, 20))
-        self.lineEdit_3DTireBodyOffset.setMaximumSize(QtCore.QSize(150, 25))
-        self.lineEdit_3DTireBodyOffset.setAlignment(QtCore.Qt.AlignCenter)
-        self.lineEdit_3DTireBodyOffset.setObjectName("lineEdit_3DTireBodyOffset")
-        self.label_searchSector_treadOffset = QtWidgets.QLabel(self.groupBox_CUTELayout)
-        self.label_searchSector_treadOffset.setGeometry(QtCore.QRect(217, 178, 51, 20))
-        self.label_searchSector_treadOffset.setAlignment(QtCore.Qt.AlignCenter)
-        self.label_searchSector_treadOffset.setObjectName("label_searchSector_treadOffset")
-        self.lineEdit_3DTireTreadOffset = QtWidgets.QLineEdit(self.groupBox_CUTELayout)
-        self.lineEdit_3DTireTreadOffset.setGeometry(QtCore.QRect(271, 178, 51, 20))
-        self.lineEdit_3DTireTreadOffset.setMaximumSize(QtCore.QSize(150, 25))
-        self.lineEdit_3DTireTreadOffset.setAlignment(QtCore.Qt.AlignCenter)
-        self.lineEdit_3DTireTreadOffset.setObjectName("lineEdit_3DTireTreadOffset")
-        self.pushButton_3DTireSector = QtWidgets.QPushButton(self.groupBox_CUTELayout)
-        self.pushButton_3DTireSector.setGeometry(QtCore.QRect(10, 158, 100, 40))
-        self.pushButton_3DTireSector.setObjectName("pushButton_3DTireSector")
         self.pushButton_search_clear = QtWidgets.QPushButton(self.groupBox_CUTELayout)
         self.pushButton_search_clear.setGeometry(QtCore.QRect(8, 131, 60, 20))
         self.pushButton_search_clear.setObjectName("pushButton_search_clear")
+        self.cdepth_meshline = QtWidgets.QLabel(self.groupBox_CUTELayout)
+        self.cdepth_meshline.setGeometry(QtCore.QRect(265, 185, 31, 16))
+        self.cdepth_meshline.setAlignment(QtCore.Qt.AlignCenter)
+        self.cdepth_meshline.setObjectName("cdepth_meshline")
+        self.Cdepth_mesh_val = QtWidgets.QLineEdit(self.groupBox_CUTELayout)
+        self.Cdepth_mesh_val.setGeometry(QtCore.QRect(297, 184, 30, 20))
+        self.Cdepth_mesh_val.setAlignment(QtCore.Qt.AlignCenter)
+        self.Cdepth_mesh_val.setObjectName("Cdepth_mesh_val")
+        self.checkBox_MergingNode = QtWidgets.QCheckBox(self.groupBox_CUTELayout)
+        self.checkBox_MergingNode.setGeometry(QtCore.QRect(10, 210, 111, 20))
+        self.checkBox_MergingNode.setMaximumSize(QtCore.QSize(130, 20))
+        self.checkBox_MergingNode.setObjectName("checkBox_MergingNode")
+        self.pushButton_printMergedElement = QtWidgets.QPushButton(self.groupBox_CUTELayout)
+        self.pushButton_printMergedElement.setGeometry(QtCore.QRect(150, 210, 171, 20))
+        self.pushButton_printMergedElement.setObjectName("pushButton_printMergedElement")
         self.verticalLayout.addWidget(self.groupBox_CUTELayout)
         self.groupBox = QtWidgets.QGroupBox(self.centralwidget)
         self.groupBox.setMinimumSize(QtCore.QSize(330, 25))
@@ -5392,11 +5407,22 @@ class Ui_MainWindow(object):
         self.radioButton_1stMeshColorchange.setText(_translate("MainWindow", "1"))
         self.radioButton_2ndMeshColorchange.setText(_translate("MainWindow", "2"))
         self.radioButton_NoColorChange.setText(_translate("MainWindow", "0"))
+        self.lineEdit_searchTreadSector.setText(_translate("MainWindow", "0"))
+        self.lineEdit_3DTireBodyOffset.setText(_translate("MainWindow", "10000"))
+        self.label_searchSector_bodyOffset.setText(_translate("MainWindow", "Offset"))
+        self.lineEdit_3DTireTreadOffset.setToolTip(_translate("MainWindow", "<html><head/><body><p>Tread Start : 10^7</p></body></html>"))
+        self.lineEdit_3DTireTreadOffset.setText(_translate("MainWindow", "10000"))
+        self.pushButton_3DTireSector.setText(_translate("MainWindow", "3D Tire Sector"))
+        self.lineEdit_searchBodySector.setText(_translate("MainWindow", "0"))
+        self.label_searchSector_treadOffset.setToolTip(_translate("MainWindow", "<html><head/><body><p><br/></p></body></html>"))
+        self.label_searchSector_treadOffset.setText(_translate("MainWindow", "Offset"))
+        self.label_searchSector_tread.setText(_translate("MainWindow", "Tread"))
+        self.label_searchSector_body.setText(_translate("MainWindow", "Body"))
         self.groupBox_CUTELayout.setTitle(_translate("MainWindow", "CUTE Layout Mesh"))
         self.pushButton_elsetSeq.setText(_translate("MainWindow", "Feature Edges"))
         self.pushButton_redraw.setText(_translate("MainWindow", "All"))
-        self.checkBox_NdNo.setText(_translate("MainWindow", "Node No"))
-        self.checkBox_ElNo.setText(_translate("MainWindow", "Element No"))
+        self.checkBox_NdNo.setText(_translate("MainWindow", "Node No."))
+        self.checkBox_ElNo.setText(_translate("MainWindow", "Element No."))
         self.checkBox_Surface.setText(_translate("MainWindow", "All Surface"))
         self.checkBox_Tie.setText(_translate("MainWindow", "Tie"))
         self.checkBox_Spress.setText(_translate("MainWindow", "Surface Pressure"))
@@ -5408,25 +5434,18 @@ class Ui_MainWindow(object):
         self.pushButton_search.setText(_translate("MainWindow", "Show"))
         self.pushButton_dotsize.setText(_translate("MainWindow", "Dot Size"))
         self.lineEdit.setText(_translate("MainWindow", "0"))
-        self.push_addingPoint.setText(_translate("MainWindow", "Add Point - 2D Mesh"))
+        self.push_addingPoint.setText(_translate("MainWindow", "Add Point(2D)"))
         self.cdepth_solid.setText(_translate("MainWindow", "Solid"))
-        self.pushButton_colordepth.setText(_translate("MainWindow", "Set Transparency (0~1)"))
+        self.pushButton_colordepth.setText(_translate("MainWindow", "Transparency (0~1)"))
         self.Cdepth_memb_val.setText(_translate("MainWindow", "0.8"))
         self.Cdepth_solid_val.setText(_translate("MainWindow", "0.5"))
-        self.cdepth_memb.setText(_translate("MainWindow", "            Membrane            "))
+        self.cdepth_memb.setText(_translate("MainWindow", "Rebar"))
         self.txt_coordinate_point.setText(_translate("MainWindow", "[x, y]"))
-        self.label_searchSector_body.setText(_translate("MainWindow", "Body"))
-        self.lineEdit_searchBodySector.setText(_translate("MainWindow", "0"))
-        self.label_searchSector_tread.setText(_translate("MainWindow", "Tread"))
-        self.lineEdit_searchTreadSector.setText(_translate("MainWindow", "0"))
-        self.label_searchSector_bodyOffset.setText(_translate("MainWindow", "Offset"))
-        self.lineEdit_3DTireBodyOffset.setText(_translate("MainWindow", "10000"))
-        self.label_searchSector_treadOffset.setToolTip(_translate("MainWindow", "<html><head/><body><p><br/></p></body></html>"))
-        self.label_searchSector_treadOffset.setText(_translate("MainWindow", "Offset"))
-        self.lineEdit_3DTireTreadOffset.setToolTip(_translate("MainWindow", "<html><head/><body><p>Tread Start : 10^7</p></body></html>"))
-        self.lineEdit_3DTireTreadOffset.setText(_translate("MainWindow", "10000"))
-        self.pushButton_3DTireSector.setText(_translate("MainWindow", "3D Tire Sector"))
         self.pushButton_search_clear.setText(_translate("MainWindow", "clear"))
+        self.cdepth_meshline.setText(_translate("MainWindow", "Line"))
+        self.Cdepth_mesh_val.setText(_translate("MainWindow", "0.3"))
+        self.checkBox_MergingNode.setText(_translate("MainWindow", "Merging Node"))
+        self.pushButton_printMergedElement.setText(_translate("MainWindow", "Print Element Definition"))
         self.checkBox_ElsetNode.setText(_translate("MainWindow", "Node No"))
         self.checkBox_ElsetElement.setText(_translate("MainWindow", "ELement No"))
         self.pushButton_SurfaceSeq.setText(_translate("MainWindow", "Clear sets"))
@@ -5440,6 +5459,7 @@ class Ui_MainWindow(object):
         self.actionOPEN.setShortcut(_translate("MainWindow", "Ctrl+O"))
         self.actionCLOSE.setText(_translate("MainWindow", "CLOSE"))
         self.actionCLOSE.setShortcut(_translate("MainWindow", "Ctrl+Q"))
+
 
 
     def dragEnterEvent(self, e):
@@ -5586,6 +5606,9 @@ class Ui_MainWindow(object):
         self.lineEdit_searchBodySector.returnPressed.connect(self.show3DTireSector)
         self.lineEdit_searchTreadSector.returnPressed.connect(self.show3DTireSector)
 
+        self.checkBox_MergingNode.clicked.connect(self.mergingNode_2d)
+        self.pushButton_printMergedElement.clicked.connect(self.print_mergedElements)
+        self.pushButton_printMergedElement.setEnabled(False)
         ############################################################# 
           ## QDialog : self.setLayout(self.verticalLayout_2)
         ###### #######################################################
@@ -5862,14 +5885,44 @@ class Ui_MainWindow(object):
 
         self.groupBox_3dMeshControl.setMinimumSize(QtCore.QSize(900, 15))
         self.groupBox_3dMeshControl.setMaximumSize(QtCore.QSize(16777215, 15))
-
         self.push_LocalMesh.setFocus()
+
+        if self.lineEdit_4_Sim_Type.text() == "D101": 
+            self.radioButton_staticFootprint.setChecked(True)
+        elif self.lineEdit_4_Sim_Type.text() == "D103": 
+            self.radioButton_dim.setChecked(True)
+        elif self.lineEdit_4_Sim_Type.text() == "D104": 
+            self.radioButton_dynamicFootprint.setChecked(True)
+        elif self.lineEdit_4_Sim_Type.text() == "D105": 
+            self.radioButton_standingWave.setChecked(True)
+
 
     def redirect(self): 
         self._stdout = StdoutRedirect()
         self._stdout.start()
         self._stdout.printOccur.connect(lambda x : self._append_text(x))
     
+    def print_mergedElements(self): 
+        self.textBrowser.clear() 
+        print("*ELEMENT, TYPE=MGAX1")
+        c3count = 0 
+        for e in self.element.Element: 
+            if e[3] ==0: 
+                print("%5d, %5d, %5d"%(e[0], e[1], e[2])) 
+            elif e[4] ==0: 
+                c3count+= 1 
+
+        if c3count : 
+            print("*ELEMENT, TYPE=CGAX3H")
+            for e in self.element.Element: 
+                if e[3] and not e[4]: 
+                    print("%5d, %5d, %5d, %5d"%(e[0], e[1], e[2], e[3])) 
+        print("*ELEMENT, TYPE=CGAX4H")
+        for e in self.element.Element: 
+            if e[3] and e[4]: 
+                print("%5d, %5d, %5d, %5d, %5d"%(e[0], e[1], e[2], e[3], e[4])) 
+        
+
     def saveSimulationCode(self): 
         fp=open("simcode.dat", 'w')
         fp.write("%s\n"%(self.lineEdit_0_Location.text().strip()))
@@ -5900,9 +5953,15 @@ class Ui_MainWindow(object):
             s.connect(("8.8.8.8", 80))
             local_add = s.getsockname()[0]
             s.close()
+            try: 
+                vf = open("version.txt", 'r')
+                cversion = vf.readline().strip()
+                vf.close()
+            except: 
+                cversion = "version unknown"
 
             cnt = 1
-            lines=  "%15s,%5d, %s\n"%(local_add, cnt, str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())) )
+            lines=  "%15s,%5d, %20s, %s\n"%(local_add, cnt, str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())), cversion )
 
             with open(locallog) as LF: 
                 words = LF.readlines()
@@ -5911,7 +5970,7 @@ class Ui_MainWindow(object):
                 if  words[0].split(",")[0].strip() == local_add: 
                     w = words[0].split(",") 
                     cnt = int(w[1].strip())+1
-                    words[0] = "%15s,%5d, %s\n"%(local_add, cnt, str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())) )
+                    words[0] = "%15s,%5d, %20s, %s\n"%(local_add, cnt, str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())), cversion)
                     lines =""
 
                 for i, wd in enumerate(words): 
@@ -6060,6 +6119,10 @@ class Ui_MainWindow(object):
             print (EX, "ERROR!!, Connecting to ISLM")
             return 
 
+        cwd = os.getcwd() +"\\"
+        inps = glob.glob(cwd+"*.inp")
+        for inp in inps: 
+            remove(inp)
 
         loc = self.lineEdit_0_Location.text().strip().upper()
         vt = self.lineEdit_1_VT_Number.text().strip().upper()
@@ -6093,10 +6156,6 @@ class Ui_MainWindow(object):
             print (" NO SIMULATION FILES!!")
             self.ftp.close()
             return 
-
-        with open('pdir.dir') as PD: 
-            line = PD.readline()
-        cwd = line.strip()
 
         self.ISLMComparingLayouts=[]
         initFile = jobDir +"/" + vtCode+".inp"
@@ -6207,14 +6266,6 @@ class Ui_MainWindow(object):
         self.comparingISLMLayoutMode = True 
         self.node = False 
         self.ftp.close()
-        
-        if isfile(cwd+ localInit): remove(cwd+ localInit)
-        if gotInf: 
-            if isfile(cwd+ localInf): remove(cwd+ localInf)
-        if gotTop: 
-            if isfile(cwd+ localTop): remove(cwd+ localTop)
-        if gotBtm: 
-            if isfile(cwd+ localBtm): remove(cwd+ localBtm)
 
         self.plot_ISLMComparingLayouts()
 
@@ -6229,25 +6280,27 @@ class Ui_MainWindow(object):
             shift = 0 
             for i, pf in enumerate(self.ISLM_mold): 
                 shift = self.ISLM_mold[0].bdmin  - pf.bdmin
-                layouts.append([pf.featuredEdge, islmProfileColor[0], linetypes[i], lineThickness[i], shift])
+                layouts.append([pf.featuredEdge, islmProfileColor[0], linetypes[i], lineThickness[i], shift, pf.layoutfile])
         if self.checkBox_Initial_profile.isChecked(): 
             shift = 0 
             for i, pf in enumerate(self.ISLM_inflated):
                 shift = self.ISLM_mold[0].bdmin  - pf.bdmin 
-                layouts.append([pf.featuredEdge, islmProfileColor[1], linetypes[i], lineThickness[i], shift])
+                layouts.append([pf.featuredEdge, islmProfileColor[1], linetypes[i], lineThickness[i], shift, pf.layoutfile])
         if self.checkBox_Initial_inflated.isChecked(): 
             shift = 0 
             for i, pf in enumerate(self.ISLM_loadedTop): 
                 shift = self.ISLM_mold[0].bdmin  - pf.bdmin
-                layouts.append([pf.featuredEdge, islmProfileColor[2], linetypes[i], lineThickness[i], shift])
+                layouts.append([pf.featuredEdge, islmProfileColor[2], linetypes[i], lineThickness[i], shift, pf.layoutfile])
         if self.checkBox_inflated_loaded.isChecked(): 
             shift = 0 
             for i, pf in enumerate(self.ISLM_loadedBottom):
                 shift = self.ISLM_mold[0].bdmin  - pf.bdmin 
-                layouts.append([pf.featuredEdge, islmProfileColor[3], linetypes[i], lineThickness[i], shift])
+                layouts.append([pf.featuredEdge, islmProfileColor[3], linetypes[i], lineThickness[i], shift, pf.layoutfile])
         
         self.figure.clearplot()
-        if len(layouts):
+        if len(layouts) == 1: 
+            self.call2Dmesh(manualfile=layouts[0][5])
+        elif len(layouts) > 1:
             self.figure.draw_ISLMProfiles(layouts)
 
 
@@ -6531,7 +6584,7 @@ class Ui_MainWindow(object):
         del(temp)
 
             
-    def call2Dmesh(self, manualfile='', pattern=False): 
+    def call2Dmesh(self, manualfile='', pattern=False, islm=False): 
         if self.view3D: self.changeToView2D()
         self.meshfile = manualfile 
         if self.meshfile and isfile(self.meshfile):
@@ -6835,6 +6888,20 @@ class Ui_MainWindow(object):
         self.figure.getplotinformation(self.node, self.element, self.elset, self.surface, self.tie,  xy=self.xy)
         self.draw2Dmesh(self.meshfile)
         MainWindow.setWindowTitle(self.meshfile)
+
+    def mergingNode_2d(self): 
+        
+        if self.checkBox_MergingNode.isChecked() and self.figure.temperature_mode == False: 
+            self.figure.snap_mode = 1 
+            self.figure.merging_mode = True
+            self.pushButton_printMergedElement.setEnabled(True)
+             
+        else: 
+            if self.figure.temperature_mode == True : 
+                self.checkBox_MergingNode.setChecked(False)
+            self.figure.merging_mode = False 
+            self.pushButton_printMergedElement.setEnabled(False)
+
 
     def Redraw(self):
         if self.view3D: return 
@@ -7451,10 +7518,11 @@ class Ui_MainWindow(object):
             else:                                                  spr = 0 
             if self.checkBox_Road.isChecked() == True:         srd = 1
             else:                                               srd = 0
-
+            
             self.figure.gplot( self.node, self.element, self.elset, self.surface, self.tie,  xy=self.xy, \
                 size=size, ni=nd, ei=el, si=sf, ti=ti, srr=srr, srl=srl, spr=spr, srd=srd, cdepth=self.solidepth, \
-                mdepth=self.membdepth, snode=self.searchnode, sel=self.searchelement, rims=self.rims)
+                mdepth=self.membdepth, snode=self.searchnode, sel=self.searchelement, rims=self.rims, \
+                    MeshLineWidth=float(self.Cdepth_mesh_val.text()))
     
     def viewyz(self): 
         if not self.view3D: return 
@@ -8976,6 +9044,13 @@ class myCanvas(FigureCanvas):
 
         self.temperature_mode = False 
         self.temperature_node =[]
+        self.merging_mode = False 
+        self.merging_org_node=[]
+        self.merging_target_node=[]
+        self.selectMergingNode=[]
+
+        self.currentXlim=None 
+        self.currentYlim=None 
 
     def Area(self, ix=[], iy=[]): 
         x =[]; y=[]
@@ -9307,6 +9382,42 @@ class myCanvas(FigureCanvas):
                         if lx >=0: 
                             tx = self.points[lx][2]
                             ty = self.points[lx][3]
+                            if self.merging_mode:
+                                distmargin = 0.05E-3  
+                                if not len(self.merging_org_node): 
+                                    self.merging_org_node = [0, 0, tx, ty]
+                                    d, = plt.plot(tx, ty, 'o', color='red', markersize=dotsize)
+                                    self.dots.append(d)
+                                    for n in self.meshNode.Node: 
+                                        if abs(n[2] - self.merging_org_node[2])<=distmargin and abs(n[3] - self.merging_org_node[3]) <=distmargin: 
+                                            self.mergingNodeID = n[0]
+                                            break 
+                                elif not len(self.merging_target_node): 
+                                    self.merging_target_node = [0, 0, tx, ty]
+                                    d, = plt.plot(tx, ty, 'o', color='red', markersize=dotsize)
+                                    self.dots.append(d)
+
+                                    for n in self.meshNode.Node: 
+                                        if abs(n[2] - self.merging_target_node[2])<=distmargin and abs(n[3] - self.merging_target_node[3]) <=distmargin: 
+                                            nodeID = n[0]
+                                            break 
+                                    
+                                    for i, e in enumerate(self.meshElement.Element): 
+                                        for j in range(1, 5): 
+                                            if e[j] == self.mergingNodeID: 
+                                                print(" NODE CHANGE: ", self.meshElement.Element[i][:5])
+                                                self.meshElement.Element[i][j] = nodeID 
+                                                self.meshElement.Element[i][-2][j-1][0]=tx
+                                                self.meshElement.Element[i][-2][j-1][1]=ty 
+                                                
+                                    self.currentXlim = self.ax.get_xlim()
+                                    self.currentYlim = self.ax.get_ylim()
+                                    self.getplotinformation(self.meshNode, self.meshElement, self.meshElset, self.meshSurface, self.meshTie)
+                                    self.gplot(node=self.meshNode, element=self.meshElement, size=0.0)
+                                    self.merging_org_node=[]
+                                    self.merging_target_node=[] 
+                                    self.dots = []
+
                             # print ("B3", self.points[lx])
                     else: 
                         self.clicked -= 1
@@ -9324,57 +9435,57 @@ class myCanvas(FigureCanvas):
             if prev == 1: 
                 self.clicked -= 1
                 return 
+            if self.merging_mode: 
+                if self.clicked > 1: 
+                    self.clicked = 0 
 
-            self.lxs.append(tx)
-            self.lys.append(ty)
-            
-            d, = plt.plot(tx, ty, 'o', color='red', markersize=dotsize)
-            self.dots.append(d)
-            # print ("%.6f, %.6f"%(tx, ty))
-            N = len(self.lxs)-1
-            if N> 0: 
-                self.distance = round( math.sqrt((self.lxs[N]-self.lxs[N-1])**2 + (self.lys[N]-self.lys[N-1])**2 ) *1000, 2)
-                self.sumLength += self.distance
-                print (" Total Length =%.3fmm"%(self.sumLength))
-                ch = plt.text((self.lxs[N]+self.lxs[N-1])/2.0, (self.lys[N]+self.lys[N-1])/2.0, str(self.distance), size=self.fontsize)
-                self.chars.append(ch)
+            else: 
 
-                ln, = plt.plot([self.lxs[N-1], self.lxs[N]],[self.lys[N-1], self.lys[N]], color='red', linewidth=dotsize/3)
-                self.lines.append(ln)
+                self.lxs.append(tx)
+                self.lys.append(ty)
+                
+                d, = plt.plot(tx, ty, 'o', color='red', markersize=dotsize)
+                self.dots.append(d)
+                # print ("%.6f, %.6f"%(tx, ty))
+                N = len(self.lxs)-1
+                if N> 0: 
+                    self.distance = round( math.sqrt((self.lxs[N]-self.lxs[N-1])**2 + (self.lys[N]-self.lys[N-1])**2 ) *1000, 2)
+                    self.sumLength += self.distance
+                    print (" Total Length =%.3fmm"%(self.sumLength))
+                    ch = plt.text((self.lxs[N]+self.lxs[N-1])/2.0, (self.lys[N]+self.lys[N-1])/2.0, str(self.distance), size=self.fontsize)
+                    self.chars.append(ch)
 
-                if self.clicked > 2: 
+                    ln, = plt.plot([self.lxs[N-1], self.lxs[N]],[self.lys[N-1], self.lys[N]], color='red', linewidth=dotsize/3)
+                    self.lines.append(ln)
 
-                    sx = 0; sy=0
-                    for x, y in zip(self.lxs, self.lys): 
-                        sx += x
-                        sy += y
-                    cx = sx/(float(N)+1)
-                    cy = sy/(float(N)+1)
+                    if self.clicked > 2: 
 
-                    area = self.Area(ix=self.lxs, iy=self.lys)
-                    for achar in self.achars: 
-                        achar.set_visible(False)
+                        sx = 0; sy=0
+                        for x, y in zip(self.lxs, self.lys): 
+                            sx += x
+                            sy += y
+                        cx = sx/(float(N)+1)
+                        cy = sy/(float(N)+1)
 
-                    ach= plt.text(cx, cy, "A="+ str(round(area*1_000_000, 1)), color='gray', size=self.fontsize)
-                    self.achars.append(ach)
+                        area = self.Area(ix=self.lxs, iy=self.lys)
+                        for achar in self.achars: 
+                            achar.set_visible(False)
 
-                    for char in self.llen:
-                        char.set_visible(False)
+                        ach= plt.text(cx, cy, "A="+ str(round(area*1_000_000, 1)), color='gray', size=self.fontsize)
+                        self.achars.append(ach)
 
-                    for line in self.cline: 
-                        line.remove()
-                    self.cline=[]
-                    
-                    self.distance = round( math.sqrt((self.lxs[N]-self.lxs[0])**2 + (self.lys[N]-self.lys[0])**2 ) *1000, 2)
-                    # ch = plt.text((self.lxs[N]+self.lxs[0])/2.0, (self.lys[N]+self.lys[0])/2.0, str(self.distance), color='gray', size=self.fontsize)
-                    # self.llen.append(ch)
-                    ln, = plt.plot([self.lxs[0], self.lxs[N]],[self.lys[0], self.lys[N]], color='gray', linestyle="--", linewidth=dotsize/3 )
-                    self.cline.append(ln)
-            # current_xlim=self.ax.get_xlim()
-            # current_ylim=self.ax.get_ylim()
-            # plt.xlim(current_xlim[0], current_xlim[1])
-            # plt.ylim(current_ylim[0], current_ylim[1])
-            # self.figure.canvas.draw_idle()
+                        for char in self.llen:
+                            char.set_visible(False)
+
+                        for line in self.cline: 
+                            line.remove()
+                        self.cline=[]
+                        
+                        self.distance = round( math.sqrt((self.lxs[N]-self.lxs[0])**2 + (self.lys[N]-self.lys[0])**2 ) *1000, 2)
+                        # ch = plt.text((self.lxs[N]+self.lxs[0])/2.0, (self.lys[N]+self.lys[0])/2.0, str(self.distance), color='gray', size=self.fontsize)
+                        # self.llen.append(ch)
+                        ln, = plt.plot([self.lxs[0], self.lxs[N]],[self.lys[0], self.lys[N]], color='gray', linestyle="--", linewidth=dotsize/3 )
+                        self.cline.append(ln)
             self.plot_current_display_range()
 
 
@@ -9739,7 +9850,7 @@ class myCanvas(FigureCanvas):
                         self.settexts.append(ch)
 
 
-            print ("(%dEA)"%(len(elset.Element)))
+            # print ("(%dEA)"%(len(elset.Element)))
             Edges = Edge_ElementBoundary(elset.Element)
         else: 
             Edges = EDGE()
@@ -9748,7 +9859,7 @@ class myCanvas(FigureCanvas):
                 el = elements.Element[ix]
                 Edges.Add([el[1], el[2], el[5], 0, el[0], -1])
             
-            print ("(%dEA)"%(len(Edges.Edge)))
+            # print ("(%dEA)"%(len(Edges.Edge)))
 
         for edge in Edges.Edge: 
             ix = np.where(nodes[:,0] == edge[0])[0][0]; n1 = nodes[ix]
@@ -9779,6 +9890,10 @@ class myCanvas(FigureCanvas):
     def getplotinformation(self, node, element, elset, surface, tie, xy=23, add2d=[]):
         X = int(xy/10)
         Y = int(xy%10)
+
+        self.meshElset = elset 
+        self.meshSurface =surface 
+        self.meshTie = tie 
 
         self.nid=[];         self.x=[];         self.y=[]
         self.polygons=[];    self.eid=[];       self.ex = [];      self.ey=[];         self.ecolor=[]
@@ -10189,13 +10304,22 @@ class myCanvas(FigureCanvas):
         plt.xlim(xmin-0.01, xmax+0.01)
         plt.ylim(ymin-0.01, ymax+0.01)
         self.figure.canvas.draw()
-    def gplot(self,  node, element, elset=None, surface=None, tie=None, xy=23, size=0.1, ni=0, ei=0, si=0, ti=0, srr=0, srl=0, spr=0, srd=0, cdepth=0.5,  mdepth=0.8, snode=[], sel=[], rims=[]):
+    def gplot(self,  node=None, element=None, elset=None, surface=None, tie=None, \
+        xy=23, size=0.1, ni=0, ei=0, si=0, ti=0, srr=0, srl=0, spr=0, \
+            srd=0, cdepth=0.5,  mdepth=0.8, snode=[], sel=[], rims=[], MeshLineWidth = 0.3):
         X = int(xy/10)
         Y = int(xy%10)
 
+        if self.merging_mode: 
+            constantview = True 
+        else: 
+            constantview = False 
+            self.meshNode = node 
+            self.meshElement = element 
+
         nodecolor = 'gray'
         dotcolor = 'black'
-        MeshLineWidth = 0.3
+        
         MembWidth = 0.5
         Mcolor = 'red'
         # memtextcolor = 'purple'
@@ -10266,7 +10390,7 @@ class myCanvas(FigureCanvas):
 
                 for poly in self.polygons:
                     if len(poly[0]) > 2:
-                        polygon = plt.Polygon(poly[0], color=poly[1], alpha=cdepth, lw=MeshLineWidth)
+                        polygon = plt.Polygon(poly[0], color=poly[1], alpha=cdepth, lw=MeshLineWidth)# , edgecolor='r',closed=True)
                         self.ax.add_patch(polygon)
                 for poly in self.polygons:
                     if len(poly[0]) == 2:
@@ -10428,6 +10552,10 @@ class myCanvas(FigureCanvas):
                 self.figure.tight_layout()
 
                 self.points = np.array(node.Node)
+
+                if constantview: 
+                    plt.xlim(self.currentXlim[0], self.currentXlim[1])
+                    plt.ylim( self.currentYlim[0],  self.currentYlim[1])
 
                 self.figure.canvas.mpl_connect('button_release_event', self.onReleased)
                 self.figure.canvas.mpl_connect('scroll_event',self.zoom)
@@ -10645,7 +10773,7 @@ if __name__ == "__main__":
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
     ui.setupUi(MainWindow)
-    # ui.redirect()
+    ui.redirect()
     ui.actions(MainWindow)
     readingTireComponentFile()
     MainWindow.show()

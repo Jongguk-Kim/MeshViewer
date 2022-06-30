@@ -5218,7 +5218,7 @@ class Ui_MainWindow(object):
         self.cdepth_solid.setAlignment(QtCore.Qt.AlignCenter)
         self.cdepth_solid.setObjectName("cdepth_solid")
         self.pushButton_colordepth = QtWidgets.QPushButton(self.groupBox_CUTELayout)
-        self.pushButton_colordepth.setGeometry(QtCore.QRect(3, 180, 121, 23))
+        self.pushButton_colordepth.setGeometry(QtCore.QRect(3, 182, 121, 20))
         self.pushButton_colordepth.setObjectName("pushButton_colordepth")
         self.Cdepth_memb_val = QtWidgets.QLineEdit(self.groupBox_CUTELayout)
         self.Cdepth_memb_val.setGeometry(QtCore.QRect(233, 182, 30, 20))
@@ -5229,7 +5229,7 @@ class Ui_MainWindow(object):
         self.Cdepth_solid_val.setAlignment(QtCore.Qt.AlignCenter)
         self.Cdepth_solid_val.setObjectName("Cdepth_solid_val")
         self.cdepth_memb = QtWidgets.QLabel(self.groupBox_CUTELayout)
-        self.cdepth_memb.setGeometry(QtCore.QRect(192, 184, 41, 16))
+        self.cdepth_memb.setGeometry(QtCore.QRect(192, 184, 41, 20))
         self.cdepth_memb.setAlignment(QtCore.Qt.AlignCenter)
         self.cdepth_memb.setObjectName("cdepth_memb")
         self.txt_coordinate_point = QtWidgets.QLineEdit(self.groupBox_CUTELayout)
@@ -5240,7 +5240,7 @@ class Ui_MainWindow(object):
         self.pushButton_search_clear.setGeometry(QtCore.QRect(8, 131, 60, 20))
         self.pushButton_search_clear.setObjectName("pushButton_search_clear")
         self.cdepth_meshline = QtWidgets.QLabel(self.groupBox_CUTELayout)
-        self.cdepth_meshline.setGeometry(QtCore.QRect(265, 185, 31, 16))
+        self.cdepth_meshline.setGeometry(QtCore.QRect(265, 185, 31, 20))
         self.cdepth_meshline.setAlignment(QtCore.Qt.AlignCenter)
         self.cdepth_meshline.setObjectName("cdepth_meshline")
         self.Cdepth_mesh_val = QtWidgets.QLineEdit(self.groupBox_CUTELayout)
@@ -5248,12 +5248,31 @@ class Ui_MainWindow(object):
         self.Cdepth_mesh_val.setAlignment(QtCore.Qt.AlignCenter)
         self.Cdepth_mesh_val.setObjectName("Cdepth_mesh_val")
         self.checkBox_MergingNode = QtWidgets.QCheckBox(self.groupBox_CUTELayout)
-        self.checkBox_MergingNode.setGeometry(QtCore.QRect(10, 210, 111, 20))
+        self.checkBox_MergingNode.setGeometry(QtCore.QRect(160, 210, 61, 20))
         self.checkBox_MergingNode.setMaximumSize(QtCore.QSize(130, 20))
         self.checkBox_MergingNode.setObjectName("checkBox_MergingNode")
         self.pushButton_printMergedElement = QtWidgets.QPushButton(self.groupBox_CUTELayout)
-        self.pushButton_printMergedElement.setGeometry(QtCore.QRect(150, 210, 171, 20))
+        self.pushButton_printMergedElement.setGeometry(QtCore.QRect(260, 210, 61, 20))
         self.pushButton_printMergedElement.setObjectName("pushButton_printMergedElement")
+        self.checkBox_AddNode = QtWidgets.QCheckBox(self.groupBox_CUTELayout)
+        self.checkBox_AddNode.setGeometry(QtCore.QRect(58, 210, 41, 20))
+        self.checkBox_AddNode.setMaximumSize(QtCore.QSize(130, 20))
+        self.checkBox_AddNode.setObjectName("checkBox_AddNode")
+        self.checkBox_MoveNode = QtWidgets.QCheckBox(self.groupBox_CUTELayout)
+        self.checkBox_MoveNode.setGeometry(QtCore.QRect(105, 210, 51, 20))
+        self.checkBox_MoveNode.setMaximumSize(QtCore.QSize(130, 20))
+        self.checkBox_MoveNode.setObjectName("checkBox_MoveNode")
+        self.search_node_2 = QtWidgets.QLabel(self.groupBox_CUTELayout)
+        self.search_node_2.setGeometry(QtCore.QRect(8, 210, 41, 20))
+        self.search_node_2.setAlignment(QtCore.Qt.AlignCenter)
+        self.search_node_2.setObjectName("search_node_2")
+        self.pushButton_revert = QtWidgets.QPushButton(self.groupBox_CUTELayout)
+        self.pushButton_revert.setGeometry(QtCore.QRect(220, 210, 31, 20))
+        self.pushButton_revert.setText("rev")
+        # icon = QtGui.QIcon()
+        # icon.addPixmap(QtGui.QPixmap("revert_icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        # self.pushButton_revert.setIcon(icon)
+        self.pushButton_revert.setObjectName("pushButton_revert")
         self.verticalLayout.addWidget(self.groupBox_CUTELayout)
         self.groupBox = QtWidgets.QGroupBox(self.centralwidget)
         self.groupBox.setMinimumSize(QtCore.QSize(330, 25))
@@ -5444,8 +5463,11 @@ class Ui_MainWindow(object):
         self.pushButton_search_clear.setText(_translate("MainWindow", "clear"))
         self.cdepth_meshline.setText(_translate("MainWindow", "Line"))
         self.Cdepth_mesh_val.setText(_translate("MainWindow", "0.3"))
-        self.checkBox_MergingNode.setText(_translate("MainWindow", "Merging Node"))
-        self.pushButton_printMergedElement.setText(_translate("MainWindow", "Print Element Definition"))
+        self.checkBox_MergingNode.setText(_translate("MainWindow", "Merge"))
+        self.pushButton_printMergedElement.setText(_translate("MainWindow", "Print "))
+        self.checkBox_AddNode.setText(_translate("MainWindow", "Add"))
+        self.checkBox_MoveNode.setText(_translate("MainWindow", "Move"))
+        self.search_node_2.setText(_translate("MainWindow", "NODE"))
         self.checkBox_ElsetNode.setText(_translate("MainWindow", "Node No"))
         self.checkBox_ElsetElement.setText(_translate("MainWindow", "ELement No"))
         self.pushButton_SurfaceSeq.setText(_translate("MainWindow", "Clear sets"))
@@ -5608,7 +5630,10 @@ class Ui_MainWindow(object):
 
         self.checkBox_MergingNode.clicked.connect(self.mergingNode_2d)
         self.pushButton_printMergedElement.clicked.connect(self.print_mergedElements)
-        self.pushButton_printMergedElement.setEnabled(False)
+        self.checkBox_AddNode.clicked.connect(self.addNode_2d)
+        self.checkBox_MoveNode.clicked.connect(self.moveNode_2d)
+        self.pushButton_revert.clicked.connect(self.revertNode_2d)
+        # self.pushButton_printMergedElement.setEnabled(False)
         ############################################################# 
           ## QDialog : self.setLayout(self.verticalLayout_2)
         ###### #######################################################
@@ -5895,34 +5920,19 @@ class Ui_MainWindow(object):
             self.radioButton_dynamicFootprint.setChecked(True)
         elif self.lineEdit_4_Sim_Type.text() == "D105": 
             self.radioButton_standingWave.setChecked(True)
+        self.setModifyingMode(False)
 
+    def setModifyingMode(self, mode): 
+        self.checkBox_AddNode.setEnabled(mode)
+        self.checkBox_MoveNode.setEnabled(mode)
+        self.checkBox_MergingNode.setEnabled(mode)
 
     def redirect(self): 
         self._stdout = StdoutRedirect()
         self._stdout.start()
         self._stdout.printOccur.connect(lambda x : self._append_text(x))
     
-    def print_mergedElements(self): 
-        self.textBrowser.clear() 
-        print("*ELEMENT, TYPE=MGAX1")
-        c3count = 0 
-        for e in self.element.Element: 
-            if e[3] ==0: 
-                print("%5d, %5d, %5d"%(e[0], e[1], e[2])) 
-            elif e[4] ==0: 
-                c3count+= 1 
-
-        if c3count : 
-            print("*ELEMENT, TYPE=CGAX3H")
-            for e in self.element.Element: 
-                if e[3] and not e[4]: 
-                    print("%5d, %5d, %5d, %5d"%(e[0], e[1], e[2], e[3])) 
-        print("*ELEMENT, TYPE=CGAX4H")
-        for e in self.element.Element: 
-            if e[3] and e[4]: 
-                print("%5d, %5d, %5d, %5d, %5d"%(e[0], e[1], e[2], e[3], e[4])) 
-        
-
+    
     def saveSimulationCode(self): 
         fp=open("simcode.dat", 'w')
         fp.write("%s\n"%(self.lineEdit_0_Location.text().strip()))
@@ -6105,12 +6115,13 @@ class Ui_MainWindow(object):
             
 
     def callISLM_Dim_Inflated(self): 
+        self.setModifyingMode(False)
         host = '10.82.66.65'
         user = 'fiper'
         pw = 'sartfiper'
         self.ftp = FTP.SSHClient()
         self.ftp.set_missing_host_key_policy(FTP.AutoAddPolicy())
-
+        
         try: 
             port = 22 
             self.ftp.connect(host, username=user, password=pw, port=port, timeout=3)
@@ -6166,6 +6177,7 @@ class Ui_MainWindow(object):
         if simType == 'D103': 
             localInf = simCode + "-deformed.inp"
             infFile = jobDir +"/" + simCode + "-deformed.inp" 
+            datafile = jobDir +"/" + simCode + "-Dimension.txt" 
 
         if simType == 'D101' or simType == 'D104': 
             infFile = jobDir +"/" + simCode + "-Inflated.inp"
@@ -6175,6 +6187,9 @@ class Ui_MainWindow(object):
             localInf = simCode + "-Inflated.inp"
             localTop = simCode + "-Deformed_TOP.inp"
             localBtm = simCode + "-Deformed_BTM.inp"
+            if simType == 'D101': datafile = jobDir +"/" + simCode + "-DOE-Staticfootprint.txt" 
+            else: datafile = jobDir +"/" + simCode + "-DOE-Rollingcharacteristics.txt"  
+
 
         if simType == 'D105': 
 
@@ -6185,6 +6200,7 @@ class Ui_MainWindow(object):
             localInf = simCode + "-Minwave.inp"
             localTop = simCode + "-Maxwave.inp"
             localBtm = simCode + "-MaxDeformed.inp"
+            datafile = jobDir +"/" + simCode + "-StandingWave.txt" 
 
         if not self.checkBox_addComparingMesh.isChecked() or len(self.ISLM_mold) > 3: 
             self.ISLM_mold=[]
@@ -6265,6 +6281,20 @@ class Ui_MainWindow(object):
 
         self.comparingISLMLayoutMode = True 
         self.node = False 
+        try: 
+            self.sftp.get(datafile, cwd+ "-data.txt")
+            with open(cwd+ "-data.txt") as DT: 
+                lines = DT.readlines()
+            txt = ""
+            for line in lines: 
+                if "Success::" in line: break 
+                wd = line.split(",")[1]
+                txt += wd 
+            print("\n** simulation results")
+            print(txt)
+        except: 
+            pass 
+
         self.ftp.close()
 
         self.plot_ISLMComparingLayouts()
@@ -6484,6 +6514,7 @@ class Ui_MainWindow(object):
             self.Cdepth_solid_val.setText("0.5")
             self.call2Dmesh(manualfile=self.meshfile)
             self.cwd = writeworkingdirectory(self.meshfile, dfile=self.dfile)
+            self.setModifyingMode(True)
 
     def loading2DLayout(self): 
 
@@ -6806,11 +6837,11 @@ class Ui_MainWindow(object):
         # self.figure.elchars=[]
 
         self.node, self.element, self.elset, self.surface, self.tie, self.xy, self.rims = Mesh2DInformation(self.meshfile, self.TireComponents)
-        if len(self.node.Node[0]) > 4 or len(self.temprature_contour): 
-            self.checkBox_Temperaure.setEnabled(True)
-        else: 
-            self.checkBox_Temperaure.setEnabled(False)
-        print("")
+        # if len(self.node.Node[0]) > 4 or len(self.temprature_contour): 
+        #     self.checkBox_Temperaure.setEnabled(True)
+        # else: 
+        #     self.checkBox_Temperaure.setEnabled(False)
+        # print("")
         if len(self.element.Element) ==0: 
             with open(self.meshfile) as MF: 
                 lines = MF.readlines()
@@ -6893,15 +6924,88 @@ class Ui_MainWindow(object):
         
         if self.checkBox_MergingNode.isChecked() and self.figure.temperature_mode == False: 
             self.figure.snap_mode = 1 
-            self.figure.merging_mode = True
-            self.pushButton_printMergedElement.setEnabled(True)
+            self.figure.merging_mode = True 
+            self.figure.adding_mode = False
+            self.figure.moving_mode = False 
+            self.figure.merging_org_node=[]
+            self.figure.merging_target_node=[]
+            self.checkBox_AddNode.setChecked(False)
+            self.checkBox_MoveNode.setChecked(False)
              
         else: 
             if self.figure.temperature_mode == True : 
                 self.checkBox_MergingNode.setChecked(False)
             self.figure.merging_mode = False 
-            self.pushButton_printMergedElement.setEnabled(False)
 
+    def addNode_2d(self): 
+        if self.checkBox_AddNode.isChecked() and self.figure.temperature_mode == False: 
+            self.figure.snap_mode = 1 
+            self.figure.merging_mode = False 
+            self.figure.adding_mode = True
+            self.figure.moving_mode = False 
+            self.figure.merging_org_node=[]
+            self.figure.merging_target_node=[]
+            self.checkBox_MergingNode.setChecked(False)
+            self.checkBox_MoveNode.setChecked(False)
+             
+        else: 
+            if self.figure.temperature_mode == True : 
+                self.checkBox_AddNode.setChecked(False)
+            self.figure.adding_mode = False 
+
+    def moveNode_2d(self): 
+        if self.checkBox_MoveNode.isChecked() and self.figure.temperature_mode == False: 
+            self.figure.snap_mode = 1 
+            self.figure.merging_mode = False 
+            self.figure.adding_mode = False
+            self.figure.moving_mode = True 
+            self.figure.merging_org_node=[]
+            self.figure.merging_target_node=[]
+            self.checkBox_AddNode.setChecked(False)
+            self.checkBox_MergingNode.setChecked(False)
+             
+        else: 
+            if self.figure.temperature_mode == True : 
+                self.checkBox_MoveNode.setChecked(False)
+            self.figure.moving_mode = False 
+    def revertNode_2d(self): 
+        self.figure.merging_mode = False 
+        self.figure.adding_mode = False
+        self.figure.moving_mode = False 
+        self.checkBox_AddNode.setChecked(False)
+        self.checkBox_MoveNode.setChecked(False)
+        self.checkBox_MergingNode.setChecked(False)
+        self.ReloadMesh()
+    def print_mergedElements(self): 
+        self.figure.merging_mode = False 
+        self.figure.adding_mode = False
+        self.figure.moving_mode = False 
+        self.checkBox_AddNode.setChecked(False)
+        self.checkBox_MoveNode.setChecked(False)
+        self.checkBox_MergingNode.setChecked(False)
+        text = ""
+        text += "*NODE\n"
+        for n in self.node.Node : 
+            text+= "%5d,%13.6E,%13.6E,%13.6E\n"%(n[0], n[1], n[2], n[3])
+        text+= "*ELEMENT, TYPE=MGAX1\n"
+        c3count = 0 
+        for e in self.element.Element: 
+            if e[3] ==0: 
+                text+= "%5d, %5d, %5d\n"%(e[0], e[1], e[2])
+            elif e[4] ==0: 
+                c3count+= 1 
+
+        if c3count : 
+            text+= "*ELEMENT, TYPE=CGAX3H\n"
+            for e in self.element.Element: 
+                if e[3] and not e[4]: 
+                    text += "%5d, %5d, %5d, %5d\n"%(e[0], e[1], e[2], e[3])
+        text+= "*ELEMENT, TYPE=CGAX4H\n"
+        for e in self.element.Element: 
+            if e[3] and e[4]: 
+                text += "%5d, %5d, %5d, %5d, %5d\n"%(e[0], e[1], e[2], e[3], e[4])
+        self.textBrowser.clear() 
+        print(text)
 
     def Redraw(self):
         if self.view3D: return 
@@ -6913,6 +7017,7 @@ class Ui_MainWindow(object):
 
         self.figure.getplotinformation(self.node, self.element, self.elset, self.surface, self.tie,  xy=self.xy)
         self.draw2Dmesh(self.meshfile)
+        self.setModifyingMode(True)
         
     def drawDots(self):
         if self.view3D: return 
@@ -7202,7 +7307,7 @@ class Ui_MainWindow(object):
     def AddComparingLayouts(self, comparingMesh=False): 
 
         if not self.view3D: 
-        
+            self.setModifyingMode(False)
             if self.layoutcounting ==0: 
                 print ("\n* Need to load a mesh first.\n")
                 return
@@ -7225,6 +7330,7 @@ class Ui_MainWindow(object):
             else: 
                 self.figure.Draw_profiles(self.Profiles, self.Bead_Min_R)
         else: 
+
             self.addMesh()
 
     def putAnotherLayout(self, comparingmesh): 
@@ -7970,6 +8076,8 @@ class Ui_MainWindow(object):
                 self.getting_pyVistaMesh(filetypes="File Open(*.ptn)", adding=True)
             else: 
                 self.openSMARTFile()
+            self.setModifyingMode(False)
+
         else: 
             self.openFile()
 
@@ -8199,7 +8307,7 @@ class Ui_MainWindow(object):
             self.showMesh() 
             if len(meshfiles) > 1: self.checkBox_colorChanging.setChecked(True)
             self.changingCurrentColor()
-
+            self.setModifyingMode(False)
             # if isfile(tempmeshfile+".inp"): remove(tempmeshfile+".inp")
 
     def saveSFRICasSTL(self): 
@@ -9001,6 +9109,11 @@ class myCanvas(FigureCanvas):
         self.mtie =[]; self.stie =[]
         self.ric_r=[]; self.ric_l=[]; self.cont=[]
 
+        self.colordepth = 0.5 
+        self.membranedepth = 0.8 
+        self.dotsize = 0.1
+        self.meshLineWidth = 0.3 
+
         self.ax =[]
         self.pei =0; self.pni =0
 
@@ -9045,9 +9158,12 @@ class myCanvas(FigureCanvas):
         self.temperature_mode = False 
         self.temperature_node =[]
         self.merging_mode = False 
+        self.adding_mode = False 
+        self.moving_mode = False 
         self.merging_org_node=[]
         self.merging_target_node=[]
         self.selectMergingNode=[]
+        self.mergingNodeID=0
 
         self.currentXlim=None 
         self.currentYlim=None 
@@ -9303,8 +9419,80 @@ class myCanvas(FigureCanvas):
             self.plot_current_display_range()
 
         elif event.button ==3:
-            self.clicked += 1
+            if self.moving_mode: 
+                distmargin = 0.05E-3 
+                if not len(self.merging_org_node): 
+                    ind = []
+                    indx1 = np.where(self.points[:,2]>=event.xdata-0.01)[0]
+                    indx2 = np.where(self.points[:,2]<=event.xdata+0.01)[0]
+                    indx = np.intersect1d(indx1, indx2)
+                    if len(indx) > 0: 
+                        indy1 = np.where(self.points[:,3]>=event.ydata-0.01)[0]
+                        indy2 = np.where(self.points[:,3]<=event.ydata+0.01)[0]
+                        indy = np.intersect1d(indy1, indy2)
+                        if len(indy) > 0: 
+                            ind = np.intersect1d(indx, indy) 
+                    if len(ind) > 0 : 
+                        mn = []
+                        for ix in ind: 
+                            l = math.sqrt( (event.xdata - self.points[ix][2])**2 + (event.ydata - self.points[ix][3])**2 )
+                            mn.append([ix, l])
+                        mn = np.array(mn)
+                        lmin = np.min(mn[:,1]) 
+                        lx = -1
+                        for l in mn: 
+                            if l[1] == lmin: 
+                                lx = int(l[0])
+                                break 
+                        if lx >=0: 
+                            tx = self.points[lx][2]
+                            ty = self.points[lx][3]
+                            d, = plt.plot(tx, ty, 'o', color='red', markersize=dotsize)
+                            self.dots.append(d)
 
+                            self.merging_org_node = [0, 0, tx, ty]
+                            
+                            for n in self.meshNode.Node: 
+                                if abs(n[2] - tx)<=distmargin and abs(n[3] -ty) <=distmargin: 
+                                    self.mergingNodeID = n[0]
+                                    break 
+                            self.plot_current_display_range()
+                    
+                elif len(self.merging_org_node) and not len(self.merging_target_node): 
+                    tx = event.xdata; ty = event.ydata
+                    self.merging_target_node = [0, 0, tx, ty]
+                    for i, n in enumerate(self.meshNode.Node):
+                        if n[0] == self.mergingNodeID: 
+                            self.meshNode.Node[i][2] = tx 
+                            self.meshNode.Node[i][3] = ty
+                            break 
+                    for i, e in enumerate(self.meshElement.Element): 
+                        for j in range(1, 5): 
+                            if e[j] == self.mergingNodeID: 
+                                self.meshElement.Element[i][-2][j-1][0]=tx
+                                self.meshElement.Element[i][-2][j-1][1]=ty 
+                    self.currentXlim = self.ax.get_xlim()
+                    self.currentYlim = self.ax.get_ylim()
+                    self.getplotinformation(self.meshNode, self.meshElement, self.meshElset, self.meshSurface, self.meshTie)
+                    self.gplot(node=self.meshNode, element=self.meshElement, size=0.1, 
+                            cdepth=self.colordepth, mdepth=self.membranedepth, MeshLineWidth=self.meshLineWidth)
+                    self.merging_org_node=[]
+                    self.merging_target_node=[] 
+                    self.dots = []
+                return 
+
+            if self.adding_mode: 
+                tx = event.xdata; ty = event.ydata 
+                newNode = self.addMeshnode(tx, ty) 
+                print (" Node : %6d,%10.6f,%10.6f,%10.6f"%(newNode[0], newNode[1], newNode[2], newNode[3]))
+                self.currentXlim = self.ax.get_xlim()
+                self.currentYlim = self.ax.get_ylim()
+                self.getplotinformation(self.meshNode, self.meshElement, self.meshElset, self.meshSurface, self.meshTie)
+                self.gplot(node=self.meshNode, element=self.meshElement, size=0.1, \
+                    cdepth=self.colordepth, mdepth=self.membranedepth, MeshLineWidth=self.meshLineWidth)
+                return 
+
+            self.clicked += 1
             if self.snap_mode == 1: 
                 if self.temperature_mode: 
                     ind = []
@@ -9382,6 +9570,7 @@ class myCanvas(FigureCanvas):
                         if lx >=0: 
                             tx = self.points[lx][2]
                             ty = self.points[lx][3]
+
                             if self.merging_mode:
                                 distmargin = 0.05E-3  
                                 if not len(self.merging_org_node): 
@@ -9396,7 +9585,6 @@ class myCanvas(FigureCanvas):
                                     self.merging_target_node = [0, 0, tx, ty]
                                     d, = plt.plot(tx, ty, 'o', color='red', markersize=dotsize)
                                     self.dots.append(d)
-
                                     for n in self.meshNode.Node: 
                                         if abs(n[2] - self.merging_target_node[2])<=distmargin and abs(n[3] - self.merging_target_node[3]) <=distmargin: 
                                             nodeID = n[0]
@@ -9409,11 +9597,13 @@ class myCanvas(FigureCanvas):
                                                 self.meshElement.Element[i][j] = nodeID 
                                                 self.meshElement.Element[i][-2][j-1][0]=tx
                                                 self.meshElement.Element[i][-2][j-1][1]=ty 
-                                                
+                                    ptSize = 0 
+                                    
                                     self.currentXlim = self.ax.get_xlim()
                                     self.currentYlim = self.ax.get_ylim()
                                     self.getplotinformation(self.meshNode, self.meshElement, self.meshElset, self.meshSurface, self.meshTie)
-                                    self.gplot(node=self.meshNode, element=self.meshElement, size=0.0)
+                                    self.gplot(node=self.meshNode, element=self.meshElement, size=ptSize, 
+                                            cdepth=self.colordepth, mdepth=self.membranedepth, MeshLineWidth=self.meshLineWidth)
                                     self.merging_org_node=[]
                                     self.merging_target_node=[] 
                                     self.dots = []
@@ -9426,7 +9616,7 @@ class myCanvas(FigureCanvas):
                     
             else: 
                 tx = event.xdata; ty = event.ydata
-
+                
             prev = 0 
             for xs,ys in zip(self.lxs, self.lys): 
                 if tx == xs and ty == ys: 
@@ -9487,6 +9677,13 @@ class myCanvas(FigureCanvas):
                         ln, = plt.plot([self.lxs[0], self.lxs[N]],[self.lys[0], self.lys[N]], color='gray', linestyle="--", linewidth=dotsize/3 )
                         self.cline.append(ln)
             self.plot_current_display_range()
+
+    def addMeshnode(self, px, py): 
+        # self.meshNode.Node
+        npn = np.array(self.meshNode.Node)
+        nodemax = np.max(npn[:,0])
+        self.meshNode.Add([nodemax+1, 0, px, py])
+        return [nodemax+1, 0, px, py]
 
 
     def ComparingMode(self, edge0, node0, xy0, edge1, node1, xy1): 
@@ -10310,12 +10507,17 @@ class myCanvas(FigureCanvas):
         X = int(xy/10)
         Y = int(xy%10)
 
-        if self.merging_mode: 
+        if self.merging_mode or self.adding_mode or self.moving_mode: 
             constantview = True 
         else: 
             constantview = False 
             self.meshNode = node 
             self.meshElement = element 
+
+            self.colordepth=cdepth 
+            self.membranedepth = mdepth 
+            self.dotsize = size 
+            self.meshLineWidth = MeshLineWidth
 
         nodecolor = 'gray'
         dotcolor = 'black'
@@ -10554,8 +10756,11 @@ class myCanvas(FigureCanvas):
                 self.points = np.array(node.Node)
 
                 if constantview: 
-                    plt.xlim(self.currentXlim[0], self.currentXlim[1])
-                    plt.ylim( self.currentYlim[0],  self.currentYlim[1])
+                    try: 
+                        plt.xlim(self.currentXlim[0], self.currentXlim[1])
+                        plt.ylim( self.currentYlim[0],  self.currentYlim[1])
+                    except: 
+                        pass 
 
                 self.figure.canvas.mpl_connect('button_release_event', self.onReleased)
                 self.figure.canvas.mpl_connect('scroll_event',self.zoom)

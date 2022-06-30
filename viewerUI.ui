@@ -2021,9 +2021,9 @@
            <property name="geometry">
             <rect>
              <x>3</x>
-             <y>180</y>
+             <y>182</y>
              <width>121</width>
-             <height>23</height>
+             <height>20</height>
             </rect>
            </property>
            <property name="text">
@@ -2068,7 +2068,7 @@
              <x>192</x>
              <y>184</y>
              <width>41</width>
-             <height>16</height>
+             <height>20</height>
             </rect>
            </property>
            <property name="text">
@@ -2113,7 +2113,7 @@
              <x>265</x>
              <y>185</y>
              <width>31</width>
-             <height>16</height>
+             <height>20</height>
             </rect>
            </property>
            <property name="text">
@@ -2142,9 +2142,9 @@
           <widget class="QCheckBox" name="checkBox_MergingNode">
            <property name="geometry">
             <rect>
-             <x>10</x>
+             <x>160</x>
              <y>210</y>
-             <width>111</width>
+             <width>61</width>
              <height>20</height>
             </rect>
            </property>
@@ -2155,20 +2155,91 @@
             </size>
            </property>
            <property name="text">
-            <string>Merging Node</string>
+            <string>Merge</string>
            </property>
           </widget>
           <widget class="QPushButton" name="pushButton_printMergedElement">
            <property name="geometry">
             <rect>
-             <x>150</x>
+             <x>260</x>
              <y>210</y>
-             <width>171</width>
+             <width>61</width>
              <height>20</height>
             </rect>
            </property>
            <property name="text">
-            <string>Print Element Definition</string>
+            <string>Print </string>
+           </property>
+          </widget>
+          <widget class="QCheckBox" name="checkBox_AddNode">
+           <property name="geometry">
+            <rect>
+             <x>58</x>
+             <y>210</y>
+             <width>41</width>
+             <height>20</height>
+            </rect>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>130</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Add</string>
+           </property>
+          </widget>
+          <widget class="QCheckBox" name="checkBox_MoveNode">
+           <property name="geometry">
+            <rect>
+             <x>105</x>
+             <y>210</y>
+             <width>51</width>
+             <height>20</height>
+            </rect>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>130</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Move</string>
+           </property>
+          </widget>
+          <widget class="QLabel" name="search_node_2">
+           <property name="geometry">
+            <rect>
+             <x>8</x>
+             <y>210</y>
+             <width>41</width>
+             <height>20</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>NODE</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+          <widget class="QPushButton" name="pushButton_revert">
+           <property name="geometry">
+            <rect>
+             <x>220</x>
+             <y>210</y>
+             <width>31</width>
+             <height>20</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset>
+             <normaloff>revert_icon.png</normaloff>revert_icon.png</iconset>
            </property>
           </widget>
          </widget>

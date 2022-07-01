@@ -2477,7 +2477,7 @@ def FindInnerFreeEdges(Oedge, medge):
         if mch == 0: 
             residuals.append(ed1)
     return residuals 
-def DivideInnerFreeEdgesToMasterSlave(edges, node_class): 
+def DivideInnerFreeEdgesToMasterSlave(edges, node_class, gap=0.1E-3): 
     nodes = node_class 
 
     masters=[]
@@ -2494,26 +2494,49 @@ def DivideInnerFreeEdgesToMasterSlave(edges, node_class):
         MinZ = min(Lz); MaxZ = max(Lz)
         tslave = []
         for j in range(len(edges)): 
-            
             if i == j : continue 
-            
             if edges[i][0] == edges[j][0] or edges[i][0] == edges[j][1] :
                 N1 = nodes.NodeByID(edges[j][0])
                 N2 = nodes.NodeByID(edges[j][1])
                 SL = NodeDistance(N1, N2)  
+                
                 if ML < SL: 
                     continue 
                 if edges[i][0] == edges[j][0]: 
                     if N2[2] >= MinY and N2[2] <= MaxY and N2[3] >= MinZ and N2[3] <= MaxZ: 
                         dist = DistanceFromLineToNode2D(N2, [N01, N02], onlydist=1)
-                        if dist < .10E-03 : 
+                        if dist < gap : 
+                            con1 = 1 
+                            c1e = edges[j]
+                            tslave.append(edges[j])
+                    elif  abs(MinY - MaxY) <gap and abs(N2[2]-MinY) < gap and ((N01[3] < N2[3] and N2[3] < N02[3]) or (N02[3] < N2[3] and N2[3] < N01[3])): 
+                        dist = DistanceFromLineToNode2D(N2, [N01, N02], onlydist=1)
+                        if dist < gap : 
+                            con1 = 1 
+                            c1e = edges[j]
+                            tslave.append(edges[j])
+                    elif  abs(MinZ - MaxZ) <gap and abs(N2[3]-MinZ) < gap and ((N01[2] < N2[2] and N2[2] < N02[2]) or (N02[2] < N2[2] and N2[2] < N01[2])): 
+                        dist = DistanceFromLineToNode2D(N2, [N01, N02], onlydist=1)
+                        if dist < gap : 
                             con1 = 1 
                             c1e = edges[j]
                             tslave.append(edges[j])
                 else: 
                     if N1[2] >= MinY and N1[2] <= MaxY and N1[3] >= MinZ and N1[3] <= MaxZ: 
                         dist = DistanceFromLineToNode2D(N1, [N01, N02], onlydist=1)
-                        if dist < .10E-03 : 
+                        if dist < gap : 
+                            con1 = 1 
+                            c1e = edges[j]
+                            tslave.append(edges[j])
+                    elif  abs(MinY - MaxY) <gap and abs(N1[2]-MinY) < gap  and ((N01[3] < N1[3] and N1[3] < N02[3]) or (N02[3] < N1[3] and N1[3] < N01[3])): 
+                        dist = DistanceFromLineToNode2D(N1, [N01, N02], onlydist=1)
+                        if dist < gap : 
+                            con1 = 1 
+                            c1e = edges[j]
+                            tslave.append(edges[j])
+                    elif  abs(MinZ - MaxZ) <gap and abs(N1[3]-MinZ) < gap and ((N01[2] < N1[2] and N1[2] < N02[2]) or (N02[2] < N1[2] and N1[2] < N01[2])): 
+                        dist = DistanceFromLineToNode2D(N1, [N01, N02], onlydist=1)
+                        if dist < gap : 
                             con1 = 1 
                             c1e = edges[j]
                             tslave.append(edges[j])
@@ -2524,25 +2547,48 @@ def DivideInnerFreeEdgesToMasterSlave(edges, node_class):
                 SL = NodeDistance(N1, N2)  
                 if ML < SL: 
                     continue 
-
                 if edges[i][1] == edges[j][0]: 
                     if N2[2] >= MinY and N2[2] <= MaxY and N2[3] >= MinZ and N2[3] <= MaxZ: 
                         dist = DistanceFromLineToNode2D(N2, [N01, N02], onlydist=1)
-                        if dist < .10E-03 : 
+                        if dist < gap : 
+                            con2 = 1 
+                            c2e = edges[j]
+                            tslave.append(edges[j])
+                    elif  abs(MinY - MaxY) <gap and abs(N2[2]-MinY) < gap and ((N01[3] < N2[3] and N2[3] < N02[3]) or (N02[3] < N2[3] and N2[3] < N01[3])): 
+                        dist = DistanceFromLineToNode2D(N2, [N01, N02], onlydist=1)
+                        if dist < gap : 
+                            con2 = 1 
+                            c2e = edges[j]
+                            tslave.append(edges[j])
+                    elif  abs(MinZ - MaxZ) <gap and abs(N2[3]-MinZ) < gap and ((N01[2] < N2[2] and N2[2] < N02[2]) or (N02[2] < N2[2] and N2[2] < N01[2])): 
+                        dist = DistanceFromLineToNode2D(N2, [N01, N02], onlydist=1)
+                        if dist < gap : 
                             con2 = 1 
                             c2e = edges[j]
                             tslave.append(edges[j])
                 else: 
                     if N1[2] >= MinY and N1[2] <= MaxY and N1[3] >= MinZ and N1[3] <= MaxZ: 
                         dist = DistanceFromLineToNode2D(N1, [N01, N02], onlydist=1)
-                        if dist < .10E-03 : 
+                        if dist < gap : 
+                            con2 = 1 
+                            c2e = edges[j]
+                            tslave.append(edges[j])
+                    elif  abs(MinY - MaxY) <gap and abs(N1[2]-MinY) < gap and ((N01[3] < N1[3] and N1[3] < N02[3]) or (N02[3] < N1[3] and N1[3] < N01[3])): 
+                        dist = DistanceFromLineToNode2D(N1, [N01, N02], onlydist=1)
+                        if dist < gap : 
+                            con2 = 1 
+                            c2e = edges[j]
+                            tslave.append(edges[j])
+                    elif  abs(MinZ - MaxZ) <gap and abs(N1[3]-MinZ) < gap and ((N01[2] < N1[2] and N1[2] < N02[2]) or (N02[2] < N1[2] and N1[2] < N01[2])): 
+                        dist = DistanceFromLineToNode2D(N1, [N01, N02], onlydist=1)
+                        if dist < gap : 
                             con2 = 1 
                             c2e = edges[j]
                             tslave.append(edges[j])
 
             if con1 == 1 and con2 ==1: 
                 break 
-        
+
         if con1 ==1 or con2 == 1: 
             masters.append([edges[i], tslave])
         i+=1 
@@ -2551,7 +2597,6 @@ def DivideInnerFreeEdgesToMasterSlave(edges, node_class):
     isError = 0 
     TIE_ERROR = []
     for e in masters: 
-        
         excluding.append(e[0])
         excluding.append(e[1][0])
         if len(e[1]) <2: 
@@ -2576,20 +2621,13 @@ def DivideInnerFreeEdgesToMasterSlave(edges, node_class):
         s_temp.append(ed[1][1])
         if ed[1][0][0] == ed[1][1][1] or ed[1][0][1] == ed[1][1][0] : 
             slave_edge.append(s_temp)
-            # print ("* Slave Edges %2d, No=%d"%(i, len(s_temp)))
             continue 
 
         nexts = ConnectedEdge(ed[1][0], edges, exclude=excluding)
         if len(nexts) ==0: 
-            # print (len(master_edge))
-            # print ("--")
-            # print (len(slave_edge))
-            # print ("**")
-            # print (TIE_ERROR)
             return master_edge, slave_edge, TIE_ERROR
         
         s_temp.append(nexts[0])
-        # print (ed[0], ":", nexts)
         if nexts[0][0] != ed[1][1][1] and nexts[0][1] != ed[1][1][0] : 
             excluding.append(nexts[0]) 
             nexts = ConnectedEdge(nexts[0], edges, exclude=excluding)
@@ -2597,10 +2635,7 @@ def DivideInnerFreeEdgesToMasterSlave(edges, node_class):
                 s_temp.append(nexts[0])
                 excluding.append(nexts[0]) 
                 nexts = ConnectedEdge(nexts[0], edges, exclude=excluding)
-        
-            # print (ed[0], ":::", nexts)
         slave_edge.append(s_temp)
-        # print ("**Slave Edges %2d, No=%d"%(i, len(s_temp)))
 
     i = 0 
     while i < len(edges): 
@@ -2625,12 +2660,11 @@ def DivideInnerFreeEdgesToMasterSlave(edges, node_class):
             if fd: break  
         if fd: continue 
         i+=1 
-    
     if len(edges): 
         for e in edges: 
-            TIE_ERROR.append(e[4])    
-            
+            TIE_ERROR.append(e[4]) 
     return master_edge, slave_edge, TIE_ERROR
+
 def NodeDistance(N1, N2, xy=0): 
     if xy > 10: 
         x = int(xy/10); y=int(xy%10)
@@ -6983,6 +7017,21 @@ class Ui_MainWindow(object):
         self.checkBox_AddNode.setChecked(False)
         self.checkBox_MoveNode.setChecked(False)
         self.checkBox_MergingNode.setChecked(False)
+
+        for mn in self.figure.modifiednodes: 
+            for e in self.element.Element: 
+                if mn == e[1] or mn == e[2] or mn == e[3] or mn == e[4]: 
+                    fd = True  
+                    break 
+            else: 
+                fd =False 
+            if not fd: 
+                N = len(self.node.Node)
+                for i in range(N-1, -1, -1): 
+                    if self.node.Node[i][0] == mn : 
+                        del(self.node.Node[i])
+                        break 
+             
         text = ""
         text += "*NODE\n"
         for n in self.node.Node : 
@@ -9164,6 +9213,7 @@ class myCanvas(FigureCanvas):
         self.merging_target_node=[]
         self.selectMergingNode=[]
         self.mergingNodeID=0
+        self.modifiednodes=[]
 
         self.currentXlim=None 
         self.currentYlim=None 
@@ -9471,6 +9521,8 @@ class myCanvas(FigureCanvas):
                             if e[j] == self.mergingNodeID: 
                                 self.meshElement.Element[i][-2][j-1][0]=tx
                                 self.meshElement.Element[i][-2][j-1][1]=ty 
+                    self.modifiednodes.append(self.mergingNodeID)
+
                     self.currentXlim = self.ax.get_xlim()
                     self.currentYlim = self.ax.get_ylim()
                     self.getplotinformation(self.meshNode, self.meshElement, self.meshElset, self.meshSurface, self.meshTie)
@@ -9484,6 +9536,7 @@ class myCanvas(FigureCanvas):
             if self.adding_mode: 
                 tx = event.xdata; ty = event.ydata 
                 newNode = self.addMeshnode(tx, ty) 
+                self.modifiednodes.append(newNode[0])
                 print (" Node : %6d,%10.6f,%10.6f,%10.6f"%(newNode[0], newNode[1], newNode[2], newNode[3]))
                 self.currentXlim = self.ax.get_xlim()
                 self.currentYlim = self.ax.get_ylim()

@@ -53,6 +53,9 @@ from matplotlib.patches import Arc
 import pyVista as Mesh 
 from pyvistaqt import QtInteractor, MainWindow
 
+import warnings 
+warnings.filterwarnings('ignore')
+
 viewerVersion=1
 componentsfile="c:\\Hankook\\tirecomponents.dat"
 TireComponents = [
@@ -126,6 +129,8 @@ islmProfileColor=['lightgray', 'black', 'blue', 'red']
 linetypes =['-', '--', '-.']
 lineThickness=[0.9, 0.6, 0.3]
 
+ISLM_simtype_supported=['D101', 'D103', 'D104', 'D105']
+
 preComponentColor = {  "CTR":"darkgray",       "CTB":"darkgray", 
                     "SUT" : "lightpink",    "UTR" : "lightpink", 
                     "CC1":"lightsalmon",    "C01":"lightsalmon",    "CCU":"lightsalmon",
@@ -145,7 +150,14 @@ preComponentColor = {  "CTR":"darkgray",       "CTB":"darkgray",
                     "PRESS":"blue",
                     "TDROAD":"coral",
                     "BDTOP":"gray",
-                    "TRW":"steelblue"#,
+                    "TRW":"steelblue",
+                    "BFT":"steelblue",
+                    "RFM":"lightsalmon",
+                    "SRTT":"darkkhaki",
+                    "CCT":"coral",
+                    "JBT":"orange",
+                    "steel":"red"#,
+                    # "":"",
                     # "":"",
 
 }
@@ -5051,6 +5063,10 @@ class Ui_MainWindow(object):
         self.checkBox_MoldProfile.setMaximumSize(QtCore.QSize(60, 25))
         self.checkBox_MoldProfile.setChecked(True)
         self.checkBox_MoldProfile.setObjectName("checkBox_MoldProfile")
+        self.checkBox_freeSimtype = QtWidgets.QCheckBox(self.groupBox_ISLM)
+        self.checkBox_freeSimtype.setGeometry(QtCore.QRect(10, 20, 16, 16))
+        self.checkBox_freeSimtype.setText("")
+        self.checkBox_freeSimtype.setObjectName("checkBox_freeSimtype")
         self.verticalLayout.addWidget(self.groupBox_ISLM)
         self.groupBox_LoadMesh = QtWidgets.QGroupBox(self.centralwidget)
         self.groupBox_LoadMesh.setMinimumSize(QtCore.QSize(330, 70))
@@ -5302,10 +5318,10 @@ class Ui_MainWindow(object):
         self.search_node_2.setObjectName("search_node_2")
         self.pushButton_revert = QtWidgets.QPushButton(self.groupBox_CUTELayout)
         self.pushButton_revert.setGeometry(QtCore.QRect(220, 210, 31, 20))
-        self.pushButton_revert.setText("rev")
-        # icon = QtGui.QIcon()
-        # icon.addPixmap(QtGui.QPixmap("revert_icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        # self.pushButton_revert.setIcon(icon)
+        self.pushButton_revert.setText("")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(".\\revert_icon.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton_revert.setIcon(icon)
         self.pushButton_revert.setObjectName("pushButton_revert")
         self.verticalLayout.addWidget(self.groupBox_CUTELayout)
         self.groupBox = QtWidgets.QGroupBox(self.centralwidget)
@@ -5566,6 +5582,7 @@ class Ui_MainWindow(object):
         self.pushButton_redraw.clicked.connect(self.Redraw)
         self.push_comparing.clicked.connect(self.AddComparingLayouts)
         self.push_regen_mesh.clicked.connect(self.RegenMesh)
+        self.checkBox_freeSimtype.clicked.connect(self.freeSimTYpeMode)
         # self.push_origin.clicked.connect(self.ReloadMesh)
         
         self.checkBox_MoldProfile.clicked.connect(self.plot_ISLMComparingLayouts)
@@ -5635,6 +5652,7 @@ class Ui_MainWindow(object):
             self.lineEdit_2_VT_Revision.setText(lines[3].strip())
             self.lineEdit_5_Sim_Num.setText(lines[4].strip())
             self.lineEdit_4_Sim_Type.setText(lines[5].strip())
+           
         else: 
             self.lineEdit_0_Location.setText('RND')
             self.lineEdit_1_VT_Number.setText("1023257")
@@ -5643,6 +5661,17 @@ class Ui_MainWindow(object):
             self.lineEdit_5_Sim_Num.setText('1')
             self.lineEdit_4_Sim_Type.setText("D103")
             self.saveSimulationCode()
+
+        for st in ISLM_simtype_supported: 
+            if st == self.lineEdit_4_Sim_Type.text(): 
+                exist = True 
+                break 
+        else: 
+            exist = False 
+        
+        if not exist: 
+            self.lineEdit_4_Sim_Type.setText("D103")
+            self.radioButton_dim.setChecked(True)
 
         self.lineEdit_0_Location.editingFinished.connect(self.saveSimulationCode)
         self.lineEdit_1_VT_Number.editingFinished.connect(self.saveSimulationCode)
@@ -6147,6 +6176,20 @@ class Ui_MainWindow(object):
         else: 
             return False  
             
+    def freeSimTYpeMode(self): 
+        if self.checkBox_freeSimtype.isChecked(): 
+            self.checkBox_MoldProfile.setEnabled(True)
+            self.checkBox_Initial_profile.setEnabled(True)
+            self.checkBox_Initial_inflated.setEnabled(True)
+            self.checkBox_inflated_loaded.setEnabled(True)
+
+            self.lineEdit_4_Sim_Type.setEnabled(True)
+        else: 
+            self.lineEdit_4_Sim_Type.setText("D103")
+            self.radioButton_dim.setChecked(True)
+            self.checkBox_Initial_inflated.setChecked(False)
+            self.checkBox_inflated_loaded.setChecked(False)
+            self.lineEdit_4_Sim_Type.setEnabled(False)
 
     def callISLM_Dim_Inflated(self): 
         self.setModifyingMode(False)
@@ -6175,12 +6218,12 @@ class Ui_MainWindow(object):
         vt_revision = self.lineEdit_2_VT_Revision.text().strip()
         sim_serial = int(self.lineEdit_5_Sim_Num.text().strip() )
         simType = self.lineEdit_4_Sim_Type.text().strip().upper()
-        if simType != 'D101' and simType != 'D103' and simType != 'D104' and simType != 'D105': 
-            print("###########################################")
-            print("## Check the simulation type")
-            print("   D101 or D103 or D104 or D105")
-            print("###########################################")
-            return 
+        # if simType != 'D101' and simType != 'D103' and simType != 'D104' and simType != 'D105': 
+        #     print("###########################################")
+        #     print("## Check the simulation type")
+        #     print("   D101 or D103 or D104 or D105")
+        #     print("###########################################")
+        #     return 
 
 
         simCode ="%s-%sVT%05d-%s-%s-%04d"%(loc, vt, vt_serial, vt_revision, simType, sim_serial)
@@ -6199,6 +6242,7 @@ class Ui_MainWindow(object):
         except Exception as EX: 
             print(EX) 
             print (" NO SIMULATION FILES!!")
+            print ( jobDir)
             self.ftp.close()
             return 
 
@@ -6213,7 +6257,7 @@ class Ui_MainWindow(object):
             infFile = jobDir +"/" + simCode + "-deformed.inp" 
             datafile = jobDir +"/" + simCode + "-Dimension.txt" 
 
-        if simType == 'D101' or simType == 'D104': 
+        elif simType == 'D101' or simType == 'D104': 
             infFile = jobDir +"/" + simCode + "-Inflated.inp"
             TopFile = jobDir +"/" + simCode + "-Deformed_TOP.inp"
             BtmFile = jobDir +"/" + simCode + "-Deformed_BTM.inp"
@@ -6225,7 +6269,7 @@ class Ui_MainWindow(object):
             else: datafile = jobDir +"/" + simCode + "-DOE-Rollingcharacteristics.txt"  
 
 
-        if simType == 'D105': 
+        elif simType == 'D105': 
 
             infFile = jobDir +"/" + simCode + "-Minwave.inp"
             TopFile = jobDir +"/" + simCode + "-Maxwave.inp"
@@ -6235,6 +6279,51 @@ class Ui_MainWindow(object):
             localTop = simCode + "-Maxwave.inp"
             localBtm = simCode + "-MaxDeformed.inp"
             datafile = jobDir +"/" + simCode + "-StandingWave.txt" 
+
+        elif simType == 'S106': 
+            localInf = simCode + "-2DST.inp"
+            infFile = jobDir +"/" + simCode + "-2DST.inp" 
+            localTop = simCode + "-2DTH.inp"
+            TopFile = jobDir +"/" + simCode + "-2DTH.inp"
+            self.checkBox_Initial_profile.setText("2DST")
+            self.checkBox_Initial_inflated.setText("Heat")
+            datafile = jobDir +"/" + simCode + "-LongTermEndurance.txt" 
+        elif simType == 'S104': 
+            localInf = simCode + "-2DST.inp"
+            infFile = jobDir +"/" + simCode + "-2DST.inp" 
+            self.checkBox_Initial_profile.setText("2DST")
+            datafile = jobDir +"/" + simCode + "-Stiffness.txt" 
+
+        elif simType == 'D102': 
+            localInf = simCode + "-postRR.inp"
+            infFile = jobDir +"/" + simCode + "-postRR.inp" 
+            self.checkBox_Initial_profile.setText("deformed")
+            datafile = jobDir +"/" + simCode + "-RRValue.txt" 
+        elif simType == 'D201' or simType == 'D202' : 
+            pass 
+        elif simType == 'D203': 
+            datafile = jobDir +"/" + simCode + "-WEARSENS.txt" 
+        elif simType == 'D204': 
+            datafile = jobDir +"/" + simCode + "-ForceMomentValue.txt" 
+        elif simType == 'D205': 
+            datafile = jobDir +"/" + simCode + "-DOE-CorneringStiffness.txt" 
+        elif simType == 'D206': 
+            datafile = jobDir +"/" + simCode + "-RelaxationLength.txt" 
+        elif simType == 'D207': 
+            datafile = jobDir +"/" + simCode + "-LE_Radius.txt" 
+        elif simType == 'D207': 
+            datafile = jobDir +"/" + simCode + "-LE_Radius.txt" 
+        elif simType == 'S107': 
+            # datafile = jobDir +"/" + simCode + "-LE_Radius.txt"
+            pass 
+        elif simType == 'S201': 
+            datafile = jobDir +"/" + simCode + "-ModalResults.txt" 
+        else: 
+            print(" NOT SUPPORT SIMULATION")
+            return 
+
+
+            # datafile = jobDir +"/" + simCode + "-StandingWave.txt" 
 
         if not self.checkBox_addComparingMesh.isChecked() or len(self.ISLM_mold) > 3: 
             self.ISLM_mold=[]
@@ -6315,23 +6404,34 @@ class Ui_MainWindow(object):
 
         self.comparingISLMLayoutMode = True 
         self.node = False 
+
+        txt = ""
         try: 
             self.sftp.get(datafile, cwd+ "-data.txt")
             with open(cwd+ "-data.txt") as DT: 
                 lines = DT.readlines()
-            txt = ""
+            
             for line in lines: 
                 if "Success::" in line: break 
-                wd = line.split(",")[1]
+                lstline = line.split(",")
+                if len(lstline) > 1: 
+                    wd = line.split(",")[1]
+                else: 
+                    wd = line
                 txt += wd 
-            print("\n** simulation results")
-            print(txt)
         except: 
             pass 
 
         self.ftp.close()
 
         self.plot_ISLMComparingLayouts()
+
+        if txt =="": 
+            print(" NO DATA FILE")
+        else: 
+            print("\n** simulation results")
+            print(txt)
+
 
     def plot_ISLMComparingLayouts(self):
         if not self.comparingISLMLayoutMode: return 

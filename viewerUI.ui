@@ -1133,6 +1133,19 @@
             <bool>true</bool>
            </property>
           </widget>
+          <widget class="QCheckBox" name="checkBox_freeSimtype">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>20</y>
+             <width>16</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
          </widget>
         </item>
         <item>

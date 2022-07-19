@@ -37,7 +37,7 @@ from os.path import isfile
 import numpy as np 
 
 from islmPostFunctions import *
-from files import makingFullFilePath_linux, simulationCodes
+# from files import makingFullFilePath_linux, simulationCodes
 
 try: 
     import paramiko as FTP 
@@ -317,7 +317,7 @@ def readTireComponents(fname, color=False):
 
 def readingTireComponentFile(): 
     if not isfile(componentsfile):    
-        print(" GENERATE file which has materail components")
+        print(" GENERATE file which has material components")
         generateComponentfile(componentsfile)
 element_color = readTireComponents(componentsfile, color=True)
 def Color(elsetname): 
@@ -2397,6 +2397,7 @@ def FindOutEdges(FreeEdge, CenterNodes, Nodes, Elements):
         if ix[0] == rightToe[0]: 
             i = k 
             break 
+    else: i = 0 
     FreeEdge[i][5] = 1
     outEdge.append(FreeEdge[i])
     iFirstNode = FreeEdge[i][0]
@@ -3542,6 +3543,74 @@ class ELEMENT:
         OEdges = OuterEdge(FEdges, Node, self)
         return OEdges
 
+
+def Mesh_Building_Inc(fname): 
+    with open(fname) as F: 
+        lines = F.readlines()
+    Node = NODE()
+    Element = ELEMENT()
+    Elset = ELSET()
+    surface =[]
+    spt = None 
+    for line in lines: 
+        if "**" in line: continue 
+        if "*" in line: 
+            if '*NODE' in line.upper(): spt = 'N'
+            elif "*ELEMENT" in line.upper(): 
+                wds = line.split(",")
+                for wd in wds: 
+                    if 'ELSET' in wd: 
+                        name = wd.split("=")[1].strip()
+                Elset.AddName(name)
+
+                if 'TYPE=MAX' in line.upper(): 
+                    spt="E2"
+                    
+                if 'TYPE=CAX3T' in line.upper(): 
+                    spt="E3"
+                if 'TYPE=CAX4T' in line.upper(): 
+                    spt="E4"
+            elif '*SURFACE' in line.upper(): spt ='S'
+            else: 
+                spt = None 
+
+        else: 
+            wds = line.split(",")
+            if spt == 'N': 
+                Nid = int(wds[0].strip())
+                y = float(wds[1].strip())/1000
+                z = float(wds[2].strip())/1000
+                Node.Add([Nid, 0, z, y])
+            
+            if spt=='E2': 
+                Eid = int(wds[0].strip())
+                n1 = int(wds[1].strip())
+                n2 = int(wds[2].strip())
+                N1 = Node.NodeByID(n1)
+                N2 = Node.NodeByID(n2)
+                C = [[N1[2], N1[3]], [N2[2], N2[3]]]
+                Element.Add([Eid, n1, n2, 0, 0, name, 2, math.sqrt(math.pow(N1[2] - N2[2], 2) + math.pow(N1[3] - N2[3], 2)+ math.pow(N1[1] - N2[1], 2)), (N1[2] + N2[2]) / 2.0, (N1[3] + N2[3]) / 2.0, C, 0]) 
+                Elset.AddNumber(Eid, name)
+            if spt=='E3': 
+                Eid = int(wds[0].strip())
+                n1 = int(wds[1].strip())
+                n2 = int(wds[2].strip())
+                n3 = int(wds[3].strip())
+                A, C = Area([n1, n2, n3], Node)
+                Element.Add([Eid, n1, n2, n3, 0, name, 3,  A[0], A[1], A[2], C, 0])
+                Elset.AddNumber(Eid, name) 
+            if spt=='E4': 
+                Eid = int(wds[0].strip())
+                n1 = int(wds[1].strip())
+                n2 = int(wds[2].strip())
+                n3 = int(wds[3].strip())
+                n4 = int(wds[4].strip())
+                A, C = Area([n1, n2, n3, n4], Node)
+                Element.Add([Eid, n1, n2, n3, n4, name, 4,  A[0], A[1], A[2], C, 0]) 
+                Elset.AddNumber(Eid, name)
+
+    return Node, Element, Elset, surface
+
 def Mesh2DInformation(InpFileName, comments=True, components=False):
     
 
@@ -3615,7 +3684,6 @@ def Mesh2DInformation(InpFileName, comments=True, components=False):
                 elif "*ELEMENT" in line.upper() and "TYPE" in line.upper() : 
 
                     ename = ''
-                    
                     words = line.split(",")
                     for word in words: 
                         if "TYPE" in word.upper(): 
@@ -3623,7 +3691,7 @@ def Mesh2DInformation(InpFileName, comments=True, components=False):
                         if "ELSET" in word.upper(): 
                             ename = word.split("=")[1].strip()
                     
-                    if EL == 'MGAX1' or EL == 'MAX1':
+                    if EL == 'MGAX1' or EL == 'MAX1' or EL == 'SFMGAX1':
                         spt = 'M1'
                     elif 'CGAX3'  in EL or 'CAX3'  in EL: 
                         spt = 'C3'
@@ -3631,8 +3699,7 @@ def Mesh2DInformation(InpFileName, comments=True, components=False):
                         spt = 'C4'
                     else:
                         spt = 'NN'
-
-                    # print ("$$", line.strip(), word, EL, spt)
+                
                     
                 elif "*SURFACE" in line.upper(): 
                     if "INTERACTION" in line.upper() or "BEHAVIOR" in line.upper() or "PROPERTY" in line.upper(): 
@@ -3693,7 +3760,7 @@ def Mesh2DInformation(InpFileName, comments=True, components=False):
                         if "INPUT" in word.upper(): 
                             incfile = word.split("=")[1].strip()
                             break 
-                    if isfile(incfile): 
+                    if isfile(incfile) and not '.aircavity' in incfile: 
                         Node, sel, sset, t_rims = MeshInclude(incfile, Node, Elset)
                     else: 
                         list_file = InpFileName.split("/")
@@ -3722,13 +3789,14 @@ def Mesh2DInformation(InpFileName, comments=True, components=False):
                     pass
                 if spt == 'ND':
                     try: 
-                        if len(word) ==4: 
-                            Node.Add([int(word[0]), float(word[3]), float(word[2]), float(word[1])])
-                        elif len(word) == 5: ## 5th item : temperature 
-                            Node.Add([int(word[0]), float(word[3]), float(word[2]), float(word[1]), float(word[4])])
+                        if float(word[2]) < 1.0 and float(word[3]) < 1.0: 
+                            if len(word) ==4: 
+                                Node.Add([int(word[0]), float(word[3]), float(word[2]), float(word[1])])
+                            elif len(word) == 5: ## 5th item : temperature 
+                                Node.Add([int(word[0]), float(word[3]), float(word[2]), float(word[1]), float(word[4])])
                     except:
                         if comments: print ("* Error to read node:", line.strip())
-
+                    
                     
                 if spt == 'M1':
                     # Element   [EL No,                  N1,          N2,  N3, N4,'elset Name', N,  Area/length, CenterX, CenterY]
@@ -3739,21 +3807,25 @@ def Mesh2DInformation(InpFileName, comments=True, components=False):
                         Element.Add([int(word[0]), int(word[1]), int(word[2]), 0, 0, ename, 2, math.sqrt(math.pow(N1[2] - N2[2], 2) + math.pow(N1[3] - N2[3], 2)+ math.pow(N1[1] - N2[1], 2)), (N1[2] + N2[2]) / 2.0, (N1[3] + N2[3]) / 2.0, C, 0])
                     except:
                         # if comments: print ("* Error to read MGAX1:", line.strip())
+                        print(" ERROR NODE", word)
                         pass 
                 if spt == 'C3':
                     try:
                         A, C = Area([int(word[1]), int(word[2]), int(word[3])], Node)
-                        Element.Add([int(word[0]), int(word[1]), int(word[2]), int(word[3]), 0, ename, 3, A[0], A[1], A[2], C, 0])
                     except:
-                        # if comments: print ("* Error to read CGAX3:", line.strip())
-                        pass 
+                        A=[0, 0, 0]
+                        C = 0  
+                    Element.Add([int(word[0]), int(word[1]), int(word[2]), int(word[3]), 0, ename, 3, A[0], A[1], A[2], C, 0])
+                    
                 if spt == 'C4':
                     # print (line.strip())
-                    # try:
-                        # print (line.strip())
+                    try:
                         A, C = Area([int(word[1]), int(word[2]), int(word[3]), int(word[4])], Node)
+                    except: 
+                        A=[0, 0, 0]
+                        C = 0 
                         # print(A, C)
-                        Element.Add([int(word[0]), int(word[1]), int(word[2]), int(word[3]), int(word[4]), ename, 4, A[0], A[1], A[2], C, 0])
+                    Element.Add([int(word[0]), int(word[1]), int(word[2]), int(word[3]), int(word[4]), ename, 4, A[0], A[1], A[2], C, 0])
                         # print (Element.Element[-1])
                     # except:
                     #     # if comments: print ("* Error to read CGAX4:", line.strip())
@@ -3918,7 +3990,6 @@ def Mesh2DInformation(InpFileName, comments=True, components=False):
         if TIRE_BT_LIFT !="": print (TIRE_BT_LIFT)
         if TIRE_ReBELT != '': print(TIRE_ReBELT)
 
-
     td = []
     elements = []
     for el in Element.Element: 
@@ -4027,7 +4098,9 @@ def MeshInclude(incfile, Node, Elset, xy=23):
                 except: ty = 0.0
                 try: tz = float(word[1])
                 except: tz = 0.0
-                Node.add([int(word[0]), tx, ty, tz])
+                if ty < 1.0 and tz < 1.0:
+                    nid = int(float(word[0]))
+                    Node.Add([nid, tx, ty, tz])
 
             if cmd == 'el2':
                 # Element   [EL No,                  N1,          N2,  N3, N4,'elset Name', N,  Area/length, CenterX, CenterY]
@@ -4054,6 +4127,50 @@ def MeshInclude(incfile, Node, Elset, xy=23):
     if len(rimtemp) > 0: rims.append(rimtemp)
     
     return Node, Element, Elset, rims 
+
+def node_ABAQUS(fname): 
+    with open(fname) as F: 
+        lines = F.readlines()
+    onode = NODE(); dnode = NODE()
+
+    cmd = None 
+    for line in lines: 
+        if "**" in line: continue 
+        if 'PART-1-1' in line: 
+            words  = line.split(" ")
+            cnt = 0 
+            for word in words: 
+                if word != "": 
+                    cnt += 1 
+                    if cnt == 2: nid = int(word) 
+                    if cnt == 3: ox = float(word)/1000
+                    if cnt == 4: oy = float(word)/1000
+                    if cnt == 5: oz = float(word)/1000
+                    if cnt == 6: dx = float(word)/1000
+                    if cnt == 7: dy = float(word)/1000
+                    if cnt == 8: dz = float(word)/1000
+            if cnt ==8: 
+                dnode.Add([nid, dz, dy, dx])
+                onode.Add([nid, oz, oy, ox])
+        elif "*" in line: 
+            if "*NODE" in line.upper(): 
+                cmd = "ND"
+            else: 
+                cmd = None 
+        else: 
+            if cmd == "ND": 
+                words = line.split(",")
+                nid = int(words[0])
+                dz = float(words[1])
+                dy = float(words[2])
+                dx = float(words[3])
+
+                dnode.Add([nid, dz, dy, dx])
+                onode.Add([nid, dz, dy, dx])
+
+    return onode, dnode
+    
+
 
 def RegenenerateMesh(savefile, meshfile, allnodes, Element, Elset, sdb=False): 
 
@@ -5392,6 +5509,15 @@ class Ui_MainWindow(object):
         self.actionOPEN.setObjectName("actionOPEN")
         self.actionCLOSE = QtWidgets.QAction(MainWindow)
         self.actionCLOSE.setObjectName("actionCLOSE")
+        self.actionABAQUS_DOTS = QtWidgets.QAction(MainWindow)
+        self.actionABAQUS_DOTS.setObjectName("actionABAQUS_DOTS")
+        self.actionSAVE_ABQ_DOTS = QtWidgets.QAction(MainWindow)
+        self.actionSAVE_ABQ_DOTS.setObjectName("actionSAVE_ABQ_DOTS")
+        self.actionABAQUS_Elements = QtWidgets.QAction(MainWindow)
+        self.actionABAQUS_Elements.setObjectName("actionABAQUS_Elements")
+        self.menuFILE.addAction(self.actionABAQUS_Elements)
+        self.menuFILE.addAction(self.actionABAQUS_DOTS)
+        self.menuFILE.addAction(self.actionSAVE_ABQ_DOTS)
         self.menuFILE.addAction(self.actionCLOSE)
         self.menubar.addAction(self.menuFILE.menuAction())
 
@@ -5531,6 +5657,12 @@ class Ui_MainWindow(object):
         self.actionOPEN.setShortcut(_translate("MainWindow", "Ctrl+O"))
         self.actionCLOSE.setText(_translate("MainWindow", "CLOSE"))
         self.actionCLOSE.setShortcut(_translate("MainWindow", "Ctrl+Q"))
+        self.actionABAQUS_DOTS.setText(_translate("MainWindow", "ABAQUS_DeformedNode"))
+        self.actionABAQUS_DOTS.setShortcut(_translate("MainWindow", "Shift+D"))
+        self.actionSAVE_ABQ_DOTS.setText(_translate("MainWindow", "SAVE_ABQ_Nodes"))
+        self.actionSAVE_ABQ_DOTS.setShortcut(_translate("MainWindow", "Shift+S"))
+        self.actionABAQUS_Elements.setText(_translate("MainWindow", "ABAQUS_Green"))
+        self.actionABAQUS_Elements.setShortcut(_translate("MainWindow", "Shift+I"))
 
 
 
@@ -5796,7 +5928,7 @@ class Ui_MainWindow(object):
         try: 
             self.usingLog()
         except Exception as EX: 
-            print(EX)
+            print(EX, 'E1')
 
         self.view3D = False 
 
@@ -5862,6 +5994,9 @@ class Ui_MainWindow(object):
         self.checkBox_pyvistaLighting.clicked.connect(self.changeLighting)
         self.pushButton_showAllCells.clicked.connect(self.plotAll)
 
+        self.actionABAQUS_DOTS.triggered.connect(self.addNode_abaqus_result)
+        self.actionSAVE_ABQ_DOTS.triggered.connect(self.convert_AbaqusNode_INP)
+        self.actionABAQUS_Elements.triggered.connect(self.read_abaqus_inc)
         
 
         self.initialize() 
@@ -6057,7 +6192,7 @@ class Ui_MainWindow(object):
 
             self.sftp.put(locallog, logfile)
         except Exception as EX: 
-            print(EX)
+            print(EX, 'E2')
 
         if isfile(locallog) : 
             remove(locallog)
@@ -6754,9 +6889,14 @@ class Ui_MainWindow(object):
         self.meshfile = manualfile 
         if self.meshfile and isfile(self.meshfile):
             self.layoutcounting = 1
-            
-            # print ("READ MESH %s"%(self.meshfile) )
-            self.node, self.element, self.elset, self.surface, self.tie, self.xy, self.rims = Mesh2DInformation(self.meshfile, self.TireComponents)
+            print ("READ MESH %s"%(self.meshfile) )
+            if self.meshfile[-4:].lower()  == ".inc": 
+                self.checkBox_meshCheck.setChecked(False)
+                self.node, self.element, self.elset, self.surface = Mesh_Building_Inc(self.meshfile)
+                self.tie=[]; self.xy=23; self.rims=[]
+            else: 
+                self.node, self.element, self.elset, self.surface, self.tie, self.xy, self.rims = Mesh2DInformation(self.meshfile, self.TireComponents)
+
             self.npn = np.array(self.node.Node)
             print ("**** Done reading mesh file")
             self.loading2DLayout()
@@ -6764,10 +6904,12 @@ class Ui_MainWindow(object):
             if self.checkBox_meshCheck.isChecked(): 
                 # Element, Elset, LROffset = ChaferDivide(self.element.Element, ChaferName, self.elset.Elset, self.node.Node)
                 # OffsetLeftRight= LROffset
-
+                print(" TIE SEARCHING")
                 MasterEdges, SlaveEdges, OutEdges,CenterNodes, FreeEdges, AllEdges, self.TieError = \
-                           TieSurface(self.element.Element, self.node.Node)
+                            TieSurface(self.element.Element, self.node.Node)
                 if len(self.TieError): 
+                    print(self.TieError)
+                    print(MasterEdges)
                     print("## ERROR in searching TIE" )
                 if len(MasterEdges) != len(SlaveEdges):
                     print ("## Error to find Tie : Master(%dEA)/Slave(%dEA)"%(len(MasterEdges), len(SlaveEdges)))
@@ -7214,6 +7356,86 @@ class Ui_MainWindow(object):
                 self.figure.OnlyAddingNode(PT, size)
         # except:
         #     pass 
+
+    def addNode_abaqus_result(self): 
+        self.FileAbaqusDots, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Select ABAQUS DOTS", self.cwd, "text(*.txt *.inp)")
+        if self.FileAbaqusDots: 
+            self.org_nodes, self.def_nodes = node_ABAQUS(self.FileAbaqusDots)
+            if self.FileAbaqusInc: 
+                self.node =  self.def_nodes
+                self.npn = np.array(self.node.Node)
+                for i, e in enumerate(self.element.Element): 
+                    ix1 = np.where(self.npn[:,0] == e[1])[0][0]; N1 = self.npn[ix1]
+                    ix2 = np.where(self.npn[:,0] == e[2])[0][0]; N2 = self.npn[ix2]
+                    if e[6] == 2: 
+                        self.element.Element[i][7] = math.sqrt(math.pow(N1[2] - N2[2], 2) + math.pow(N1[3] - N2[3], 2)+ math.pow(N1[1] - N2[1], 2))
+                        self.element.Element[i][8] = (N1[2] + N2[2]) / 2.0 
+                        self.element.Element[i][9] =  (N1[3] + N2[3]) / 2.0
+                        self.element.Element[i][10] =[[N1[2], N1[3]], [N2[2], N2[3]]]
+                    elif e[6] ==3: 
+                        ix3 = np.where(self.npn[:,0] == e[3])[0][0]; N3 = self.npn[ix3]
+                        A, C = Area([N1[0], N2[0], N3[0]], self.node)
+                        self.element.Element[i][7] = A[0]
+                        self.element.Element[i][8] = A[1]
+                        self.element.Element[i][9] = A[2]
+                        self.element.Element[i][10] = C 
+                    else: 
+                        ix3 = np.where(self.npn[:,0] == e[3])[0][0]; N3 = self.npn[ix3]
+                        ix4 = np.where(self.npn[:,0] == e[4])[0][0]; N4 = self.npn[ix4]
+                        A, C = Area([N1[0], N2[0], N3[0], N4[0]], self.node)
+                        self.element.Element[i][7] = A[0]
+                        self.element.Element[i][8] = A[1]
+                        self.element.Element[i][9] = A[2]
+                        self.element.Element[i][10] = C 
+
+
+
+                self.loading2DLayout()
+                self.figure.getplotinformation(self.node, self.element, self.elset, self.surface, self.tie,  xy=self.xy, add2d=self.TieError)
+                self.draw2Dmesh(self.meshfile)
+            else: 
+                size =  5 
+                try: 
+                    self.figure.OnlyAddingNode(self.def_nodes, size, keep_showing=True)
+                except: 
+                    self.clearFrame()
+                    self.figure = myCanvas()
+                    self.canvas = self.figure.canvas
+                    self.toolbar = self.figure.toolbar
+                    self.verticalLayout_2.addWidget(self.toolbar)
+                    self.verticalLayout_2.addWidget(self.canvas)
+                    self.groupBox_3dMeshControl.setChecked(False)
+                    self.view3D=False 
+                    self.comparingISLMLayoutMode=False
+                    self.groupBox_3dMeshControl.setMinimumSize(QtCore.QSize(900, 15))
+                    self.groupBox_3dMeshControl.setMaximumSize(QtCore.QSize(16777215, 15))
+                    
+                    self.figure.initializeFigure()
+                    self.figure.OnlyAddingNode(self.def_nodes, size, keep_showing=True)
+
+    def read_abaqus_inc(self): 
+        self.FileAbaqusInc, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Select ABAQUS Input", self.cwd, "text(*.inc)")
+        if self.FileAbaqusInc: 
+            self.layoutcomparing = -1
+            self.textBrowser.clear()
+            if self.FileAbaqusInc and isfile(self.FileAbaqusInc):
+                self.Cdepth_memb_val.setText('0.8')
+                self.Cdepth_solid_val.setText("0.5")
+                self.call2Dmesh(manualfile=self.FileAbaqusInc)
+                self.cwd = writeworkingdirectory(self.FileAbaqusInc, dfile=self.dfile)
+                self.setModifyingMode(True)
+
+    def convert_AbaqusNode_INP(self):
+        if self.FileAbaqusDots: 
+            filename = self.FileAbaqusDots.split(".")[0]+"-dots"
+            saveINPfile, _= QtWidgets.QFileDialog.getSaveFileName(None, "Save files as", filename, "New Mesh(*.inp)")
+            if saveINPfile: 
+                inps = "*NODE\n"
+                for n in self.def_nodes.Node: 
+                    inps += "%10d, %.8f, %.8f, %.8f\n"%(n[0], n[1], n[2], n[3])
+                fp = open(saveINPfile, 'w')
+                fp.write(inps)
+                fp.close()
 
     def checkBoxState(self):
         if self.view3D: return 
@@ -8346,7 +8568,7 @@ class Ui_MainWindow(object):
                                 else: c = 'red'
                                 self.plotter_qulity = self.plotter.add_mesh(sliced, opacity=1.0, color=c, show_edges=True)
                 except Exception as EX:
-                    print(EX) 
+                    print(EX, 'E3') 
                     
 
         if self.checkBox_pyvistaLighting.isChecked(): 
@@ -8726,7 +8948,7 @@ class Ui_MainWindow(object):
                                 self.plotter_qulity = self.plotter.add_mesh(sliced, interpolate_before_map=True, opacity=1.0, 
                                     scalar_bar_args={'title': ' %s  - interpolated'%(item)}, **dargs)
                             except Exception as ex: 
-                                print(ex)
+                                print(ex, 'E4')
 
 
                     else: 
@@ -8805,7 +9027,7 @@ class Ui_MainWindow(object):
                                     self.plotter_qulity = self.plotter.add_mesh(sliced, interpolate_before_map=True, opacity=1.0, 
                                         scalar_bar_args={'title': ' %s  - interpolated'%(item)}, **dargs)
                                 except Exception as ex: 
-                                    print(ex)
+                                    print(ex, 'E5')
                         else: 
                             if self.show_qualityCheck:
                                 qmesh = mesh.compute_cell_quality('jacobian')
@@ -8832,7 +9054,7 @@ class Ui_MainWindow(object):
 
                             self.plotter.enable_cell_picking(mesh=clippedMesh)
                     except Exception as EX: 
-                        print (EX)
+                        print (EX, 'E6')
                         cnt += 1 
                         continue 
                     cnt += 1 
@@ -8910,7 +9132,7 @@ class Ui_MainWindow(object):
                                 color=clr, metallic=0.3, pbr=False, diffuse=1, opacity=self.opecity, smooth_shading=False, edge_color=self.color_meshLine) 
                             self.plotter.enable_cell_picking(mesh=clippedMesh)
                     except Exception as EX: 
-                        print (EX)
+                        print (EX, 'E8')
                         continue 
 
                     if self.checkBox_Slicing.isChecked(): 
@@ -9014,7 +9236,7 @@ class Ui_MainWindow(object):
 
             self.plotter.show()
         except Exception as EX: 
-            print(EX)
+            print(EX, 'E9')
             self.plotting()
 
     def show3DTireSector(self): 
@@ -9838,6 +10060,22 @@ class myCanvas(FigureCanvas):
         self.meshNode.Add([nodemax+1, 0, px, py])
         return [nodemax+1, 0, px, py]
 
+    def initializeFigure(self): 
+        for nch in self.nodechars: 
+            nch.set_visible(False)
+        for nch in self.elchars: 
+            nch.set_visible(False)
+        self.elchars=[]
+        self.nodechars=[]
+
+        self.temperature_mode = False 
+        self.figure.clear()
+        self.ax = self.figure.add_subplot(111)
+        self.ax.axis("equal")
+        self.figure.canvas.mpl_connect('button_release_event', self.onReleased)
+        self.figure.canvas.draw()
+        self.figure.tight_layout()
+
 
     def ComparingMode(self, edge0, node0, xy0, edge1, node1, xy1): 
         self.figure.clear()
@@ -9973,7 +10211,7 @@ class myCanvas(FigureCanvas):
         # plt.ylim(current_ylim[0], current_ylim[1])
         # self.figure.canvas.draw_idle()
 
-    def OnlyAddingNode(self, nodes, size, color=0, vmin=0, vmax=0 ): 
+    def OnlyAddingNode(self, nodes, size, color=0, vmin=0, vmax=0, keep_showing=False ): 
         # self.dots = []
         if size > 0.0: 
             Xs=[]; Ys=[]
@@ -9988,9 +10226,11 @@ class myCanvas(FigureCanvas):
                 except: 
                     nd = self.ax.scatter(Xs, Ys, s=size, c='gray' )    
 
-            self.dots.append(nd)
+            if not keep_showing: 
+                self.dots.append(nd)
 
         self.plot_current_display_range()
+        self.figure.tight_layout()
         # current_xlim=self.ax.get_xlim()
         # current_ylim=self.ax.get_ylim()
         # plt.xlim(current_xlim[0], current_xlim[1])
@@ -10258,7 +10498,7 @@ class myCanvas(FigureCanvas):
             self.y.append(nd[Y])
 
         for el in element.Element:
-            try: 
+            # try: 
                 if el[6] == 3: 
                     x1 = el[10][0][0]; y1 = el[10][0][1]
                     x2 = el[10][1][0]; y2 = el[10][1][1]
@@ -10291,9 +10531,9 @@ class myCanvas(FigureCanvas):
                     self.eid.append(el[0])
                     self.ex.append((x1 + x2 )/2)
                     self.ey.append((y1 + y2 )/2)
-            except Exception as EX: 
-                print (EX)
-                continue 
+            # except Exception as EX: 
+            #     print (EX, 'E10')
+            #     continue 
                 
 
         if len(add2d) > 0: 
@@ -11131,7 +11371,7 @@ if __name__ == "__main__":
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
     ui.setupUi(MainWindow)
-    ui.redirect()
+    # ui.redirect()
     ui.actions(MainWindow)
     readingTireComponentFile()
     MainWindow.show()

@@ -131,6 +131,23 @@ lineThickness=[0.9, 0.6, 0.3]
 
 ISLM_simtype_supported=['D101', 'D103', 'D104', 'D105']
 
+comparingColor_cured = {
+    "CTR": "red", 'CTB': 'red', 
+    'SUT':"magenta", 'UTR': 'magenta', 
+    'TRW': 'blue',
+    "CCT": "blue", 
+    "BTT": "green",
+    "IL1": "magenta",
+    "BSW": "green", 
+    "HUS": "blue", 
+    "RIC": "magenta", 
+    "SHW": "black", 
+    "BDC": "black", 
+    "FIL": "red", 
+    "LBF": 'red', 'UBF':'red',
+    'SRTT':'blue', 'RFM':'blue', 'BFT':'blue'
+}
+
 preComponentColor = {  "CTR":"darkgray",       "CTB":"darkgray", 
                     "SUT" : "lightpink",    "UTR" : "lightpink", 
                     "CC1":"lightsalmon",    "C01":"lightsalmon",    "CCU":"lightsalmon",
@@ -5657,12 +5674,12 @@ class Ui_MainWindow(object):
         self.actionOPEN.setShortcut(_translate("MainWindow", "Ctrl+O"))
         self.actionCLOSE.setText(_translate("MainWindow", "CLOSE"))
         self.actionCLOSE.setShortcut(_translate("MainWindow", "Ctrl+Q"))
-        self.actionABAQUS_DOTS.setText(_translate("MainWindow", "ABAQUS_DeformedNode"))
+        self.actionABAQUS_DOTS.setText(_translate("MainWindow", "ABQ_Deformed Node"))
         self.actionABAQUS_DOTS.setShortcut(_translate("MainWindow", "Shift+D"))
-        self.actionSAVE_ABQ_DOTS.setText(_translate("MainWindow", "SAVE_ABQ_Nodes"))
+        self.actionSAVE_ABQ_DOTS.setText(_translate("MainWindow", "ABQ_Saving Deformed Node"))
         self.actionSAVE_ABQ_DOTS.setShortcut(_translate("MainWindow", "Shift+S"))
-        self.actionABAQUS_Elements.setText(_translate("MainWindow", "ABAQUS_Green"))
-        self.actionABAQUS_Elements.setShortcut(_translate("MainWindow", "Shift+I"))
+        self.actionABAQUS_Elements.setText(_translate("MainWindow", "ABQ_Green Tire Mesh"))
+        self.actionABAQUS_Elements.setShortcut(_translate("MainWindow", "Shift+G"))
 
 
 
@@ -5908,6 +5925,8 @@ class Ui_MainWindow(object):
         self.selectedPlot=False 
         self.picked = None 
 
+        self.FileAbaqusInc=None 
+        self.FileAbaqusDots = None 
 
         self.dfile = "pdir.dir"
         cwd =getcwd()
@@ -7360,44 +7379,53 @@ class Ui_MainWindow(object):
     def addNode_abaqus_result(self): 
         self.FileAbaqusDots, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Select ABAQUS DOTS", self.cwd, "text(*.txt *.inp)")
         if self.FileAbaqusDots: 
+            df = self.FileAbaqusDots + '/' +self.dfile
+            self.cwd=writeworkingdirectory(df, dfile=self.dfile)
+
             self.org_nodes, self.def_nodes = node_ABAQUS(self.FileAbaqusDots)
             if self.FileAbaqusInc: 
-                self.node =  self.def_nodes
-                self.npn = np.array(self.node.Node)
-                for i, e in enumerate(self.element.Element): 
-                    ix1 = np.where(self.npn[:,0] == e[1])[0][0]; N1 = self.npn[ix1]
-                    ix2 = np.where(self.npn[:,0] == e[2])[0][0]; N2 = self.npn[ix2]
-                    if e[6] == 2: 
-                        self.element.Element[i][7] = math.sqrt(math.pow(N1[2] - N2[2], 2) + math.pow(N1[3] - N2[3], 2)+ math.pow(N1[1] - N2[1], 2))
-                        self.element.Element[i][8] = (N1[2] + N2[2]) / 2.0 
-                        self.element.Element[i][9] =  (N1[3] + N2[3]) / 2.0
-                        self.element.Element[i][10] =[[N1[2], N1[3]], [N2[2], N2[3]]]
-                    elif e[6] ==3: 
-                        ix3 = np.where(self.npn[:,0] == e[3])[0][0]; N3 = self.npn[ix3]
-                        A, C = Area([N1[0], N2[0], N3[0]], self.node)
-                        self.element.Element[i][7] = A[0]
-                        self.element.Element[i][8] = A[1]
-                        self.element.Element[i][9] = A[2]
-                        self.element.Element[i][10] = C 
-                    else: 
-                        ix3 = np.where(self.npn[:,0] == e[3])[0][0]; N3 = self.npn[ix3]
-                        ix4 = np.where(self.npn[:,0] == e[4])[0][0]; N4 = self.npn[ix4]
-                        A, C = Area([N1[0], N2[0], N3[0], N4[0]], self.node)
-                        self.element.Element[i][7] = A[0]
-                        self.element.Element[i][8] = A[1]
-                        self.element.Element[i][9] = A[2]
-                        self.element.Element[i][10] = C 
+                try: 
+                    self.npn = np.array(self.def_nodes.Node)
+                    copiedElement = self.element.Element 
+                    for i, e in enumerate(copiedElement): 
+                        ix1 = np.where(self.npn[:,0] == e[1])[0][0]; N1 = self.npn[ix1]
+                        ix2 = np.where(self.npn[:,0] == e[2])[0][0]; N2 = self.npn[ix2]
+                        if e[6] == 2: 
+                            copiedElement[i][7] = math.sqrt(math.pow(N1[2] - N2[2], 2) + math.pow(N1[3] - N2[3], 2)+ math.pow(N1[1] - N2[1], 2))
+                            copiedElement[i][8] = (N1[2] + N2[2]) / 2.0 
+                            copiedElement[i][9] =  (N1[3] + N2[3]) / 2.0
+                            copiedElement[i][10] =[[N1[2], N1[3]], [N2[2], N2[3]]]
+                        elif e[6] ==3: 
+                            ix3 = np.where(self.npn[:,0] == e[3])[0][0]; N3 = self.npn[ix3]
+                            A, C = Area([N1[0], N2[0], N3[0]], self.def_nodes)
+                            copiedElement[i][7] = A[0]
+                            copiedElement[i][8] = A[1]
+                            copiedElement[i][9] = A[2]
+                            copiedElement[i][10] = C 
+                        else: 
+                            ix3 = np.where(self.npn[:,0] == e[3])[0][0]; N3 = self.npn[ix3]
+                            ix4 = np.where(self.npn[:,0] == e[4])[0][0]; N4 = self.npn[ix4]
+                            A, C = Area([N1[0], N2[0], N3[0], N4[0]], self.def_nodes)
+                            copiedElement[i][7] = A[0]
+                            copiedElement[i][8] = A[1]
+                            copiedElement[i][9] = A[2]
+                            copiedElement[i][10] = C 
 
-
-
-                self.loading2DLayout()
-                self.figure.getplotinformation(self.node, self.element, self.elset, self.surface, self.tie,  xy=self.xy, add2d=self.TieError)
-                self.draw2Dmesh(self.meshfile)
+                    self.node =  self.def_nodes
+                    self.element.Element = copiedElement 
+                    self.loading2DLayout()
+                    self.figure.getplotinformation(self.node, self.element, self.elset, self.surface, self.tie,  xy=self.xy, add2d=self.TieError)
+                    self.draw2Dmesh(self.meshfile)
+                except Exception as EX: 
+                    print(EX)
+                    print(" NO FOUND NODE")
+                    self.draw2Dmesh(self.meshfile)
             else: 
                 size =  5 
                 try: 
                     self.figure.OnlyAddingNode(self.def_nodes, size, keep_showing=True)
-                except: 
+                except Exception as EX: 
+                    print("Error to scatter dots")
                     self.clearFrame()
                     self.figure = myCanvas()
                     self.canvas = self.figure.canvas
@@ -7413,17 +7441,25 @@ class Ui_MainWindow(object):
                     self.figure.initializeFigure()
                     self.figure.OnlyAddingNode(self.def_nodes, size, keep_showing=True)
 
+
     def read_abaqus_inc(self): 
         self.FileAbaqusInc, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Select ABAQUS Input", self.cwd, "text(*.inc)")
         if self.FileAbaqusInc: 
+
             self.layoutcomparing = -1
             self.textBrowser.clear()
-            if self.FileAbaqusInc and isfile(self.FileAbaqusInc):
+            if self.FileAbaqusInc :
                 self.Cdepth_memb_val.setText('0.8')
                 self.Cdepth_solid_val.setText("0.5")
-                self.call2Dmesh(manualfile=self.FileAbaqusInc)
-                self.cwd = writeworkingdirectory(self.FileAbaqusInc, dfile=self.dfile)
-                self.setModifyingMode(True)
+                try: 
+                    self.call2Dmesh(manualfile=self.FileAbaqusInc)
+                    self.cwd = writeworkingdirectory(self.FileAbaqusInc, dfile=self.dfile)
+                    self.setModifyingMode(True)
+                except Exception as EX: 
+                    print(EX)
+                    self.draw2Dmesh(self.meshfile)
+                    print(" There is some error in the mesh file")
+                
 
     def convert_AbaqusNode_INP(self):
         if self.FileAbaqusDots: 
@@ -7679,27 +7715,46 @@ class Ui_MainWindow(object):
 
         if not self.view3D: 
             self.setModifyingMode(False)
-            if self.layoutcounting ==0: 
-                print ("\n* Need to load a mesh first.\n")
-                return
-            elif self.layoutcounting == 1: 
-                self.Bead_Min_R = []
-                self.Profiles = []
-                basic_line_width = 0.5
-                profile0, mr0= LayoutToProfile(self.element, self.node, output='line', color=lst_colors[0], lw=basic_line_width, counting=0)
-                if mr0 : 
-                    self.Bead_Min_R.append(mr0)
-                self.Profiles.append(profile0)
-            if not comparingMesh: 
+            
+            if self.meshfile[-4:].upper() == '.INC': 
                 self.comparingmesh, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Select File", self.cwd, "File Open(*.inp *.msh)")
-            else: 
-                self.comparingmesh = comparingMesh 
+                if self.comparingmesh: 
+                    cNode, cElement, cElset, _, _, _, _ = Mesh2DInformation(self.comparingmesh)
+                    npel = []
+                    for e in cElement.Element: 
+                        npel.append([e[0], e[1], e[2], e[3], e[4]])
+                    npel = np.array(npel)
+                    for eset in cElset.Elset: 
+                        try: 
+                            c = comparingColor_cured[eset[0]]
+                        except : 
+                            c = 'black'
+                        self.figure.Add_ElsetBoundary(eset[0], cElement, cNode, 0, 0, cElset.Elset, npel,\
+                             refresh=False, color=c, lw=0.5)
 
-            if self.comparingmesh: 
-                self.putAnotherLayout(self.comparingmesh)
-                self.cwd = writeworkingdirectory(self.comparingmesh, dfile=self.dfile)
             else: 
-                self.figure.Draw_profiles(self.Profiles, self.Bead_Min_R)
+                if self.layoutcounting ==0: 
+                    print ("\n* Need to load a mesh first.\n")
+                    return
+                elif  self.layoutcounting ==1  : # self.meshfile[-4:].upper() != '.INC' and: 
+                    self.Bead_Min_R = []
+                    self.Profiles = []
+                    basic_line_width = 0.5
+                    profile0, mr0= LayoutToProfile(self.element, self.node, output='line', color=lst_colors[0], lw=basic_line_width, counting=0)
+                    if mr0 : 
+                        self.Bead_Min_R.append(mr0)
+                    self.Profiles.append(profile0)
+
+                if not comparingMesh: 
+                    self.comparingmesh, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Select File", self.cwd, "File Open(*.inp *.msh)")
+                else: 
+                    self.comparingmesh = comparingMesh 
+
+                if self.comparingmesh: 
+                    self.putAnotherLayout(self.comparingmesh)
+                    self.cwd = writeworkingdirectory(self.comparingmesh, dfile=self.dfile)
+                else: 
+                    self.figure.Draw_profiles(self.Profiles, self.Bead_Min_R)
         else: 
 
             self.addMesh()
@@ -10385,32 +10440,32 @@ class myCanvas(FigureCanvas):
         # self.figure.canvas.draw_idle()
 
 
-    def Add_ElsetBoundary(self, name, elements, nodes, nid, eid,  allelsets, npel): 
-        
-        try: 
+    def Add_ElsetBoundary(self, name, elements, nodes, nid, eid,  allelsets, npel, refresh=True, color='green', lw=2): 
+        nodes = np.array(nodes.Node)
+
+        if refresh: 
             for line in self.LineEL: 
                 line.remove()
             for txt in self.settexts: 
                 txt.set_visible(False)
-        except: 
-            pass 
+
+            self.LineEL=[]
 
         searching =[]
         for elset in allelsets: 
             if name == elset[0]: 
                 searching = elset[1:]
-                
                 break 
         
-        self.LineEL=[]
+        
         solid=-1
         for el in elements.Element: 
             if el[0]==searching[0]: 
                 if el[6] == 2: solid =0 
                 else: solid = 1 
                 break 
-
-        nodes = np.array(nodes.Node)
+        
+        
 
         if solid == 1: 
             elset =ELEMENT()
@@ -10456,7 +10511,7 @@ class myCanvas(FigureCanvas):
             ix = np.where(nodes[:,0] == edge[1])[0][0]; n2 = nodes[ix]
             X=[n1[2], n2[2]]
             Y=[n1[3], n2[3]]
-            line, = self.ax.plot(X, Y, color="green", linewidth=2.0)
+            line, = self.ax.plot(X, Y, color=color, linewidth=lw)
             if solid==0 and eid ==1: 
                 ch = self.ax.text((n1[2]+n2[2])/2, (n1[3]+n2[3])/2, str(int(edge[4])), size=8, color='orange' )
                 self.settexts.append(ch)
@@ -11371,7 +11426,7 @@ if __name__ == "__main__":
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
     ui.setupUi(MainWindow)
-    # ui.redirect()
+    ui.redirect()
     ui.actions(MainWindow)
     readingTireComponentFile()
     MainWindow.show()

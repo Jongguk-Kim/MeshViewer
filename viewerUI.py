@@ -732,6 +732,15 @@ class Ui_MainWindow(object):
         self.actionOPEN.setObjectName("actionOPEN")
         self.actionCLOSE = QtWidgets.QAction(MainWindow)
         self.actionCLOSE.setObjectName("actionCLOSE")
+        self.actionABAQUS_DOTS = QtWidgets.QAction(MainWindow)
+        self.actionABAQUS_DOTS.setObjectName("actionABAQUS_DOTS")
+        self.actionSAVE_ABQ_DOTS = QtWidgets.QAction(MainWindow)
+        self.actionSAVE_ABQ_DOTS.setObjectName("actionSAVE_ABQ_DOTS")
+        self.actionABAQUS_Elements = QtWidgets.QAction(MainWindow)
+        self.actionABAQUS_Elements.setObjectName("actionABAQUS_Elements")
+        self.menuFILE.addAction(self.actionABAQUS_Elements)
+        self.menuFILE.addAction(self.actionABAQUS_DOTS)
+        self.menuFILE.addAction(self.actionSAVE_ABQ_DOTS)
         self.menuFILE.addAction(self.actionCLOSE)
         self.menubar.addAction(self.menuFILE.menuAction())
 
@@ -871,6 +880,12 @@ class Ui_MainWindow(object):
         self.actionOPEN.setShortcut(_translate("MainWindow", "Ctrl+O"))
         self.actionCLOSE.setText(_translate("MainWindow", "CLOSE"))
         self.actionCLOSE.setShortcut(_translate("MainWindow", "Ctrl+Q"))
+        self.actionABAQUS_DOTS.setText(_translate("MainWindow", "ABQ_Deformed Node"))
+        self.actionABAQUS_DOTS.setShortcut(_translate("MainWindow", "Shift+D"))
+        self.actionSAVE_ABQ_DOTS.setText(_translate("MainWindow", "ABQ_Saving Deformed Node"))
+        self.actionSAVE_ABQ_DOTS.setShortcut(_translate("MainWindow", "Shift+S"))
+        self.actionABAQUS_Elements.setText(_translate("MainWindow", "ABQ_Green Tire Mesh"))
+        self.actionABAQUS_Elements.setShortcut(_translate("MainWindow", "Shift+G"))
 
 
 if __name__ == "__main__":

@@ -1,0 +1,144 @@
+*Version=1
+*TIRE COMPONENTS
+BEAD_R
+BEAD_L
+BEC
+BSW
+BTT
+CCT
+SCT
+NCT
+CHS
+CTB
+CTR
+ET
+FIL
+BDF
+HUS
+JBT
+L11
+IL1
+L12
+IL2
+LBF
+UBF
+RIC
+SIR
+SHW
+SRTT
+SUT
+UTR
+TRW
+ES2
+BFT
+WSW
+C01
+CC1
+C02
+CC2
+C03
+CC3
+C04
+CC4
+BT1
+BT2
+BT3
+BT4
+JFC1
+JFC
+JFC2
+JEC1
+JEC
+OJEC1
+OJFC1
+OJEC2
+OJFC2
+PK1
+PK2
+RFM
+FLI
+CH1
+CH1_R
+CH1_L
+CH2
+CH2_R
+CH2_L
+CH3
+CH3_R
+CH3_L
+BDC
+SPC
+SWS
+JPC1
+CCU-1
+CCU-2
+CCU-3
+BT-1
+BT-2
+BT-3
+BT-4
+JFC-1
+JFC-2
+JEC-1
+JEC-2
+CCU_SKIM-1
+BT_SKIM-1
+JFC_SKIM-1
+BDS-1
+FIL-1
+RIC-1
+ILC-1
+BSW-1
+TRW-1
+CTB-1
+SUT-1
+BT-1_Surf
+BT-2_Surf
+BT-3_Surf
+BT-4_Surf
+JFC-1_Surf
+JFC-2_Surf
+JEC-1_Surf
+JEC-2_Surf
+CH-1
+BDC-1
+CH-2
+CH-3
+UBF-1
+SHW-1
+LBF-1
+HUS-1
+******************************
+** Elset Color Definition
+******************************
+*Color
+   CTR=darkgray
+   CTB=darkgray
+   SUT=lightpink
+   UTR=lightpink
+   CC1=lightsalmon
+   C01=lightsalmon
+   CCU=lightsalmon
+   BTT=steelblue
+BT_SKIM=steelblue
+   FIL=green
+   LBF=green
+   UBF=lightpink
+   IL1=y
+   L11=y
+   ILC=y
+   BSW=yellowgreen
+   HUS=steelblue
+   RIC=darkgray
+   SHW=darkcyan
+   BD1=dimgray
+   BDS=dimgray
+   BDC=black
+  MEMB=black
+   RIM=red
+TDBASE=aqua
+   DOT=red
+ PRESS=blue
+TDROAD=coral
+ BDTOP=gray
+   TRW=steelblue
